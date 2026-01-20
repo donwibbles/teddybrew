@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* Font Family */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Primary Colors (Community & Action) */
+  --color-primary-50: #eff6ff;   /* Very light blue */
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;  /* Main brand color */
+  --color-primary-600: #2563eb;  /* Hover states */
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Neutral Colors (UI Structure) */
+  --color-neutral-50: #fafafa;   /* Backgrounds */
+  --color-neutral-100: #f5f5f5;  /* Card backgrounds */
+  --color-neutral-200: #e5e5e5;  /* Borders */
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;  /* Secondary text */
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;  /* Primary text */
+
+  /* Semantic Colors */
+  --color-success-500: #10b981;  /* Green - "Going" RSVP */
+  --color-success-600: #059669;
+  --color-success-100: #d1fae5;  /* Success backgrounds */
+  --color-success-700: #047857;
+
+  --color-error-500: #ef4444;    /* Red - "Not Going", errors */
+  --color-error-600: #dc2626;
+  --color-error-50: #fef2f2;     /* Error backgrounds */
+  --color-error-200: #fecaca;
+
+  --color-warning-500: #f59e0b;  /* Amber - Capacity warnings */
+  --color-warning-600: #d97706;
+  --color-warning-100: #fef3c7;
+
+  /* Font Sizes with Line Heights */
+  --font-size-xs: 0.75rem;       /* 12px - captions, badges */
+  --line-height-xs: 1rem;
+
+  --font-size-sm: 0.875rem;      /* 14px - small text */
+  --line-height-sm: 1.25rem;
+
+  --font-size-base: 1rem;        /* 16px - body text */
+  --line-height-base: 1.5rem;
+
+  --font-size-lg: 1.125rem;      /* 18px - emphasized text */
+  --line-height-lg: 1.75rem;
+
+  --font-size-xl: 1.25rem;       /* 20px - card titles */
+  --line-height-xl: 1.75rem;
+
+  --font-size-2xl: 1.5rem;       /* 24px - section headings */
+  --line-height-2xl: 2rem;
+
+  --font-size-3xl: 1.875rem;     /* 30px - page titles */
+  --line-height-3xl: 2.25rem;
+
+  --font-size-4xl: 2.25rem;      /* 36px - hero headings */
+  --line-height-4xl: 2.5rem;
+
+  --font-size-5xl: 3rem;         /* 48px - homepage hero */
+  --line-height-5xl: 1;
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;          /* 4px - small elements */
+  --radius: 0.5rem;              /* 8px - buttons, inputs */
+  --radius-md: 0.625rem;         /* 10px - cards */
+  --radius-lg: 0.75rem;          /* 12px - modals */
+  --radius-xl: 1rem;             /* 16px - large cards */
+  --radius-full: 9999px;         /* Pills, avatars */
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Breakpoints (Tailwind defaults) */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* Base styles */
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-white text-neutral-900 antialiased;
+  }
+}
