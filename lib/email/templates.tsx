@@ -1,0 +1,113 @@
+/**
+ * Email templates for Hive Community
+ * Accessible HTML with plain text fallback
+ */
+
+interface MagicLinkEmailProps {
+  url: string;
+  host: string;
+}
+
+/**
+ * Generate HTML email for magic link authentication
+ * Designed to display correctly in Gmail, Outlook, and Apple Mail
+ */
+export function getMagicLinkEmailHtml({ url, host }: MagicLinkEmailProps): string {
+  // Escape HTML to prevent XSS
+  const escapedHost = host.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Sign in to Hive Community</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f5;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #e4e4e7;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #18181b;">
+                Hive Community
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #18181b;">
+                Sign in to your account
+              </h2>
+              <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.5; color: #52525b;">
+                Click the button below to sign in to Hive Community. This link will expire in 24 hours.
+              </p>
+
+              <!-- Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding: 0 0 24px;">
+                    <a href="${url}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 28px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 500; border-radius: 6px;">
+                      Sign in to Hive Community
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Alternative link -->
+              <p style="margin: 0 0 8px; font-size: 14px; color: #71717a;">
+                Or copy and paste this link into your browser:
+              </p>
+              <p style="margin: 0 0 24px; font-size: 14px; word-break: break-all; color: #3b82f6;">
+                <a href="${url}" style="color: #3b82f6; text-decoration: underline;">${url}</a>
+              </p>
+
+              <!-- Security notice -->
+              <p style="margin: 0; padding: 16px; background-color: #fafafa; border-radius: 6px; font-size: 14px; line-height: 1.5; color: #71717a;">
+                If you didn't request this email, you can safely ignore it. Someone may have entered your email address by mistake.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+                This email was sent from ${escapedHost}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`.trim();
+}
+
+/**
+ * Generate plain text email for magic link authentication
+ * Fallback for email clients that don't support HTML
+ */
+export function getMagicLinkEmailText({ url, host }: MagicLinkEmailProps): string {
+  return `
+Sign in to Hive Community
+
+Click the link below to sign in to your account. This link will expire in 24 hours.
+
+${url}
+
+If you didn't request this email, you can safely ignore it. Someone may have entered your email address by mistake.
+
+---
+This email was sent from ${host}
+`.trim();
+}
