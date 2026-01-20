@@ -16,22 +16,28 @@
   "dependencies": {
     "@auth/prisma-adapter": "2.7.4",
     "@hookform/resolvers": "5.2.2",
+    "@neondatabase/serverless": "^1.0.2",
+    "@prisma/adapter-neon": "^7.2.0",
+    "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "7.2.0",
     "@sentry/nextjs": "10.34.0",
     "@tailwindcss/postcss": "^4.1.0",
     "@upstash/ratelimit": "2.0.4",
     "@upstash/redis": "1.34.3",
     "date-fns": "4.1.0",
+    "dotenv": "^17.2.3",
     "isomorphic-dompurify": "2.16.0",
     "lucide-react": "0.562.0",
     "next": "16.1.0",
     "next-auth": "5.0.0-beta.30",
+    "pg": "^8.17.1",
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "react-hook-form": "7.71.1",
     "resend": "6.7.0",
     "sonner": "1.7.1",
     "tailwindcss": "4.1.0",
+    "ws": "^8.19.0",
     "zod": "4.3.5"
   },
   "devDependencies": {
@@ -41,5 +47,8 @@
     "prisma": "7.2.0",
     "tsx": "4.19.2",
     "typescript": "5.9.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

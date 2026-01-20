@@ -5,8 +5,9 @@ const envSchema = z.object({
   // Node environment
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
-  // Database
+  // Database (Neon Postgres)
   DATABASE_URL: z.string().url().min(1, "DATABASE_URL is required"),
+  DIRECT_URL: z.string().url().optional(), // For migrations and Prisma Studio
 
   // Auth.js
   NEXTAUTH_URL: z.string().url().optional(),

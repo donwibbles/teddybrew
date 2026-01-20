@@ -1,0 +1,350 @@
+import "dotenv/config";
+import { CommunityType, MemberRole, RSVPStatus } from "@prisma/client";
+import { prisma } from "../lib/prisma";
+
+async function main() {
+  console.log("🌱 Starting database seed...");
+
+  // Clear existing data (in reverse order of dependencies)
+  console.log("🧹 Cleaning existing data...");
+  await prisma.rSVP.deleteMany();
+  await prisma.event.deleteMany();
+  await prisma.member.deleteMany();
+  await prisma.community.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.verificationToken.deleteMany();
+  await prisma.user.deleteMany();
+
+  // Create 10 users
+  console.log("👥 Creating users...");
+  const users = await Promise.all([
+    prisma.user.create({
+      data: {
+        name: "Alice Chen",
+        email: "alice@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=1",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Bob Martinez",
+        email: "bob@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=3",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Carol Kim",
+        email: "carol@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=5",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "David Johnson",
+        email: "david@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=7",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Emma Wilson",
+        email: "emma@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=9",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Frank Lopez",
+        email: "frank@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=11",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Grace Taylor",
+        email: "grace@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=13",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Henry Brown",
+        email: "henry@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=15",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Iris Patel",
+        email: "iris@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=17",
+      },
+    }),
+    prisma.user.create({
+      data: {
+        name: "Jack Thompson",
+        email: "jack@example.com",
+        emailVerified: new Date(),
+        image: "https://i.pravatar.cc/150?img=19",
+      },
+    }),
+  ]);
+
+  console.log(`✅ Created ${users.length} users`);
+
+  // Create 3 communities
+  console.log("🏘️  Creating communities...");
+
+  const techCommunity = await prisma.community.create({
+    data: {
+      slug: "tech-innovators",
+      name: "Tech Innovators",
+      description: "A community for developers, designers, and tech enthusiasts to share knowledge and collaborate on innovative projects.",
+      type: CommunityType.PUBLIC,
+      ownerId: users[0].id, // Alice owns this community
+    },
+  });
+
+  const bookClub = await prisma.community.create({
+    data: {
+      slug: "book-lovers-unite",
+      name: "Book Lovers Unite",
+      description: "Join us for monthly book discussions, author meetups, and literary adventures. All genres welcome!",
+      type: CommunityType.PUBLIC,
+      ownerId: users[2].id, // Carol owns this community
+    },
+  });
+
+  const fitnessGroup = await prisma.community.create({
+    data: {
+      slug: "morning-runners",
+      name: "Morning Runners",
+      description: "Early bird runners meeting for sunrise jogs and fitness challenges. Private group for committed members.",
+      type: CommunityType.PRIVATE,
+      ownerId: users[4].id, // Emma owns this community
+    },
+  });
+
+  console.log(`✅ Created 3 communities`);
+
+  // Add members to communities
+  console.log("🤝 Adding members to communities...");
+
+  // Tech Innovators members (owner + 5 members)
+  await prisma.member.create({
+    data: {
+      userId: users[0].id, // Alice (owner)
+      communityId: techCommunity.id,
+      role: MemberRole.OWNER,
+    },
+  });
+  await prisma.member.createMany({
+    data: [
+      { userId: users[1].id, communityId: techCommunity.id, role: MemberRole.MEMBER }, // Bob
+      { userId: users[3].id, communityId: techCommunity.id, role: MemberRole.MEMBER }, // David
+      { userId: users[5].id, communityId: techCommunity.id, role: MemberRole.MEMBER }, // Frank
+      { userId: users[7].id, communityId: techCommunity.id, role: MemberRole.MEMBER }, // Henry
+      { userId: users[9].id, communityId: techCommunity.id, role: MemberRole.MEMBER }, // Jack
+    ],
+  });
+
+  // Book Lovers Unite members (owner + 4 members)
+  await prisma.member.create({
+    data: {
+      userId: users[2].id, // Carol (owner)
+      communityId: bookClub.id,
+      role: MemberRole.OWNER,
+    },
+  });
+  await prisma.member.createMany({
+    data: [
+      { userId: users[1].id, communityId: bookClub.id, role: MemberRole.MEMBER }, // Bob
+      { userId: users[4].id, communityId: bookClub.id, role: MemberRole.MEMBER }, // Emma
+      { userId: users[6].id, communityId: bookClub.id, role: MemberRole.MEMBER }, // Grace
+      { userId: users[8].id, communityId: bookClub.id, role: MemberRole.MEMBER }, // Iris
+    ],
+  });
+
+  // Morning Runners members (owner + 3 members)
+  await prisma.member.create({
+    data: {
+      userId: users[4].id, // Emma (owner)
+      communityId: fitnessGroup.id,
+      role: MemberRole.OWNER,
+    },
+  });
+  await prisma.member.createMany({
+    data: [
+      { userId: users[0].id, communityId: fitnessGroup.id, role: MemberRole.MEMBER }, // Alice
+      { userId: users[3].id, communityId: fitnessGroup.id, role: MemberRole.MEMBER }, // David
+      { userId: users[7].id, communityId: fitnessGroup.id, role: MemberRole.MEMBER }, // Henry
+    ],
+  });
+
+  console.log(`✅ Added members to communities`);
+
+  // Create 5 events (mix of past and upcoming)
+  console.log("📅 Creating events...");
+
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const nextWeek = new Date(now);
+  nextWeek.setDate(nextWeek.getDate() + 7);
+  const twoWeeks = new Date(now);
+  twoWeeks.setDate(twoWeeks.getDate() + 14);
+  const lastWeek = new Date(now);
+  lastWeek.setDate(lastWeek.getDate() - 7);
+
+  const event1 = await prisma.event.create({
+    data: {
+      title: "AI & Machine Learning Workshop",
+      description: "Hands-on workshop covering the fundamentals of AI and machine learning. Bring your laptop!",
+      startTime: nextWeek,
+      endTime: new Date(nextWeek.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
+      location: "Tech Hub, 123 Innovation St",
+      capacity: 30,
+      communityId: techCommunity.id,
+      organizerId: users[0].id, // Alice
+    },
+  });
+
+  const event2 = await prisma.event.create({
+    data: {
+      title: "Discussing 'The Midnight Library'",
+      description: "Our monthly book club meeting to discuss Matt Haig's bestseller. Tea and snacks provided!",
+      startTime: tomorrow,
+      endTime: new Date(tomorrow.getTime() + 2 * 60 * 60 * 1000), // 2 hours later
+      location: "Cozy Corner Café, Downtown",
+      capacity: 15,
+      communityId: bookClub.id,
+      organizerId: users[2].id, // Carol
+    },
+  });
+
+  const event3 = await prisma.event.create({
+    data: {
+      title: "Saturday Morning 5K Run",
+      description: "Weekly group run through the park. All fitness levels welcome!",
+      startTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+      endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000 + 1.5 * 60 * 60 * 1000), // 1.5 hours later
+      location: "Central Park North Entrance",
+      capacity: null, // Unlimited
+      communityId: fitnessGroup.id,
+      organizerId: users[4].id, // Emma
+    },
+  });
+
+  const event4 = await prisma.event.create({
+    data: {
+      title: "React 19 Deep Dive",
+      description: "Exploring the new features in React 19 with live coding examples. Past event.",
+      startTime: lastWeek,
+      endTime: new Date(lastWeek.getTime() + 2.5 * 60 * 60 * 1000), // 2.5 hours later
+      location: "Online - Zoom link in description",
+      capacity: 50,
+      communityId: techCommunity.id,
+      organizerId: users[5].id, // Frank
+    },
+  });
+
+  const event5 = await prisma.event.create({
+    data: {
+      title: "Hackathon: Build for Good",
+      description: "48-hour hackathon focused on creating apps that make a positive social impact. Teams of 2-5 people.",
+      startTime: twoWeeks,
+      endTime: new Date(twoWeeks.getTime() + 48 * 60 * 60 * 1000), // 48 hours later
+      location: "Innovation Lab, Suite 400",
+      capacity: 40,
+      communityId: techCommunity.id,
+      organizerId: users[0].id, // Alice
+    },
+  });
+
+  console.log(`✅ Created 5 events`);
+
+  // Create RSVPs
+  console.log("✋ Creating RSVPs...");
+
+  // Event 1 RSVPs (AI Workshop)
+  await prisma.rSVP.createMany({
+    data: [
+      { userId: users[1].id, eventId: event1.id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, eventId: event1.id, status: RSVPStatus.GOING }, // David
+      { userId: users[5].id, eventId: event1.id, status: RSVPStatus.GOING }, // Frank
+      { userId: users[7].id, eventId: event1.id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[9].id, eventId: event1.id, status: RSVPStatus.NOT_GOING }, // Jack
+    ],
+  });
+
+  // Event 2 RSVPs (Book Club)
+  await prisma.rSVP.createMany({
+    data: [
+      { userId: users[1].id, eventId: event2.id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[4].id, eventId: event2.id, status: RSVPStatus.GOING }, // Emma
+      { userId: users[6].id, eventId: event2.id, status: RSVPStatus.GOING }, // Grace
+      { userId: users[8].id, eventId: event2.id, status: RSVPStatus.NOT_GOING }, // Iris
+    ],
+  });
+
+  // Event 3 RSVPs (5K Run)
+  await prisma.rSVP.createMany({
+    data: [
+      { userId: users[0].id, eventId: event3.id, status: RSVPStatus.GOING }, // Alice
+      { userId: users[3].id, eventId: event3.id, status: RSVPStatus.GOING }, // David
+      { userId: users[7].id, eventId: event3.id, status: RSVPStatus.GOING }, // Henry
+    ],
+  });
+
+  // Event 4 RSVPs (Past event)
+  await prisma.rSVP.createMany({
+    data: [
+      { userId: users[1].id, eventId: event4.id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, eventId: event4.id, status: RSVPStatus.GOING }, // David
+      { userId: users[7].id, eventId: event4.id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[9].id, eventId: event4.id, status: RSVPStatus.GOING }, // Jack
+    ],
+  });
+
+  // Event 5 RSVPs (Hackathon)
+  await prisma.rSVP.createMany({
+    data: [
+      { userId: users[1].id, eventId: event5.id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, eventId: event5.id, status: RSVPStatus.GOING }, // David
+      { userId: users[5].id, eventId: event5.id, status: RSVPStatus.GOING }, // Frank
+      { userId: users[7].id, eventId: event5.id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[9].id, eventId: event5.id, status: RSVPStatus.GOING }, // Jack
+    ],
+  });
+
+  console.log(`✅ Created RSVPs`);
+
+  console.log("\n🎉 Database seed completed successfully!\n");
+  console.log("Summary:");
+  console.log(`  • ${users.length} users`);
+  console.log(`  • 3 communities (2 public, 1 private)`);
+  console.log(`  • 5 events (4 upcoming, 1 past)`);
+  console.log(`  • Multiple members per community`);
+  console.log(`  • Multiple RSVPs per event\n`);
+}
+
+main()
+  .catch((e) => {
+    console.error("❌ Seed failed:");
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
