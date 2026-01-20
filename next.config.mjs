@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Turbopack is enabled via --turbopack flag in npm dev script
+  output: 'standalone',
   async headers() {
     return [
       {
