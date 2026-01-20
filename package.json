@@ -14,31 +14,32 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
+    "@auth/prisma-adapter": "2.7.4",
+    "@hookform/resolvers": "5.2.2",
+    "@prisma/client": "7.2.0",
+    "@sentry/nextjs": "10.34.0",
+    "@tailwindcss/postcss": "^4.1.0",
+    "@upstash/ratelimit": "2.0.4",
+    "@upstash/redis": "1.34.3",
+    "date-fns": "4.1.0",
+    "isomorphic-dompurify": "2.16.0",
+    "lucide-react": "0.562.0",
     "next": "16.1.0",
+    "next-auth": "5.0.0-beta.30",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "@prisma/client": "7.2.0",
-    "next-auth": "5.0.0-beta.30",
-    "@auth/prisma-adapter": "2.7.4",
-    "zod": "4.3.5",
     "react-hook-form": "7.71.1",
-    "@hookform/resolvers": "5.2.2",
-    "tailwindcss": "4.1.0",
-    "lucide-react": "0.562.0",
     "resend": "6.7.0",
     "sonner": "1.7.1",
-    "date-fns": "4.1.0",
-    "@sentry/nextjs": "10.34.0",
-    "isomorphic-dompurify": "2.16.0",
-    "@upstash/ratelimit": "2.0.4",
-    "@upstash/redis": "1.34.3"
+    "tailwindcss": "4.1.0",
+    "zod": "4.3.5"
   },
   "devDependencies": {
     "@types/node": "22.10.2",
     "@types/react": "19.0.6",
     "@types/react-dom": "19.0.2",
-    "typescript": "5.9.3",
     "prisma": "7.2.0",
-    "tsx": "4.19.2"
+    "tsx": "4.19.2",
+    "typescript": "5.9.3"
   }
 }

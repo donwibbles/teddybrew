@@ -94,8 +94,10 @@
 
 /* Base styles */
 @layer base {
-  * {
-    @apply border-border;
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
   }
 
   body {
