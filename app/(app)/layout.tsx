@@ -7,7 +7,9 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await auth();
 
-  // Double-check authentication (middleware should handle this, but be safe)
+  // Protect all routes under (app) - redirect unauthenticated users to sign-in
+  // Note: Auth check happens here (not middleware) because Auth.js with Prisma
+  // adapter requires Node.js runtime, but middleware runs in edge runtime
   if (!session?.user) {
     redirect("/sign-in");
   }

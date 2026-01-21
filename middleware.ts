@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 
-// Routes that require authentication
-const protectedRoutes = [
-  "/communities",
-  "/events",
-  "/profile",
-  "/dashboard",
-];
+// Note: Auth checks are handled at the layout level, not in middleware.
+// This is because Auth.js with Prisma adapter requires Node.js runtime,
+// but Next.js middleware runs in edge runtime which is incompatible.
 
-// Routes that are always public
-const publicRoutes = [
-  "/",
-  "/sign-in",
-  "/verify-request",
-  "/auth-error",
-  "/api/auth",
-];
-
-export async function middleware(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Skip middleware for static files
@@ -29,30 +15,6 @@ export async function middleware(request: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next();
-  }
-
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  if (isPublicRoute) {
-    return addSecurityHeaders(NextResponse.next());
-  }
-
-  // Check if route is protected
-  const isProtectedRoute = protectedRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  if (isProtectedRoute) {
-    const session = await auth();
-
-    if (!session?.user) {
-      const signInUrl = new URL("/sign-in", request.url);
-      signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
-    }
   }
 
   return addSecurityHeaders(NextResponse.next());
