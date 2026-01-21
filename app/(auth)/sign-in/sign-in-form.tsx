@@ -33,7 +33,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-zinc-700 mb-1"
+          className="block text-sm font-medium text-neutral-700 mb-1"
         >
           Email address
         </label>
@@ -46,12 +46,12 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
           disabled={isPending}
           placeholder="you@example.com"
           aria-describedby={state.error ? "email-error" : undefined}
-          className="w-full px-4 py-2.5 border border-zinc-300 rounded-lg text-zinc-900 placeholder-zinc-400
-                     focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent
-                     disabled:bg-zinc-50 disabled:text-zinc-500"
+          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                     disabled:bg-neutral-50 disabled:text-neutral-500"
         />
         {state.error && (
-          <p id="email-error" className="mt-2 text-sm text-red-600" role="alert">
+          <p id="email-error" className="mt-2 text-sm text-error-600" role="alert">
             {state.error}
           </p>
         )}
@@ -60,8 +60,8 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full px-4 py-2.5 bg-zinc-900 text-white font-medium rounded-lg
-                   hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-900
+        className="w-full px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+                   hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                    disabled:opacity-50 disabled:cursor-not-allowed
                    transition-colors"
       >
@@ -75,7 +75,7 @@ export function SignInForm({ callbackUrl }: SignInFormProps) {
         )}
       </button>
 
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-neutral-500">
         We&apos;ll send you a magic link to sign in. No password needed.
       </p>
     </form>

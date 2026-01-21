@@ -7,12 +7,12 @@ export const metadata = {
 
 export default function VerifyRequestPage() {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-zinc-200 p-8 text-center">
+    <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8 text-center">
       {/* Email icon */}
       <div className="mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-zinc-100 rounded-full">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-100 rounded-full">
           <svg
-            className="w-8 h-8 text-zinc-600"
+            className="w-8 h-8 text-primary-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -28,20 +28,20 @@ export default function VerifyRequestPage() {
         </div>
       </div>
 
-      <h1 className="text-2xl font-semibold text-zinc-900 mb-2">
+      <h1 className="text-2xl font-semibold text-neutral-900 mb-2">
         Check your email
       </h1>
 
-      <p className="text-zinc-600 mb-6">
+      <p className="text-neutral-600 mb-6">
         We&apos;ve sent you a magic link to sign in. Click the link in the email
         to continue.
       </p>
 
-      <div className="bg-zinc-50 rounded-lg p-4 mb-6">
-        <h2 className="text-sm font-medium text-zinc-900 mb-2">
+      <div className="bg-neutral-50 rounded-lg p-4 mb-6">
+        <h2 className="text-sm font-medium text-neutral-900 mb-2">
           Didn&apos;t receive the email?
         </h2>
-        <ul className="text-sm text-zinc-600 space-y-1 text-left">
+        <ul className="text-sm text-neutral-600 space-y-1 text-left">
           <li>• Check your spam or junk folder</li>
           <li>• Make sure you entered the correct email</li>
           <li>• Wait a few minutes and try again</li>
@@ -50,7 +50,7 @@ export default function VerifyRequestPage() {
 
       <Link
         href="/sign-in"
-        className="inline-flex items-center text-sm text-zinc-600 hover:text-zinc-900"
+        className="inline-flex items-center text-sm text-neutral-600 hover:text-primary-600"
       >
         <svg
           className="w-4 h-4 mr-1"

@@ -42,8 +42,8 @@ export function DevLoginForm() {
 
   return (
     <form onSubmit={handleDevLogin} className="space-y-4">
-      <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-        <p className="text-xs text-amber-800 font-medium">
+      <div className="p-3 bg-primary-50 border border-primary-200 rounded-lg">
+        <p className="text-xs text-primary-800 font-medium">
           Development Only - Skip email verification
         </p>
       </div>
@@ -51,7 +51,7 @@ export function DevLoginForm() {
       <div>
         <label
           htmlFor="dev-email"
-          className="block text-sm font-medium text-zinc-700 mb-1"
+          className="block text-sm font-medium text-neutral-700 mb-1"
         >
           Quick login as
         </label>
@@ -60,9 +60,9 @@ export function DevLoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
-          className="w-full px-4 py-2.5 border border-zinc-300 rounded-lg text-zinc-900
-                     focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent
-                     disabled:bg-zinc-50 disabled:text-zinc-500"
+          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                     disabled:bg-neutral-50 disabled:text-neutral-500"
         >
           <option value="alice@example.com">alice@example.com (seed user)</option>
           <option value="bob@example.com">bob@example.com (seed user)</option>
@@ -72,7 +72,7 @@ export function DevLoginForm() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <p className="text-sm text-error-600" role="alert">
           {error}
         </p>
       )}
@@ -80,8 +80,8 @@ export function DevLoginForm() {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full px-4 py-2.5 bg-amber-500 text-white font-medium rounded-lg
-                   hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500
+        className="w-full px-4 py-2.5 bg-primary-600 text-white font-medium rounded-lg
+                   hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                    disabled:opacity-50 disabled:cursor-not-allowed
                    transition-colors"
       >

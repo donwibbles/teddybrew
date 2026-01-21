@@ -14,12 +14,12 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
   const { title, description } = getErrorDetails(params.error);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-zinc-200 p-8 text-center">
+    <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8 text-center">
       {/* Error icon */}
       <div className="mb-6">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-error-50 rounded-full">
           <svg
-            className="w-8 h-8 text-red-600"
+            className="w-8 h-8 text-error-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -35,15 +35,15 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
         </div>
       </div>
 
-      <h1 className="text-2xl font-semibold text-zinc-900 mb-2">{title}</h1>
+      <h1 className="text-2xl font-semibold text-neutral-900 mb-2">{title}</h1>
 
-      <p className="text-zinc-600 mb-6">{description}</p>
+      <p className="text-neutral-600 mb-6">{description}</p>
 
       <div className="flex flex-col gap-3">
         <Link
           href="/sign-in"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-zinc-900 text-white font-medium rounded-lg
-                     hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-zinc-900
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+                     hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      transition-colors"
         >
           Try again
@@ -51,7 +51,7 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
 
         <Link
           href="/"
-          className="inline-flex items-center justify-center text-sm text-zinc-600 hover:text-zinc-900"
+          className="inline-flex items-center justify-center text-sm text-neutral-600 hover:text-primary-600"
         >
           Go to home page
         </Link>

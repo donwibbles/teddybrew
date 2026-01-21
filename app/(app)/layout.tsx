@@ -15,13 +15,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-neutral-50">
       {/* Header */}
-      <header className="bg-white border-b border-zinc-200">
+      <header className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/communities" className="font-semibold text-xl text-zinc-900">
+            <Link href="/communities" className="font-semibold text-xl text-primary-600">
               Hive Community
             </Link>
 
@@ -29,13 +29,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <nav className="hidden md:flex items-center gap-6">
               <Link
                 href="/communities"
-                className="text-zinc-600 hover:text-zinc-900 text-sm font-medium"
+                className="text-neutral-600 hover:text-primary-600 text-sm font-medium"
               >
                 Communities
               </Link>
               <Link
                 href="/events"
-                className="text-zinc-600 hover:text-zinc-900 text-sm font-medium"
+                className="text-neutral-600 hover:text-primary-600 text-sm font-medium"
               >
                 Events
               </Link>
@@ -43,11 +43,11 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
             {/* User menu */}
             <div className="flex items-center gap-4">
-              <span className="text-sm text-zinc-600">
+              <span className="text-sm text-neutral-600">
                 {session.user.email}
               </span>
               <SignOutButton
-                className="px-3 py-1.5 text-sm text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded-md transition-colors"
+                className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"
               />
             </div>
           </div>
