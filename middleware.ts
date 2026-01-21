@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
-import { checkAuthRateLimit, getClientIp } from "@/lib/rate-limit";
 
 // Routes that require authentication
 const protectedRoutes = [
@@ -23,34 +22,13 @@ const publicRoutes = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files and api routes (except auth)
+  // Skip middleware for static files
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
     pathname.includes(".")
   ) {
     return NextResponse.next();
-  }
-
-  // Rate limit auth endpoints
-  if (pathname.startsWith("/api/auth") && request.method === "POST") {
-    const ip = getClientIp(request.headers);
-    const { success, remaining } = await checkAuthRateLimit(ip);
-
-    if (!success) {
-      return new NextResponse(
-        JSON.stringify({
-          error: "Too many requests. Please try again in 15 minutes.",
-        }),
-        {
-          status: 429,
-          headers: {
-            "Content-Type": "application/json",
-            "X-RateLimit-Remaining": remaining.toString(),
-          },
-        }
-      );
-    }
   }
 
   // Check if route is public
