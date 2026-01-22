@@ -1,6 +1,6 @@
 "use client";
 
-import { useAblyPresence } from "@/hooks/use-ably";
+import { usePresenceContext } from "@/contexts/presence-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Users } from "lucide-react";
 
@@ -11,17 +11,11 @@ interface MemberData {
 }
 
 interface OnlineMembersProps {
-  communityId: string;
-  currentUser: MemberData;
+  currentUserId: string;
 }
 
-export function OnlineMembers({ communityId, currentUser }: OnlineMembersProps) {
-  const presenceChannelName = `community:${communityId}:presence`;
-
-  const { members, isConnected, memberCount } = useAblyPresence(
-    presenceChannelName,
-    { id: currentUser.id, name: currentUser.name, image: currentUser.image }
-  );
+export function OnlineMembers({ currentUserId }: OnlineMembersProps) {
+  const { members, isConnected, memberCount } = usePresenceContext();
 
   // Get unique members (by clientId) with their data
   const uniqueMembers = members.reduce<MemberData[]>((acc, member) => {
@@ -75,7 +69,7 @@ export function OnlineMembers({ communityId, currentUser }: OnlineMembersProps) 
               </div>
               <span className="text-sm text-neutral-700 truncate">
                 {member.name || "Anonymous"}
-                {member.id === currentUser.id && (
+                {member.id === currentUserId && (
                   <span className="text-neutral-400 ml-1">(you)</span>
                 )}
               </span>

@@ -133,7 +133,7 @@ export function ChatLayout({
 
       {/* Online Members Sidebar - Hidden on mobile */}
       <div className="hidden xl:block w-52 border-l border-neutral-200 bg-neutral-50 shrink-0">
-        <OnlineMembers communityId={communityId} currentUser={currentUser} />
+        <OnlineMembers currentUserId={currentUser.id} />
       </div>
 
       {/* Mobile Members Toggle - Show on tablet */}
@@ -152,7 +152,7 @@ export function ChatLayout({
             onClick={() => setShowMobileMembers(false)}
           />
           <div className="xl:hidden fixed right-0 top-0 bottom-0 w-52 bg-neutral-50 border-l border-neutral-200 z-20">
-            <OnlineMembers communityId={communityId} currentUser={currentUser} />
+            <OnlineMembers currentUserId={currentUser.id} />
           </div>
         </>
       )}
