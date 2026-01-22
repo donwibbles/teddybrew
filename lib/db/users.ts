@@ -75,3 +75,35 @@ export async function getUserWithUpcomingEvents(userId: string) {
     },
   });
 }
+
+/**
+ * Get user dashboard stats
+ */
+export async function getUserDashboardStats(userId: string) {
+  const now = new Date();
+
+  const [
+    communitiesOwned,
+    communitiesJoined,
+    eventsOrganized,
+    upcomingRsvps,
+  ] = await Promise.all([
+    prisma.community.count({ where: { ownerId: userId } }),
+    prisma.member.count({ where: { userId } }),
+    prisma.event.count({ where: { organizerId: userId } }),
+    prisma.rSVP.count({
+      where: {
+        userId,
+        status: "GOING",
+        event: { startTime: { gte: now } },
+      },
+    }),
+  ]);
+
+  return {
+    communitiesOwned,
+    communitiesJoined,
+    eventsOrganized,
+    upcomingRsvps,
+  };
+}

@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -15,49 +15,17 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="min-h-screen bg-neutral-50 flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b border-neutral-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link href="/communities" className="font-semibold text-xl text-primary-600">
-              Hive Community
-            </Link>
-
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <Link
-                href="/communities"
-                className="text-neutral-600 hover:text-primary-600 text-sm font-medium"
-              >
-                Communities
-              </Link>
-              <Link
-                href="/events"
-                className="text-neutral-600 hover:text-primary-600 text-sm font-medium"
-              >
-                Events
-              </Link>
-            </nav>
-
-            {/* User menu */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-neutral-600">
-                {session.user.email}
-              </span>
-              <SignOutButton
-                className="px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"
-              />
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header userEmail={session.user.email} userName={session.user.name} />
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         {children}
       </main>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }
