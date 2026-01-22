@@ -75,6 +75,16 @@ export async function createCommunity(
         },
       });
 
+      // Create default #general chat channel
+      await tx.chatChannel.create({
+        data: {
+          name: "general",
+          description: "General discussion",
+          communityId: newCommunity.id,
+          isDefault: true,
+        },
+      });
+
       return newCommunity;
     });
 

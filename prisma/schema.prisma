@@ -20,13 +20,23 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  ownedCommunities Community[]  @relation("CommunityOwner")
-  memberships   Member[]
-  organizedEvents Event[]      @relation("EventOrganizer")
-  coOrganizedEvents Event[]    @relation("EventCoOrganizers")
-  rsvps         RSVP[]
+  accounts          Account[]
+  sessions          Session[]
+  ownedCommunities  Community[]   @relation("CommunityOwner")
+  memberships       Member[]
+  organizedEvents   Event[]       @relation("EventOrganizer")
+  coOrganizedEvents Event[]       @relation("EventCoOrganizers")
+  rsvps             RSVP[]
+
+  // Chat & Forum relations
+  messages          Message[]     @relation("MessageAuthor")
+  deletedMessages   Message[]     @relation("MessageDeletedBy")
+  posts             Post[]        @relation("PostAuthor")
+  deletedPosts      Post[]        @relation("PostDeletedBy")
+  comments          Comment[]     @relation("CommentAuthor")
+  deletedComments   Comment[]     @relation("CommentDeletedBy")
+  postVotes         PostVote[]
+  commentVotes      CommentVote[]
 
   @@index([email])
 }
@@ -85,9 +95,11 @@ model Community {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  owner   User     @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members Member[]
-  events  Event[]
+  owner        User          @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members      Member[]
+  events       Event[]
+  chatChannels ChatChannel[]
+  posts        Post[]
 
   @@index([slug])
   @@index([ownerId])
@@ -172,4 +184,124 @@ model RSVP {
 enum RSVPStatus {
   GOING
   NOT_GOING
+}
+
+// ============ CHAT SYSTEM ============
+
+// Chat Channel - Multiple channels per community (like Discord)
+model ChatChannel {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  communityId String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([communityId, name])
+  @@index([communityId])
+}
+
+// Chat Message
+model Message {
+  id          String    @id @default(cuid())
+  content     String    @db.Text
+  channelId   String
+  authorId    String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  deletedById String?
+
+  channel   ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  author    User        @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  deletedBy User?       @relation("MessageDeletedBy", fields: [deletedById], references: [id])
+
+  @@index([channelId, createdAt(sort: Desc)])
+  @@index([authorId])
+}
+
+// ============ FORUM SYSTEM ============
+
+model Post {
+  id           String    @id @default(cuid())
+  title        String    @db.VarChar(300)
+  content      String    @db.Text
+  communityId  String
+  authorId     String
+  isPinned     Boolean   @default(false)
+  voteScore    Int       @default(0)
+  commentCount Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  deletedById  String?
+
+  community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  author      User       @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  deletedBy   User?      @relation("PostDeletedBy", fields: [deletedById], references: [id])
+  comments    Comment[]
+  votes       PostVote[]
+
+  @@index([communityId, createdAt(sort: Desc)])
+  @@index([communityId, voteScore(sort: Desc)])
+  @@index([communityId, isPinned, createdAt(sort: Desc)])
+  @@index([authorId])
+}
+
+model Comment {
+  id          String    @id @default(cuid())
+  content     String    @db.Text
+  postId      String
+  authorId    String
+  parentId    String?
+  depth       Int       @default(0)
+  voteScore   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  deletedById String?
+
+  post      Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User          @relation("CommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  deletedBy User?         @relation("CommentDeletedBy", fields: [deletedById], references: [id])
+  parent    Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]     @relation("CommentReplies")
+  votes     CommentVote[]
+
+  @@index([postId, createdAt])
+  @@index([postId, voteScore(sort: Desc)])
+  @@index([parentId])
+  @@index([authorId])
+}
+
+model PostVote {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  value     Int
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+}
+
+model CommentVote {
+  id        String   @id @default(cuid())
+  commentId String
+  userId    String
+  value     Int
+  createdAt DateTime @default(now())
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId])
 }

@@ -1,0 +1,352 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { verifySession } from "@/lib/dal";
+import {
+  createCommentSchema,
+  updateCommentSchema,
+  deleteCommentSchema,
+  voteCommentSchema,
+  getCommentsSchema,
+  MAX_COMMENT_DEPTH,
+} from "@/lib/validations/comment";
+import { publishToChannel, getForumChannelName } from "@/lib/ably";
+import type { ActionResult } from "./community";
+
+/**
+ * Check if user is a member of the community
+ */
+async function isMember(communityId: string, userId: string): Promise<boolean> {
+  const membership = await prisma.member.findUnique({
+    where: {
+      userId_communityId: { userId, communityId },
+    },
+  });
+  return !!membership;
+}
+
+/**
+ * Check if user is the owner of the community
+ */
+async function isOwner(communityId: string, userId: string): Promise<boolean> {
+  const membership = await prisma.member.findUnique({
+    where: {
+      userId_communityId: { userId, communityId },
+    },
+    select: { role: true },
+  });
+  return membership?.role === "OWNER";
+}
+
+/**
+ * Create a comment
+ */
+export async function createComment(
+  input: unknown
+): Promise<ActionResult<{ commentId: string }>> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = createCommentSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { postId, content, parentId } = parsed.data;
+
+    // Get post with community
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: { community: { select: { id: true, slug: true } } },
+    });
+
+    if (!post || post.deletedAt) {
+      return { success: false, error: "Post not found" };
+    }
+
+    // Check membership
+    if (!(await isMember(post.communityId, userId))) {
+      return { success: false, error: "You must be a member to comment" };
+    }
+
+    // Calculate depth if replying to another comment
+    let depth = 0;
+    if (parentId) {
+      const parent = await prisma.comment.findUnique({
+        where: { id: parentId },
+        select: { depth: true, deletedAt: true },
+      });
+
+      if (!parent || parent.deletedAt) {
+        return { success: false, error: "Parent comment not found" };
+      }
+
+      depth = parent.depth + 1;
+
+      if (depth > MAX_COMMENT_DEPTH) {
+        return {
+          success: false,
+          error: "Maximum reply depth reached. Please reply to a higher comment.",
+        };
+      }
+    }
+
+    // Create comment and update count
+    const comment = await prisma.$transaction(async (tx) => {
+      const newComment = await tx.comment.create({
+        data: {
+          content,
+          postId,
+          authorId: userId,
+          parentId,
+          depth,
+        },
+      });
+
+      // Increment comment count on post
+      await tx.post.update({
+        where: { id: postId },
+        data: { commentCount: { increment: 1 } },
+      });
+
+      return newComment;
+    });
+
+    // Notify via Ably
+    try {
+      await publishToChannel(getForumChannelName(post.communityId), "new-comment", {
+        postId,
+        commentId: comment.id,
+      });
+    } catch (err) {
+      console.error("Failed to publish comment notification:", err);
+    }
+
+    revalidatePath(`/communities/${post.community.slug}/forum/${postId}`);
+
+    return { success: true, data: { commentId: comment.id } };
+  } catch (error) {
+    console.error("Failed to create comment:", error);
+    return { success: false, error: "Failed to create comment" };
+  }
+}
+
+/**
+ * Update a comment (author only)
+ */
+export async function updateComment(input: unknown): Promise<ActionResult> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = updateCommentSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { commentId, content } = parsed.data;
+
+    // Get comment
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: {
+        post: {
+          include: { community: { select: { slug: true } } },
+        },
+      },
+    });
+
+    if (!comment || comment.deletedAt) {
+      return { success: false, error: "Comment not found" };
+    }
+
+    // Only author can edit
+    if (comment.authorId !== userId) {
+      return { success: false, error: "You can only edit your own comments" };
+    }
+
+    await prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        content,
+        updatedAt: new Date(),
+      },
+    });
+
+    revalidatePath(
+      `/communities/${comment.post.community.slug}/forum/${comment.postId}`
+    );
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Failed to update comment:", error);
+    return { success: false, error: "Failed to update comment" };
+  }
+}
+
+/**
+ * Delete a comment (author or community owner)
+ */
+export async function deleteComment(input: unknown): Promise<ActionResult> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = deleteCommentSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { commentId } = parsed.data;
+
+    // Get comment
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: {
+        post: {
+          include: { community: { select: { id: true, slug: true } } },
+        },
+      },
+    });
+
+    if (!comment || comment.deletedAt) {
+      return { success: false, error: "Comment not found" };
+    }
+
+    // Check permission: author or community owner
+    const isAuthor = comment.authorId === userId;
+    const isCommunityOwner = await isOwner(comment.post.communityId, userId);
+
+    if (!isAuthor && !isCommunityOwner) {
+      return { success: false, error: "You can only delete your own comments" };
+    }
+
+    // Soft delete and decrement count
+    await prisma.$transaction(async (tx) => {
+      await tx.comment.update({
+        where: { id: commentId },
+        data: {
+          deletedAt: new Date(),
+          deletedById: userId,
+        },
+      });
+
+      await tx.post.update({
+        where: { id: comment.postId },
+        data: { commentCount: { decrement: 1 } },
+      });
+    });
+
+    revalidatePath(
+      `/communities/${comment.post.community.slug}/forum/${comment.postId}`
+    );
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Failed to delete comment:", error);
+    return { success: false, error: "Failed to delete comment" };
+  }
+}
+
+/**
+ * Vote on a comment
+ */
+export async function voteComment(
+  input: unknown
+): Promise<ActionResult<{ newScore: number }>> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = voteCommentSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { commentId, value } = parsed.data;
+
+    // Get comment
+    const comment = await prisma.comment.findUnique({
+      where: { id: commentId },
+      include: {
+        post: {
+          include: { community: { select: { id: true } } },
+        },
+      },
+    });
+
+    if (!comment || comment.deletedAt) {
+      return { success: false, error: "Comment not found" };
+    }
+
+    // Check membership
+    if (!(await isMember(comment.post.communityId, userId))) {
+      return { success: false, error: "You must be a member to vote" };
+    }
+
+    // Get existing vote
+    const existingVote = await prisma.commentVote.findUnique({
+      where: { commentId_userId: { commentId, userId } },
+    });
+
+    const oldValue = existingVote?.value ?? 0;
+    const scoreDelta = value - oldValue;
+
+    // Update vote and score in transaction
+    await prisma.$transaction(async (tx) => {
+      if (value === 0 && existingVote) {
+        // Remove vote
+        await tx.commentVote.delete({
+          where: { commentId_userId: { commentId, userId } },
+        });
+      } else if (value !== 0) {
+        // Upsert vote
+        await tx.commentVote.upsert({
+          where: { commentId_userId: { commentId, userId } },
+          create: { commentId, userId, value },
+          update: { value },
+        });
+      }
+
+      // Update cached score
+      await tx.comment.update({
+        where: { id: commentId },
+        data: { voteScore: { increment: scoreDelta } },
+      });
+    });
+
+    const newScore = comment.voteScore + scoreDelta;
+
+    return { success: true, data: { newScore } };
+  } catch (error) {
+    console.error("Failed to vote on comment:", error);
+    return { success: false, error: "Failed to vote" };
+  }
+}
+
+/**
+ * Get comments for a post
+ */
+export async function getComments(input: unknown) {
+  try {
+    const parsed = getCommentsSchema.safeParse(input);
+    if (!parsed.success) {
+      return [];
+    }
+
+    const { postId, sort } = parsed.data;
+
+    // Try to get user ID for vote status
+    let userId: string | undefined;
+    try {
+      const session = await verifySession();
+      userId = session.userId;
+    } catch {
+      // Not logged in, that's fine
+    }
+
+    // Import here to avoid circular dependencies
+    const { getPostComments } = await import("@/lib/db/posts");
+    return await getPostComments(postId, sort, userId);
+  } catch {
+    return [];
+  }
+}

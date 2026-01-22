@@ -1,0 +1,76 @@
+import { notFound, redirect } from "next/navigation";
+import { getCommunityWithDetails } from "@/lib/db/communities";
+import { getMembershipStatus } from "@/lib/actions/membership";
+import { getChannels } from "@/lib/db/channels";
+import { getSession } from "@/lib/dal";
+import { ChatLayout } from "@/components/chat/chat-layout";
+
+interface ChatPageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: ChatPageProps) {
+  const { slug } = await params;
+  const community = await getCommunityWithDetails(slug);
+
+  if (!community) {
+    return { title: "Community Not Found" };
+  }
+
+  return {
+    title: `Chat - ${community.name} - Hive Community`,
+    description: `Chat with members of ${community.name}`,
+  };
+}
+
+export default async function ChatPage({ params }: ChatPageProps) {
+  const { slug } = await params;
+  const community = await getCommunityWithDetails(slug);
+
+  if (!community) {
+    notFound();
+  }
+
+  const session = await getSession();
+  if (!session?.user) {
+    redirect(`/sign-in?callbackUrl=/communities/${slug}/chat`);
+  }
+
+  const membership = await getMembershipStatus(community.id);
+
+  // Only members can access chat
+  if (!membership.isMember) {
+    redirect(`/communities/${slug}`);
+  }
+
+  // Get channels for this community
+  const channels = await getChannels(community.id);
+
+  // Find default channel
+  const defaultChannel = channels.find((c) => c.isDefault) || channels[0];
+
+  const currentUser = {
+    id: session.user.id!,
+    name: session.user.name ?? null,
+    image: session.user.image ?? null,
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-neutral-900">
+          {community.name} Chat
+        </h1>
+      </div>
+
+      <ChatLayout
+        communityId={community.id}
+        communitySlug={community.slug}
+        channels={channels}
+        currentUser={currentUser}
+        isOwner={membership.isOwner}
+        defaultChannelId={defaultChannel?.id}
+      />
+    </div>
+  );
+}
