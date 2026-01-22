@@ -61,11 +61,13 @@ function buildCSP(nonce: string): string {
     "font-src": ["'self'", "data:"],
     "connect-src": [
       "'self'",
-      // Ably WebSocket and REST connections
+      // Ably WebSocket and REST connections (multiple domains used)
       "https://*.ably.io",
       "wss://*.ably.io",
-      "https://rest.ably.io",
-      "wss://realtime.ably.io",
+      "https://*.ably.net",
+      "wss://*.ably.net",
+      "https://*.ably-realtime.com",
+      "wss://*.ably-realtime.com",
       // Sentry error reporting
       "https://*.sentry.io",
       "https://*.ingest.sentry.io",
