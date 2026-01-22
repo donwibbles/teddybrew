@@ -9,11 +9,8 @@ import {
   getMessagesSchema,
 } from "@/lib/validations/chat";
 import { publishToChannel, getChatChannelName } from "@/lib/ably";
+import { checkChatRateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "./community";
-
-// Rate limiting: track last message time per user
-const lastMessageTime = new Map<string, number>();
-const MESSAGE_RATE_LIMIT_MS = 1000; // 1 second
 
 /**
  * Check if user is a member of the community
@@ -56,9 +53,9 @@ export async function sendChatMessage(
 
     const { channelId, content } = parsed.data;
 
-    // Rate limiting
-    const lastTime = lastMessageTime.get(userId);
-    if (lastTime && Date.now() - lastTime < MESSAGE_RATE_LIMIT_MS) {
+    // Rate limiting (Redis-based, works across instances)
+    const rateLimit = await checkChatRateLimit(userId);
+    if (!rateLimit.success) {
       return { success: false, error: "Please wait before sending another message" };
     }
 
@@ -95,9 +92,6 @@ export async function sendChatMessage(
         },
       },
     });
-
-    // Update rate limit tracker
-    lastMessageTime.set(userId, Date.now());
 
     // Publish to Ably channel
     try {

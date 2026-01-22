@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import Ably from "ably";
+import * as Sentry from "@sentry/nextjs";
 
 // Global Ably client singleton for client-side
 let ablyClient: Ably.Realtime | null = null;
@@ -59,6 +60,10 @@ async function getAblyClient(): Promise<Ably.Realtime> {
       ablyClient.connection.on("failed", (err) => {
         connectionState = "failed";
         connectionPromise = null;
+        // Capture Ably connection failure in Sentry
+        Sentry.captureException(err, {
+          tags: { service: "ably", type: "connection_failure" },
+        });
         reject(err);
       });
 
@@ -195,6 +200,11 @@ export function useAblyChannel(
       } catch (err) {
         if (!mounted) return;
         console.error("Ably connection error:", err);
+        // Capture channel subscription errors in Sentry
+        Sentry.captureException(err, {
+          tags: { service: "ably", type: "channel_subscription" },
+          extra: { channelName },
+        });
         setError(err as Error);
         setIsConnected(false);
       }
@@ -318,6 +328,11 @@ export function useAblyPresence(channelName: string | null, data?: unknown) {
       } catch (err) {
         if (!mounted) return;
         console.error("Ably presence error:", err);
+        // Capture presence errors in Sentry
+        Sentry.captureException(err, {
+          tags: { service: "ably", type: "presence" },
+          extra: { channelName },
+        });
         setError(err as Error);
         setIsConnected(false);
       }

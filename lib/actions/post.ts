@@ -13,6 +13,7 @@ import {
   getPostsSchema,
 } from "@/lib/validations/post";
 import { publishToChannel, getForumChannelName } from "@/lib/ably";
+import { checkPostRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "./community";
 
 /**
@@ -55,6 +56,12 @@ export async function createPost(
     }
 
     const { communityId, title, content } = parsed.data;
+
+    // Rate limiting: 1 post per minute
+    const rateLimit = await checkPostRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "Please wait before creating another post" };
+    }
 
     // Check membership
     if (!(await isMember(communityId, userId))) {
@@ -213,6 +220,12 @@ export async function votePost(
     }
 
     const { postId, value } = parsed.data;
+
+    // Rate limiting: 10 votes per minute
+    const rateLimit = await checkVoteRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're voting too fast. Please slow down." };
+    }
 
     // Get post
     const post = await prisma.post.findUnique({

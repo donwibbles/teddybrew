@@ -17,10 +17,83 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  return addSecurityHeaders(NextResponse.next());
+  // Generate a nonce for CSP
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+
+  // Build CSP header
+  const cspHeader = buildCSP(nonce);
+
+  const response = NextResponse.next();
+
+  // Pass nonce to components via header
+  response.headers.set("x-nonce", nonce);
+
+  // Add security headers including CSP
+  return addSecurityHeaders(response, cspHeader);
 }
 
-function addSecurityHeaders(response: NextResponse): NextResponse {
+/**
+ * Build Content Security Policy header value
+ */
+function buildCSP(nonce: string): string {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  // Base CSP directives
+  const directives: Record<string, string[]> = {
+    "default-src": ["'self'"],
+    "script-src": [
+      "'self'",
+      `'nonce-${nonce}'`,
+      "'strict-dynamic'",
+      // Allow eval in development for hot reload
+      ...(isProduction ? [] : ["'unsafe-eval'"]),
+    ],
+    "style-src": [
+      "'self'",
+      "'unsafe-inline'", // Required for Tailwind and inline styles
+    ],
+    "img-src": [
+      "'self'",
+      "data:",
+      "blob:",
+      "https:", // Allow images from any HTTPS source
+    ],
+    "font-src": ["'self'", "data:"],
+    "connect-src": [
+      "'self'",
+      // Ably WebSocket and REST connections
+      "https://*.ably.io",
+      "wss://*.ably.io",
+      "https://rest.ably.io",
+      "wss://realtime.ably.io",
+      // Sentry error reporting
+      "https://*.sentry.io",
+      "https://*.ingest.sentry.io",
+      // Development: allow localhost
+      ...(isProduction ? [] : ["ws://localhost:*", "http://localhost:*"]),
+    ],
+    "frame-ancestors": ["'none'"],
+    "form-action": ["'self'"],
+    "base-uri": ["'self'"],
+    "object-src": ["'none'"],
+    "upgrade-insecure-requests": [],
+  };
+
+  // Build the CSP string
+  return Object.entries(directives)
+    .map(([key, values]) => {
+      if (values.length === 0) {
+        return key;
+      }
+      return `${key} ${values.join(" ")}`;
+    })
+    .join("; ");
+}
+
+function addSecurityHeaders(
+  response: NextResponse,
+  cspHeader: string
+): NextResponse {
   // Security headers
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("X-Content-Type-Options", "nosniff");
@@ -30,6 +103,9 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()"
   );
+
+  // Content Security Policy
+  response.headers.set("Content-Security-Policy", cspHeader);
 
   // HSTS in production
   if (process.env.NODE_ENV === "production") {

@@ -12,6 +12,7 @@ import {
   MAX_COMMENT_DEPTH,
 } from "@/lib/validations/comment";
 import { publishToChannel, getForumChannelName } from "@/lib/ably";
+import { checkCommentRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "./community";
 
 /**
@@ -54,6 +55,12 @@ export async function createComment(
     }
 
     const { postId, content, parentId } = parsed.data;
+
+    // Rate limiting: 5 comments per minute
+    const rateLimit = await checkCommentRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "Please wait before posting another comment" };
+    }
 
     // Get post with community
     const post = await prisma.post.findUnique({
@@ -262,6 +269,12 @@ export async function voteComment(
     }
 
     const { commentId, value } = parsed.data;
+
+    // Rate limiting: 10 votes per minute
+    const rateLimit = await checkVoteRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're voting too fast. Please slow down." };
+    }
 
     // Get comment
     const comment = await prisma.comment.findUnique({
