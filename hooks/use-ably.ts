@@ -6,15 +6,20 @@ import Ably from "ably";
 // Global Ably client singleton for client-side
 let ablyClient: Ably.Realtime | null = null;
 let connectionPromise: Promise<Ably.Realtime> | null = null;
+let connectionState: "disconnected" | "connecting" | "connected" | "failed" = "disconnected";
 
 async function getAblyClient(): Promise<Ably.Realtime> {
-  if (ablyClient?.connection.state === "connected") {
+  // Return existing connected client
+  if (ablyClient && connectionState === "connected") {
     return ablyClient;
   }
 
-  if (connectionPromise) {
+  // Return existing connection promise if connecting
+  if (connectionPromise && connectionState === "connecting") {
     return connectionPromise;
   }
+
+  connectionState = "connecting";
 
   connectionPromise = new Promise(async (resolve, reject) => {
     try {
@@ -23,6 +28,12 @@ async function getAblyClient(): Promise<Ably.Realtime> {
         throw new Error("Failed to get Ably token");
       }
       const tokenRequest = await response.json();
+
+      // Close existing client if any
+      if (ablyClient) {
+        ablyClient.close();
+        ablyClient = null;
+      }
 
       ablyClient = new Ably.Realtime({
         authCallback: async (_, callback) => {
@@ -35,17 +46,31 @@ async function getAblyClient(): Promise<Ably.Realtime> {
             callback(err instanceof Error ? err.message : String(err), null);
           }
         },
+        disconnectedRetryTimeout: 5000,
+        suspendedRetryTimeout: 10000,
         ...tokenRequest,
       });
 
       ablyClient.connection.on("connected", () => {
+        connectionState = "connected";
         resolve(ablyClient!);
       });
 
       ablyClient.connection.on("failed", (err) => {
+        connectionState = "failed";
+        connectionPromise = null;
         reject(err);
       });
+
+      ablyClient.connection.on("disconnected", () => {
+        connectionState = "disconnected";
+      });
+
+      ablyClient.connection.on("suspended", () => {
+        connectionState = "disconnected";
+      });
     } catch (error) {
+      connectionState = "failed";
       connectionPromise = null;
       reject(error);
     }
@@ -67,8 +92,14 @@ export interface PresenceMember {
   data?: unknown;
 }
 
+// Message queue for throttling
+interface MessageQueue {
+  messages: AblyMessage[];
+  timeout: NodeJS.Timeout | null;
+}
+
 /**
- * Hook for subscribing to an Ably channel
+ * Hook for subscribing to an Ably channel with message throttling
  */
 export function useAblyChannel(
   channelName: string | null,
@@ -80,11 +111,59 @@ export function useAblyChannel(
   const [error, setError] = useState<Error | null>(null);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
   const onMessageRef = useRef(onMessage);
+  const messageQueueRef = useRef<MessageQueue>({ messages: [], timeout: null });
+  const processedIdsRef = useRef<Set<string>>(new Set());
 
   // Keep callback ref updated
   useEffect(() => {
     onMessageRef.current = onMessage;
   }, [onMessage]);
+
+  // Process queued messages in batches to avoid rate limits
+  const processMessageQueue = useCallback(() => {
+    const queue = messageQueueRef.current;
+    if (queue.messages.length === 0) return;
+
+    const messagesToProcess = queue.messages;
+    queue.messages = [];
+    queue.timeout = null;
+
+    // Deduplicate messages
+    const uniqueMessages = messagesToProcess.filter((msg) => {
+      if (processedIdsRef.current.has(msg.id)) return false;
+      processedIdsRef.current.add(msg.id);
+      // Keep set from growing too large
+      if (processedIdsRef.current.size > 1000) {
+        const ids = Array.from(processedIdsRef.current);
+        processedIdsRef.current = new Set(ids.slice(-500));
+      }
+      return true;
+    });
+
+    if (uniqueMessages.length > 0) {
+      setMessages((prev) => [...prev, ...uniqueMessages]);
+      uniqueMessages.forEach((msg) => onMessageRef.current?.(msg));
+    }
+  }, []);
+
+  // Queue a message for processing
+  const queueMessage = useCallback(
+    (message: AblyMessage) => {
+      const queue = messageQueueRef.current;
+      queue.messages.push(message);
+
+      // Process immediately if queue is small, otherwise batch
+      if (queue.messages.length === 1) {
+        // First message - set a short timeout to batch with any rapid followers
+        queue.timeout = setTimeout(processMessageQueue, 50);
+      } else if (queue.messages.length >= 10) {
+        // Queue is getting large - process now
+        if (queue.timeout) clearTimeout(queue.timeout);
+        processMessageQueue();
+      }
+    },
+    [processMessageQueue]
+  );
 
   useEffect(() => {
     if (!channelName) return;
@@ -108,14 +187,14 @@ export function useAblyChannel(
             timestamp: message.timestamp || Date.now(),
             clientId: message.clientId,
           };
-          setMessages((prev) => [...prev, ablyMessage]);
-          onMessageRef.current?.(ablyMessage);
+          queueMessage(ablyMessage);
         });
 
         setIsConnected(true);
         setError(null);
       } catch (err) {
         if (!mounted) return;
+        console.error("Ably connection error:", err);
         setError(err as Error);
         setIsConnected(false);
       }
@@ -125,25 +204,39 @@ export function useAblyChannel(
 
     return () => {
       mounted = false;
+      if (messageQueueRef.current.timeout) {
+        clearTimeout(messageQueueRef.current.timeout);
+      }
       if (channelRef.current) {
         channelRef.current.unsubscribe();
         channelRef.current = null;
       }
     };
-  }, [channelName, eventName]);
+  }, [channelName, eventName, queueMessage]);
 
-  const publish = useCallback(
-    async (event: string, data: unknown) => {
-      if (!channelRef.current) {
-        throw new Error("Channel not connected");
-      }
+  const publish = useCallback(async (event: string, data: unknown) => {
+    if (!channelRef.current) {
+      throw new Error("Channel not connected");
+    }
+    try {
       await channelRef.current.publish(event, data);
-    },
-    []
-  );
+    } catch (err) {
+      // Handle rate limit errors gracefully
+      if (err instanceof Error && err.message.includes("Rate limit")) {
+        console.warn("Ably rate limit hit, message queued for retry");
+        // Retry after a delay
+        setTimeout(() => {
+          channelRef.current?.publish(event, data).catch(console.error);
+        }, 1000);
+      } else {
+        throw err;
+      }
+    }
+  }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+    processedIdsRef.current.clear();
   }, []);
 
   return {
@@ -158,14 +251,12 @@ export function useAblyChannel(
 /**
  * Hook for Ably presence
  */
-export function useAblyPresence(
-  channelName: string | null,
-  data?: unknown
-) {
+export function useAblyPresence(channelName: string | null, data?: unknown) {
   const [members, setMembers] = useState<PresenceMember[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
+  const hasEnteredRef = useRef(false);
 
   useEffect(() => {
     if (!channelName) return;
@@ -208,7 +299,11 @@ export function useAblyPresence(
         });
 
         // Enter presence and get current members
-        await channel.presence.enter(data);
+        if (!hasEnteredRef.current) {
+          await channel.presence.enter(data);
+          hasEnteredRef.current = true;
+        }
+
         const currentMembers = await channel.presence.get();
         if (mounted) {
           setMembers(
@@ -222,6 +317,7 @@ export function useAblyPresence(
         }
       } catch (err) {
         if (!mounted) return;
+        console.error("Ably presence error:", err);
         setError(err as Error);
         setIsConnected(false);
       }
@@ -231,9 +327,10 @@ export function useAblyPresence(
 
     return () => {
       mounted = false;
-      if (channelRef.current) {
-        channelRef.current.presence.leave();
+      if (channelRef.current && hasEnteredRef.current) {
+        channelRef.current.presence.leave().catch(console.error);
         channelRef.current.presence.unsubscribe();
+        hasEnteredRef.current = false;
         channelRef.current = null;
       }
     };
@@ -241,7 +338,11 @@ export function useAblyPresence(
 
   const updatePresence = useCallback(async (newData: unknown) => {
     if (!channelRef.current) return;
-    await channelRef.current.presence.update(newData);
+    try {
+      await channelRef.current.presence.update(newData);
+    } catch (err) {
+      console.error("Failed to update presence:", err);
+    }
   }, []);
 
   return {
