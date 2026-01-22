@@ -229,3 +229,121 @@ export async function isEventFull(eventId: string): Promise<boolean> {
 
   return event._count.rsvps >= event.capacity;
 }
+
+/**
+ * Get events organized by a user (including co-organized)
+ */
+export async function getUserOrganizedEvents(userId: string) {
+  const now = new Date();
+  return await prisma.event.findMany({
+    where: {
+      OR: [
+        { organizerId: userId },
+        { coOrganizers: { some: { id: userId } } },
+      ],
+      startTime: { gte: now },
+    },
+    include: {
+      community: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+        },
+      },
+      organizer: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      _count: {
+        select: {
+          rsvps: true,
+        },
+      },
+    },
+    orderBy: { startTime: "asc" },
+  });
+}
+
+/**
+ * Get events user is attending (has RSVP'd GOING)
+ */
+export async function getUserAttendingEvents(userId: string) {
+  const now = new Date();
+  return await prisma.event.findMany({
+    where: {
+      startTime: { gte: now },
+      rsvps: {
+        some: {
+          userId,
+          status: "GOING",
+        },
+      },
+    },
+    include: {
+      community: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+        },
+      },
+      organizer: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      _count: {
+        select: {
+          rsvps: true,
+        },
+      },
+    },
+    orderBy: { startTime: "asc" },
+  });
+}
+
+/**
+ * Get user's past events (organized or attended)
+ */
+export async function getUserPastEvents(userId: string) {
+  const now = new Date();
+  return await prisma.event.findMany({
+    where: {
+      startTime: { lt: now },
+      OR: [
+        { organizerId: userId },
+        { coOrganizers: { some: { id: userId } } },
+        { rsvps: { some: { userId, status: "GOING" } } },
+      ],
+    },
+    include: {
+      community: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+        },
+      },
+      organizer: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      _count: {
+        select: {
+          rsvps: true,
+        },
+      },
+    },
+    orderBy: { startTime: "desc" },
+    take: 20,
+  });
+}

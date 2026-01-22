@@ -287,11 +287,12 @@ export async function getMembershipStatus(communityId: string) {
     });
 
     return {
+      userId,
       isMember: !!membership,
       isOwner: membership?.role === MemberRole.OWNER,
       role: membership?.role ?? null,
     };
   } catch {
-    return { isMember: false, isOwner: false, role: null };
+    return { userId: null, isMember: false, isOwner: false, role: null };
   }
 }
