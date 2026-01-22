@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MemberRole } from "@prisma/client";
+import { Users } from "lucide-react";
 import { removeMember } from "@/lib/actions/membership";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Member {
   id: string;
@@ -131,9 +133,11 @@ export function MemberManagementList({
       </ul>
 
       {members.length === 0 && (
-        <div className="p-8 text-center text-neutral-500">
-          No members in this community yet.
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No members yet"
+          description="No members in this community yet."
+        />
       )}
     </div>
   );

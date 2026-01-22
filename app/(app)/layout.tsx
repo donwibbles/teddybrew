@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { getUnreadNotificationCount } from "@/lib/db/notifications";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const session = await auth();
@@ -14,10 +15,20 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     redirect("/sign-in");
   }
 
+  // Fetch unread notification count
+  const unreadCount = session.user.id
+    ? await getUnreadNotificationCount(session.user.id)
+    : 0;
+
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
       {/* Header */}
-      <Header userEmail={session.user.email} userName={session.user.name} />
+      <Header
+        userEmail={session.user.email}
+        userName={session.user.name}
+        userId={session.user.id}
+        unreadNotificationCount={unreadCount}
+      />
 
       {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">

@@ -10,31 +10,7 @@ import {
 } from "@/lib/validations/chat";
 import type { ActionResult } from "./community";
 import { checkChannelRateLimit } from "@/lib/rate-limit";
-
-/**
- * Check if user is the owner of the community
- */
-async function isOwner(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-    select: { role: true },
-  });
-  return membership?.role === "OWNER";
-}
-
-/**
- * Check if user is a member of the community
- */
-async function isMember(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-  });
-  return !!membership;
-}
+import { isMember, isOwner } from "@/lib/db/members";
 
 /**
  * Create a new channel - Owner only
@@ -62,7 +38,7 @@ export async function createChannel(
     const { communityId, name, description } = parsed.data;
 
     // Check if user is owner
-    if (!(await isOwner(communityId, userId))) {
+    if (!(await isOwner(userId, communityId))) {
       return {
         success: false,
         error: "Only community owners can create channels",
@@ -145,7 +121,7 @@ export async function updateChannel(input: unknown): Promise<ActionResult> {
     }
 
     // Check if user is owner
-    if (!(await isOwner(channel.communityId, userId))) {
+    if (!(await isOwner(userId, channel.communityId))) {
       return {
         success: false,
         error: "Only community owners can edit channels",
@@ -221,7 +197,7 @@ export async function deleteChannel(input: unknown): Promise<ActionResult> {
     }
 
     // Check if user is owner
-    if (!(await isOwner(channel.communityId, userId))) {
+    if (!(await isOwner(userId, channel.communityId))) {
       return {
         success: false,
         error: "Only community owners can delete channels",
@@ -257,7 +233,7 @@ export async function getChannels(communityId: string) {
     const { userId } = await verifySession();
 
     // Check membership
-    if (!(await isMember(communityId, userId))) {
+    if (!(await isMember(userId, communityId))) {
       return [];
     }
 

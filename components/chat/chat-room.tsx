@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Hash, Loader2 } from "lucide-react";
 import { ChatMessage, ChatMessageSkeleton } from "./chat-message";
 import { ChatInput } from "./chat-input";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useAblyChannel, type AblyMessage } from "@/hooks/use-ably";
 import { sendChatMessage, deleteChatMessage, getChatMessages } from "@/lib/actions/chat";
 import { toast } from "sonner";
@@ -201,14 +202,12 @@ export function ChatRoom({
         {isLoading ? (
           <ChatMessageSkeleton count={8} />
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <Hash className="h-12 w-12 text-neutral-300 mb-4" />
-            <h3 className="font-medium text-neutral-900 mb-1">
-              Welcome to #{channelName}
-            </h3>
-            <p className="text-sm text-neutral-500">
-              This is the beginning of the conversation.
-            </p>
+          <div className="flex items-center justify-center h-full">
+            <EmptyState
+              icon={Hash}
+              title={`Welcome to #${channelName}`}
+              description="This is the beginning of the conversation."
+            />
           </div>
         ) : (
           <>

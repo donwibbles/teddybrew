@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useOptimistic, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { joinCommunity, leaveCommunity } from "@/lib/actions/membership";
@@ -18,54 +18,66 @@ export function JoinLeaveButton({
   isMember,
 }: JoinLeaveButtonProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  // Optimistic state for immediate UI feedback
+  const [optimisticMember, setOptimisticMember] = useOptimistic(
+    isMember,
+    (_, newValue: boolean) => newValue
+  );
+
   const handleJoin = async () => {
-    setIsLoading(true);
     setError(null);
 
-    const result = await joinCommunity({ communityId });
+    startTransition(async () => {
+      // Optimistically update to "member" state
+      setOptimisticMember(true);
 
-    if (result.success) {
-      toast.success("Joined community!");
-      router.refresh();
-    } else {
-      setError(result.error);
-      toast.error(result.error);
-    }
+      const result = await joinCommunity({ communityId });
 
-    setIsLoading(false);
+      if (result.success) {
+        toast.success("Joined community!");
+        router.refresh();
+      } else {
+        // Revert optimistic update on error
+        setError(result.error);
+        toast.error(result.error);
+      }
+    });
   };
 
   const handleLeave = async () => {
-    setIsLoading(true);
     setError(null);
 
-    const result = await leaveCommunity({ communityId });
+    startTransition(async () => {
+      // Optimistically update to "not member" state
+      setOptimisticMember(false);
 
-    if (result.success) {
-      toast.success("Left community");
-      router.refresh();
-    } else {
-      setError(result.error);
-      toast.error(result.error);
-    }
+      const result = await leaveCommunity({ communityId });
 
-    setIsLoading(false);
+      if (result.success) {
+        toast.success("Left community");
+        router.refresh();
+      } else {
+        // Revert optimistic update on error
+        setError(result.error);
+        toast.error(result.error);
+      }
+    });
   };
 
-  if (isMember) {
+  if (optimisticMember) {
     return (
       <div className="space-y-2">
         <button
           onClick={handleLeave}
-          disabled={isLoading}
+          disabled={isPending}
           className="w-full px-4 py-2 border border-neutral-300 text-neutral-700 font-medium rounded-lg
                      hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoading ? "Leaving..." : "Leave Community"}
+          {isPending ? "Leaving..." : "Leave Community"}
         </button>
         {error && <p className="text-sm text-error-600">{error}</p>}
       </div>
@@ -106,12 +118,12 @@ export function JoinLeaveButton({
     <div className="space-y-2">
       <button
         onClick={handleJoin}
-        disabled={isLoading}
+        disabled={isPending}
         className="w-full px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
                    hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {isLoading ? "Joining..." : "Join Community"}
+        {isPending ? "Joining..." : "Join Community"}
       </button>
       {error && <p className="text-sm text-error-600">{error}</p>}
     </div>

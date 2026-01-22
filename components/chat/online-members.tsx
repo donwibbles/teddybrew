@@ -46,7 +46,7 @@ export function OnlineMembers({ currentUserId }: OnlineMembersProps) {
             Connecting...
           </div>
         ) : uniqueMembers.length === 0 ? (
-          <div className="px-3 py-2 text-sm text-neutral-400">
+          <div className="px-3 py-4 text-center text-sm text-neutral-400">
             No one else online
           </div>
         ) : (

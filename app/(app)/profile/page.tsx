@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { Users, Calendar } from "lucide-react";
 import { getUserDashboardStats, getUserById } from "@/lib/db/users";
 import { getCommunitiesByMember, getCommunitiesByOwner } from "@/lib/db/communities";
 import { getUserOrganizedEvents, getUserAttendingEvents, getUserPastEvents } from "@/lib/db/events";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProfileHeader } from "@/components/profile/profile-header";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -59,9 +61,12 @@ export default async function ProfilePage() {
           </CardHeader>
           <CardContent>
             {ownedCommunities.length === 0 ? (
-              <p className="text-neutral-500 text-center py-4">
-                You haven&apos;t created any communities yet.
-              </p>
+              <EmptyState
+                icon={Users}
+                title="No communities yet"
+                description="You haven't created any communities yet."
+                className="py-4"
+              />
             ) : (
               <div className="space-y-3">
                 {ownedCommunities.map((community) => (
@@ -92,9 +97,12 @@ export default async function ProfilePage() {
           </CardHeader>
           <CardContent>
             {joinedCommunities.length === 0 ? (
-              <p className="text-neutral-500 text-center py-4">
-                You haven&apos;t joined any other communities yet.
-              </p>
+              <EmptyState
+                icon={Users}
+                title="No communities joined"
+                description="You haven't joined any other communities yet."
+                className="py-4"
+              />
             ) : (
               <div className="space-y-3">
                 {joinedCommunities.map((community) => (
@@ -128,7 +136,12 @@ export default async function ProfilePage() {
           </CardHeader>
           <CardContent>
             {organizedEvents.length === 0 && attendingEvents.length === 0 ? (
-              <p className="text-neutral-500 text-center py-4">No upcoming events.</p>
+              <EmptyState
+                icon={Calendar}
+                title="No upcoming events"
+                description="No events you're organizing or attending."
+                className="py-4"
+              />
             ) : (
               <div className="space-y-3">
                 {organizedEvents.map((event) => (
@@ -184,7 +197,12 @@ export default async function ProfilePage() {
           </CardHeader>
           <CardContent>
             {pastEvents.length === 0 ? (
-              <p className="text-neutral-500 text-center py-4">No past events.</p>
+              <EmptyState
+                icon={Calendar}
+                title="No past events"
+                description="No events you've attended or organized."
+                className="py-4"
+              />
             ) : (
               <div className="space-y-3">
                 {pastEvents.slice(0, 10).map((event) => (

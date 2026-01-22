@@ -4,11 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   userEmail?: string | null;
   userName?: string | null;
+  userId?: string | null;
+  unreadNotificationCount?: number;
 }
 
 const navLinks = [
@@ -18,7 +21,7 @@ const navLinks = [
   { href: "/profile", label: "Profile" },
 ];
 
-export function Header({ userEmail, userName }: HeaderProps) {
+export function Header({ userEmail, userName, userId, unreadNotificationCount = 0 }: HeaderProps) {
   const pathname = usePathname();
 
   return (
@@ -54,6 +57,12 @@ export function Header({ userEmail, userName }: HeaderProps) {
 
           {/* User menu - desktop */}
           <div className="hidden md:flex items-center gap-4">
+            {userId && (
+              <NotificationBell
+                userId={userId}
+                initialUnreadCount={unreadNotificationCount}
+              />
+            )}
             <Link
               href="/settings"
               className="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-md transition-colors"

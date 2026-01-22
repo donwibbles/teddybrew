@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Users } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getUserById } from "@/lib/db/users";
 import { searchCommunities } from "@/lib/actions/community";
 import { getBatchMembershipStatus } from "@/lib/actions/membership";
 import { CommunityCard } from "@/components/community/community-card";
 import { CommunitySearch } from "@/components/community/community-search";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = {
   title: "Communities - Hive Community",
@@ -91,36 +93,26 @@ async function CommunityList({
 
   if (communities.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg border border-neutral-200">
-        <svg
-          className="w-12 h-12 mx-auto text-neutral-400 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-          />
-        </svg>
-        <h3 className="text-lg font-medium text-neutral-900 mb-1">
-          No communities found
-        </h3>
-        <p className="text-neutral-500 mb-4">
-          {query
-            ? "Try adjusting your search or filters"
-            : "Be the first to create a community!"}
-        </p>
-        {!query && (
-          <Link
-            href="/communities/new"
-            className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
-          >
-            Create Community
-          </Link>
-        )}
+      <div className="bg-white rounded-lg border border-neutral-200">
+        <EmptyState
+          icon={Users}
+          title="No communities found"
+          description={
+            query
+              ? "Try adjusting your search or filters"
+              : "Be the first to create a community!"
+          }
+          action={
+            !query ? (
+              <Link
+                href="/communities/new"
+                className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+              >
+                Create Community
+              </Link>
+            ) : undefined
+          }
+        />
       </div>
     );
   }

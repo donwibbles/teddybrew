@@ -39,6 +39,9 @@ model User {
   postVotes         PostVote[]
   commentVotes      CommentVote[]
 
+  // Notifications
+  notifications     Notification[]
+
   @@index([email])
   @@index([username])
 }
@@ -306,4 +309,30 @@ model CommentVote {
 
   @@unique([commentId, userId])
   @@index([commentId])
+}
+
+// ============ NOTIFICATION SYSTEM ============
+
+enum NotificationType {
+  COMMENT_REPLY   // Someone replied to your comment
+  POST_COMMENT    // Someone commented on your post
+  POST_VOTE       // Your post received significant votes
+  EVENT_REMINDER  // Upcoming event reminder
+  NEW_MEMBER      // Someone joined your community (owner only)
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  userId    String           // Recipient
+  title     String           @db.VarChar(255)
+  message   String?          @db.Text
+  link      String?          @db.VarChar(500) // URL to navigate to
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
 }

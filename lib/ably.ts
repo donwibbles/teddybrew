@@ -32,6 +32,9 @@ export async function generateAblyTokenRequest(
   // Create capability object scoping access to user's communities
   const capability: { [key: string]: string[] } = {};
 
+  // User's personal notification channel
+  capability[`user:${userId}:notifications`] = ["subscribe"];
+
   for (const communityId of communityIds) {
     // Chat channels - can subscribe and publish
     capability[`community:${communityId}:chat:*`] = [
@@ -86,4 +89,8 @@ export function getPresenceChannelName(communityId: string): string {
 
 export function getForumChannelName(communityId: string): string {
   return `community:${communityId}:forum`;
+}
+
+export function getUserNotificationChannel(userId: string): string {
+  return `user:${userId}:notifications`;
 }

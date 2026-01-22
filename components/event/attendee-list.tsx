@@ -1,6 +1,8 @@
 "use client";
 
 import { RSVPStatus } from "@prisma/client";
+import { Users } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Attendee {
   id: string;
@@ -25,9 +27,12 @@ export function AttendeeList({ attendees, maxDisplay = 20 }: AttendeeListProps) 
 
   if (goingAttendees.length === 0) {
     return (
-      <div className="text-center py-8 text-neutral-500">
-        No one has RSVP&apos;d yet. Be the first!
-      </div>
+      <EmptyState
+        icon={Users}
+        title="No attendees yet"
+        description="Be the first to RSVP!"
+        className="py-8"
+      />
     );
   }
 

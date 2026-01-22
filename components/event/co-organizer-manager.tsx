@@ -132,7 +132,9 @@ export function CoOrganizerManager({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-neutral-500">No co-organizers yet</p>
+        <p className="text-sm text-neutral-500 py-4 text-center border border-neutral-200 rounded-lg">
+          No co-organizers yet
+        </p>
       )}
 
       {/* Add co-organizer */}

@@ -8,8 +8,9 @@ import {
   leaveCommunitySchema,
   removeMemberSchema,
 } from "@/lib/validations/community";
-import { MemberRole, CommunityType } from "@prisma/client";
+import { MemberRole, CommunityType, NotificationType } from "@prisma/client";
 import { checkMembershipRateLimit } from "@/lib/rate-limit";
+import { sendNotification } from "./notification";
 
 /**
  * Action result types
@@ -51,7 +52,7 @@ export async function joinCommunity(
     // Get community
     const community = await prisma.community.findUnique({
       where: { id: communityId },
-      select: { id: true, slug: true, type: true },
+      select: { id: true, slug: true, name: true, type: true, ownerId: true },
     });
 
     if (!community) {
@@ -89,6 +90,21 @@ export async function joinCommunity(
         role: MemberRole.MEMBER,
       },
     });
+
+    // Get joining user's name for notification
+    const joiningUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true },
+    });
+
+    // Notify community owner
+    sendNotification({
+      type: NotificationType.NEW_MEMBER,
+      userId: community.ownerId,
+      title: `New member in ${community.name}`,
+      message: `${joiningUser?.name || "Someone"} joined your community`,
+      link: `/communities/${community.slug}/members`,
+    }).catch(() => {}); // Fire and forget
 
     revalidatePath(`/communities/${community.slug}`);
     revalidatePath("/communities");

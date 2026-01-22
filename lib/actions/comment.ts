@@ -13,6 +13,8 @@ import {
 } from "@/lib/validations/comment";
 import { publishToChannel, getForumChannelName } from "@/lib/ably";
 import { checkCommentRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
+import { sendNotification } from "./notification";
+import { NotificationType } from "@prisma/client";
 import type { ActionResult } from "./community";
 
 /**
@@ -65,7 +67,14 @@ export async function createComment(
     // Get post with community
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: { community: { select: { id: true, slug: true } } },
+      select: {
+        id: true,
+        title: true,
+        authorId: true,
+        communityId: true,
+        deletedAt: true,
+        community: { select: { id: true, slug: true } },
+      },
     });
 
     if (!post || post.deletedAt) {
@@ -128,6 +137,35 @@ export async function createComment(
       });
     } catch (err) {
       console.error("Failed to publish comment notification:", err);
+    }
+
+    // Send notifications
+    if (parentId) {
+      // Notify parent comment author (reply notification)
+      const parentComment = await prisma.comment.findUnique({
+        where: { id: parentId },
+        select: { authorId: true, content: true },
+      });
+      if (parentComment && parentComment.authorId !== userId) {
+        sendNotification({
+          type: NotificationType.COMMENT_REPLY,
+          userId: parentComment.authorId,
+          title: "New reply to your comment",
+          message: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
+          link: `/communities/${post.community.slug}/forum/${postId}#comment-${comment.id}`,
+        }).catch(() => {}); // Fire and forget
+      }
+    } else {
+      // Notify post author (new comment notification)
+      if (post.authorId !== userId) {
+        sendNotification({
+          type: NotificationType.POST_COMMENT,
+          userId: post.authorId,
+          title: `New comment on "${post.title.slice(0, 30)}${post.title.length > 30 ? "..." : ""}"`,
+          message: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
+          link: `/communities/${post.community.slug}/forum/${postId}#comment-${comment.id}`,
+        }).catch(() => {}); // Fire and forget
+      }
     }
 
     revalidatePath(`/communities/${post.community.slug}/forum/${postId}`);

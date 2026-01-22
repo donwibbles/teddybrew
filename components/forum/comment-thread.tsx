@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
-import { MessageSquare, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { MessageSquare, Trash2, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { VoteButton } from "./vote-button";
 import { CommentForm } from "./comment-form";
@@ -12,6 +12,7 @@ import { deleteComment } from "@/lib/actions/comment";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MAX_COMMENT_DEPTH } from "@/lib/validations/comment";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Author {
   id: string;
@@ -216,9 +217,12 @@ export function CommentThread({
 }: CommentThreadProps) {
   if (comments.length === 0) {
     return (
-      <div className="py-8 text-center text-neutral-500">
-        No comments yet. Be the first to comment!
-      </div>
+      <EmptyState
+        icon={MessageCircle}
+        title="No comments yet"
+        description="Be the first to comment!"
+        className="py-8"
+      />
     );
   }
 

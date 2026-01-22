@@ -14,32 +14,8 @@ import {
 } from "@/lib/validations/post";
 import { publishToChannel, getForumChannelName } from "@/lib/ably";
 import { checkPostRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
+import { isMember, isOwner } from "@/lib/db/members";
 import type { ActionResult } from "./community";
-
-/**
- * Check if user is a member of the community
- */
-async function isMember(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-  });
-  return !!membership;
-}
-
-/**
- * Check if user is the owner of the community
- */
-async function isOwner(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-    select: { role: true },
-  });
-  return membership?.role === "OWNER";
-}
 
 /**
  * Create a new post
@@ -64,7 +40,7 @@ export async function createPost(
     }
 
     // Check membership
-    if (!(await isMember(communityId, userId))) {
+    if (!(await isMember(userId, communityId))) {
       return { success: false, error: "You must be a member to create posts" };
     }
 
@@ -181,7 +157,7 @@ export async function deletePost(input: unknown): Promise<ActionResult> {
 
     // Check permission: author or community owner
     const isAuthor = post.authorId === userId;
-    const isCommunityOwner = await isOwner(post.communityId, userId);
+    const isCommunityOwner = await isOwner(userId, post.communityId);
 
     if (!isAuthor && !isCommunityOwner) {
       return { success: false, error: "You can only delete your own posts" };
@@ -238,7 +214,7 @@ export async function votePost(
     }
 
     // Check membership
-    if (!(await isMember(post.communityId, userId))) {
+    if (!(await isMember(userId, post.communityId))) {
       return { success: false, error: "You must be a member to vote" };
     }
 
@@ -307,7 +283,7 @@ export async function pinPost(input: unknown): Promise<ActionResult> {
     }
 
     // Only owner can pin
-    if (!(await isOwner(post.communityId, userId))) {
+    if (!(await isOwner(userId, post.communityId))) {
       return { success: false, error: "Only community owners can pin posts" };
     }
 
@@ -363,7 +339,7 @@ export async function getPosts(input: unknown) {
       if (!userId) {
         return { posts: [], nextCursor: undefined, hasMore: false };
       }
-      const memberCheck = await isMember(communityId, userId);
+      const memberCheck = await isMember(userId, communityId);
       if (!memberCheck) {
         return { posts: [], nextCursor: undefined, hasMore: false };
       }

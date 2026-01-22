@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useInView } from "react-intersection-observer";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
 import { PostCard, PostCardSkeleton } from "./post-card";
 import { getPosts } from "@/lib/actions/post";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Author {
   id: string;
@@ -85,8 +86,12 @@ export function PostList({
 
   if (posts.length === 0 && !isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-8 text-center">
-        <p className="text-neutral-500">No posts yet. Be the first to post!</p>
+      <div className="bg-white rounded-lg border border-neutral-200">
+        <EmptyState
+          icon={FileText}
+          title="No posts yet"
+          description="Be the first to post!"
+        />
       </div>
     );
   }
