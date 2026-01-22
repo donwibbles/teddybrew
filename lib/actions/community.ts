@@ -224,16 +224,21 @@ export async function deleteCommunity(
  * Get communities for discovery page
  * - Supports search and filtering
  * - Case-insensitive search
+ * - By default only shows PUBLIC communities (PRIVATE communities are hidden unless explicitly filtered)
  */
 export async function searchCommunities(query?: string, typeFilter?: string) {
   try {
     const trimmedQuery = query?.trim().toLowerCase();
 
+    // Default to PUBLIC only if no filter specified or if "ALL" is selected
+    // This prevents leaking private community existence/metadata
+    const effectiveTypeFilter = typeFilter === "PRIVATE" ? "PRIVATE" : "PUBLIC";
+
     const communities = await prisma.community.findMany({
       where: {
         AND: [
-          // Type filter
-          typeFilter && typeFilter !== "ALL" ? { type: typeFilter as "PUBLIC" | "PRIVATE" } : {},
+          // Type filter - defaults to PUBLIC to hide private communities
+          { type: effectiveTypeFilter },
           // Search query (case-insensitive)
           trimmedQuery
             ? {

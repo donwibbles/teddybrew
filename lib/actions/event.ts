@@ -139,14 +139,31 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       };
     }
 
-    // Get event with community for revalidation
+    // Get event with community for revalidation and validation
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      select: { community: { select: { slug: true } } },
+      select: {
+        startTime: true,
+        endTime: true,
+        community: { select: { slug: true } }
+      },
     });
 
     if (!event) {
       return { success: false, error: "Event not found" };
+    }
+
+    // Validate endTime against existing/new startTime
+    const effectiveStartTime = startTime || event.startTime;
+    const effectiveEndTime = endTime !== undefined ? endTime : event.endTime;
+
+    if (effectiveEndTime && effectiveEndTime <= effectiveStartTime) {
+      return { success: false, error: "End time must be after start time" };
+    }
+
+    // Validate that endTime is not in the past
+    if (effectiveEndTime && effectiveEndTime <= new Date()) {
+      return { success: false, error: "End time must be in the future" };
     }
 
     // Sanitize description
@@ -367,6 +384,8 @@ export async function removeCoOrganizer(input: unknown): Promise<ActionResult> {
 
 /**
  * Search/filter events
+ * - Only shows events from PUBLIC communities (unless filtering by specific communityId)
+ * - When filtering by communityId, membership is checked elsewhere (at page level)
  */
 export async function searchEvents(
   query?: string,
@@ -382,6 +401,9 @@ export async function searchEvents(
         AND: [
           // Community filter
           communityId ? { communityId } : {},
+          // Only show events from PUBLIC communities when browsing all events
+          // (when communityId is specified, the page-level auth handles privacy)
+          !communityId ? { community: { type: "PUBLIC" } } : {},
           // Past/future filter
           showPast ? {} : { startTime: { gte: now } },
           // Search query
@@ -406,6 +428,7 @@ export async function searchEvents(
             id: true,
             slug: true,
             name: true,
+            type: true,
           },
         },
         organizer: {

@@ -75,10 +75,16 @@ export async function getPosts(
       const bScore = getHotScore(b.voteScore, b.createdAt);
       return bScore - aScore;
     });
-    // Apply pagination manually
-    const startIndex = cursor
-      ? sortedPosts.findIndex((p) => p.id === cursor) + 1
-      : 0;
+    // Apply pagination manually - use cursor position or start from beginning
+    let startIndex = 0;
+    if (cursor) {
+      const cursorIndex = sortedPosts.findIndex((p) => p.id === cursor);
+      // If cursor not found in current window, return empty (prevents loops/duplicates)
+      if (cursorIndex === -1) {
+        return { posts: [], nextCursor: undefined, hasMore: false };
+      }
+      startIndex = cursorIndex + 1;
+    }
     sortedPosts = sortedPosts.slice(startIndex, startIndex + limit + 1);
   }
 

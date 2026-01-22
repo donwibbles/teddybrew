@@ -17,8 +17,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Generate a nonce for CSP
-  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  // Generate a nonce for CSP using Web Crypto API (Edge-compatible)
+  const nonceBytes = new Uint8Array(16);
+  crypto.getRandomValues(nonceBytes);
+  const nonce = btoa(String.fromCharCode(...nonceBytes));
 
   // Build CSP header
   const cspHeader = buildCSP(nonce);
@@ -35,16 +37,19 @@ export function middleware(request: NextRequest) {
 /**
  * Build Content Security Policy header value
  */
-function buildCSP(nonce: string): string {
+function buildCSP(_nonce: string): string {
   const isProduction = process.env.NODE_ENV === "production";
 
   // Base CSP directives
+  // Note: strict-dynamic removed because Next.js doesn't automatically attach nonces to scripts
+  // Using 'unsafe-inline' for scripts is required for Next.js hydration in production
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     "script-src": [
       "'self'",
-      `'nonce-${nonce}'`,
-      "'strict-dynamic'",
+      // Note: 'unsafe-inline' is needed for Next.js inline scripts
+      // In production, Next.js generates hashed inline scripts
+      "'unsafe-inline'",
       // Allow eval in development for hot reload
       ...(isProduction ? [] : ["'unsafe-eval'"]),
     ],

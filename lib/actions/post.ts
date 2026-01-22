@@ -327,6 +327,8 @@ export async function pinPost(input: unknown): Promise<ActionResult> {
 
 /**
  * Get posts for a community
+ * - Public communities: anyone can view posts
+ * - Private communities: only members can view posts
  */
 export async function getPosts(input: unknown) {
   try {
@@ -337,13 +339,34 @@ export async function getPosts(input: unknown) {
 
     const { communityId, sort, cursor, limit } = parsed.data;
 
-    // Try to get user ID for vote status
+    // Check community privacy
+    const community = await prisma.community.findUnique({
+      where: { id: communityId },
+      select: { type: true },
+    });
+
+    if (!community) {
+      return { posts: [], nextCursor: undefined, hasMore: false };
+    }
+
+    // Try to get user ID for vote status and membership check
     let userId: string | undefined;
     try {
       const session = await verifySession();
       userId = session.userId;
     } catch {
-      // Not logged in, that's fine
+      // Not logged in
+    }
+
+    // For private communities, verify membership
+    if (community.type === "PRIVATE") {
+      if (!userId) {
+        return { posts: [], nextCursor: undefined, hasMore: false };
+      }
+      const memberCheck = await isMember(communityId, userId);
+      if (!memberCheck) {
+        return { posts: [], nextCursor: undefined, hasMore: false };
+      }
     }
 
     // Import here to avoid circular dependencies
