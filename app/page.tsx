@@ -1,8 +1,14 @@
 import { auth } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 
 export default async function HomePage() {
   const session = await auth();
+
+  // Redirect authenticated users to the communities dashboard
+  if (session?.user) {
+    redirect("/communities");
+  }
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -15,37 +21,18 @@ export default async function HomePage() {
           people together.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          {session?.user ? (
-            <>
-              <Link
-                href="/communities"
-                className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
-              >
-                Go to Communities
-              </Link>
-              <Link
-                href="/events"
-                className="bg-white hover:bg-neutral-50 text-neutral-900 px-8 py-3 rounded-lg font-semibold border-2 border-neutral-200 transition-colors"
-              >
-                Browse Events
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/communities"
-                className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
-              >
-                Browse Communities
-              </Link>
-              <Link
-                href="/sign-in"
-                className="bg-white hover:bg-neutral-50 text-neutral-900 px-8 py-3 rounded-lg font-semibold border-2 border-neutral-200 transition-colors"
-              >
-                Sign In
-              </Link>
-            </>
-          )}
+          <Link
+            href="/communities"
+            className="bg-zinc-900 hover:bg-zinc-800 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
+          >
+            Browse Communities
+          </Link>
+          <Link
+            href="/sign-in"
+            className="bg-white hover:bg-neutral-50 text-neutral-900 px-8 py-3 rounded-lg font-semibold border-2 border-neutral-200 transition-colors"
+          >
+            Sign In
+          </Link>
         </div>
       </div>
 

@@ -107,3 +107,43 @@ export async function getUserDashboardStats(userId: string) {
     upcomingRsvps,
   };
 }
+
+/**
+ * Get user by username
+ */
+export async function getUserByUsername(username: string): Promise<User | null> {
+  return await prisma.user.findUnique({
+    where: { username },
+  });
+}
+
+/**
+ * Check if username is available
+ */
+export async function isUsernameAvailable(username: string, excludeUserId?: string): Promise<boolean> {
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (!user) return true;
+  if (excludeUserId && user.id === excludeUserId) return true;
+  return false;
+}
+
+/**
+ * Update user profile
+ */
+export async function updateUserProfile(
+  userId: string,
+  data: { name?: string; username?: string }
+): Promise<User> {
+  return await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name: data.name,
+      username: data.username,
+      updatedAt: new Date(),
+    },
+  });
+}

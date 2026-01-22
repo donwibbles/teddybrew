@@ -37,14 +37,38 @@ export default function VerifyRequestPage() {
         to continue.
       </p>
 
+      {/* Link validity note */}
+      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <svg className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <p className="text-sm font-medium text-primary-900">Link expires in 24 hours</p>
+            <p className="text-sm text-primary-700 mt-1">
+              For security, your magic link will expire. If it expires, simply request a new one.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="bg-neutral-50 rounded-lg p-4 mb-6">
         <h2 className="text-sm font-medium text-neutral-900 mb-2">
           Didn&apos;t receive the email?
         </h2>
-        <ul className="text-sm text-neutral-600 space-y-1 text-left">
-          <li>• Check your spam or junk folder</li>
-          <li>• Make sure you entered the correct email</li>
-          <li>• Wait a few minutes and try again</li>
+        <ul className="text-sm text-neutral-600 space-y-1.5 text-left">
+          <li className="flex items-start gap-2">
+            <span className="text-neutral-400">•</span>
+            Check your spam or junk folder
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-neutral-400">•</span>
+            Make sure you entered the correct email
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-neutral-400">•</span>
+            Wait a few minutes and try again
+          </li>
         </ul>
       </div>
 

@@ -1,27 +1,12 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getUserDashboardStats } from "@/lib/db/users";
+import { getUserDashboardStats, getUserById } from "@/lib/db/users";
 import { getCommunitiesByMember, getCommunitiesByOwner } from "@/lib/db/communities";
 import { getUserOrganizedEvents, getUserAttendingEvents, getUserPastEvents } from "@/lib/db/events";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-
-function getInitials(name: string | null | undefined, email: string | null | undefined): string {
-  if (name) {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
-  if (email) {
-    return email[0].toUpperCase();
-  }
-  return "U";
-}
+import { ProfileHeader } from "@/components/profile/profile-header";
 
 export default async function ProfilePage() {
   const session = await auth();
@@ -31,8 +16,9 @@ export default async function ProfilePage() {
 
   const userId = session.user.id;
 
-  const [stats, ownedCommunities, memberCommunities, organizedEvents, attendingEvents, pastEvents] =
+  const [user, stats, ownedCommunities, memberCommunities, organizedEvents, attendingEvents, pastEvents] =
     await Promise.all([
+      getUserById(userId),
       getUserDashboardStats(userId),
       getCommunitiesByOwner(userId),
       getCommunitiesByMember(userId),
@@ -41,40 +27,28 @@ export default async function ProfilePage() {
       getUserPastEvents(userId),
     ]);
 
+  if (!user) {
+    redirect("/sign-in");
+  }
+
   const joinedCommunities = memberCommunities.filter((c) => c.ownerId !== userId);
+
+  // Check if this is a new user (no name and no username set)
+  const isNewUser = !user.name && !user.username;
 
   return (
     <div className="space-y-8">
-      {/* Profile Header */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20">
-              <AvatarImage src={session.user.image ?? undefined} alt={session.user.name ?? "User"} />
-              <AvatarFallback className="text-xl bg-primary-100 text-primary-700">
-                {getInitials(session.user.name, session.user.email)}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h1 className="text-2xl font-bold text-neutral-900">
-                {session.user.name || "Anonymous User"}
-              </h1>
-              <p className="text-neutral-600">{session.user.email}</p>
-              <div className="flex gap-4 mt-3 text-sm text-neutral-500">
-                <span>
-                  <strong className="text-neutral-900">{stats.communitiesOwned + stats.communitiesJoined}</strong> communities
-                </span>
-                <span>
-                  <strong className="text-neutral-900">{stats.eventsOrganized}</strong> events organized
-                </span>
-                <span>
-                  <strong className="text-neutral-900">{stats.upcomingRsvps}</strong> upcoming RSVPs
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Profile Header with Edit */}
+      <ProfileHeader
+        user={{
+          name: user.name,
+          username: user.username,
+          email: user.email,
+          image: session.user.image ?? null,
+        }}
+        stats={stats}
+        isNewUser={isNewUser}
+      />
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* Communities Owned */}

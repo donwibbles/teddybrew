@@ -1,5 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getUserById } from "@/lib/db/users";
 import { searchCommunities } from "@/lib/actions/community";
 import { getBatchMembershipStatus } from "@/lib/actions/membership";
 import { CommunityCard } from "@/components/community/community-card";
@@ -17,6 +20,16 @@ interface CommunitiesPageProps {
 export default async function CommunitiesPage({
   searchParams,
 }: CommunitiesPageProps) {
+  // Check if user needs to complete onboarding
+  const session = await auth();
+  if (session?.user?.id) {
+    const user = await getUserById(session.user.id);
+    if (user && !user.name && !user.username) {
+      // New user - redirect to profile for onboarding
+      redirect("/profile");
+    }
+  }
+
   const params = await searchParams;
   const query = params.q || "";
   const typeFilter = params.type || "ALL";
