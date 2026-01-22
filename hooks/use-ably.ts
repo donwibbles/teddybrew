@@ -258,8 +258,11 @@ export function useAblyChannel(
   };
 }
 
+// Global tracker for presence channels to prevent duplicate enters
+const presenceChannels = new Map<string, { refCount: number; channel: Ably.RealtimeChannel }>();
+
 /**
- * Hook for Ably presence
+ * Hook for Ably presence with rate limit protection
  */
 export function useAblyPresence(channelName: string | null, data?: unknown) {
   const [members, setMembers] = useState<PresenceMember[]>([]);
@@ -267,6 +270,12 @@ export function useAblyPresence(channelName: string | null, data?: unknown) {
   const [error, setError] = useState<Error | null>(null);
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
   const hasEnteredRef = useRef(false);
+  const dataRef = useRef(data);
+
+  // Update data ref without triggering reconnection
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   useEffect(() => {
     if (!channelName) return;
@@ -278,8 +287,30 @@ export function useAblyPresence(channelName: string | null, data?: unknown) {
         const client = await getAblyClient();
         if (!mounted || !channelName) return;
 
+        // Check if we already have this presence channel
+        const existing = presenceChannels.get(channelName);
+        if (existing) {
+          existing.refCount++;
+          channelRef.current = existing.channel;
+
+          // Just get current members without re-entering
+          const currentMembers = await existing.channel.presence.get();
+          if (mounted) {
+            setMembers(
+              currentMembers.map((m) => ({
+                clientId: m.clientId,
+                data: m.data,
+              }))
+            );
+            setIsConnected(true);
+            setError(null);
+          }
+          return;
+        }
+
         const channel = client.channels.get(channelName);
         channelRef.current = channel;
+        presenceChannels.set(channelName, { refCount: 1, channel });
 
         // Subscribe to presence events
         channel.presence.subscribe("enter", (member) => {
@@ -308,9 +339,13 @@ export function useAblyPresence(channelName: string | null, data?: unknown) {
           );
         });
 
-        // Enter presence and get current members
+        // Enter presence with delay to avoid rate limits
         if (!hasEnteredRef.current) {
-          await channel.presence.enter(data);
+          // Small delay to batch rapid mount/unmount cycles
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          if (!mounted) return;
+
+          await channel.presence.enter(dataRef.current);
           hasEnteredRef.current = true;
         }
 
@@ -327,12 +362,16 @@ export function useAblyPresence(channelName: string | null, data?: unknown) {
         }
       } catch (err) {
         if (!mounted) return;
-        console.error("Ably presence error:", err);
-        // Capture presence errors in Sentry
-        Sentry.captureException(err, {
-          tags: { service: "ably", type: "presence" },
-          extra: { channelName },
-        });
+
+        // Don't log rate limit errors to Sentry - they're expected under load
+        const isRateLimit = err instanceof Error && err.message.includes("Rate limit");
+        if (!isRateLimit) {
+          console.error("Ably presence error:", err);
+          Sentry.captureException(err, {
+            tags: { service: "ably", type: "presence" },
+            extra: { channelName },
+          });
+        }
         setError(err as Error);
         setIsConnected(false);
       }
@@ -342,14 +381,24 @@ export function useAblyPresence(channelName: string | null, data?: unknown) {
 
     return () => {
       mounted = false;
-      if (channelRef.current && hasEnteredRef.current) {
-        channelRef.current.presence.leave().catch(console.error);
-        channelRef.current.presence.unsubscribe();
-        hasEnteredRef.current = false;
-        channelRef.current = null;
+
+      // Decrement ref count and only cleanup if no more references
+      const existing = presenceChannels.get(channelName);
+      if (existing) {
+        existing.refCount--;
+        if (existing.refCount <= 0) {
+          presenceChannels.delete(channelName);
+          if (hasEnteredRef.current) {
+            existing.channel.presence.leave().catch(() => {});
+            existing.channel.presence.unsubscribe();
+          }
+        }
       }
+
+      hasEnteredRef.current = false;
+      channelRef.current = null;
     };
-  }, [channelName, data]);
+  }, [channelName]); // Remove data from dependencies
 
   const updatePresence = useCallback(async (newData: unknown) => {
     if (!channelRef.current) return;
