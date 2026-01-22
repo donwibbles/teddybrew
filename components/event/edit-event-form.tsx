@@ -256,7 +256,9 @@ export function EditEventForm({
         <input
           id="capacity"
           type="number"
-          {...register("capacity", { valueAsNumber: true })}
+          {...register("capacity", {
+            setValueAs: (v) => v === "" || v === null ? undefined : Number(v) || undefined
+          })}
           placeholder="Leave empty for unlimited"
           min={1}
           max={10000}

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { searchCommunities } from "@/lib/actions/community";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import { getBatchMembershipStatus } from "@/lib/actions/membership";
 import { CommunityCard } from "@/components/community/community-card";
 import { CommunitySearch } from "@/components/community/community-search";
 
@@ -112,20 +112,19 @@ async function CommunityList({
     );
   }
 
+  // Batch fetch membership status for all communities (prevents N+1 queries)
+  const communityIds = communities.map((c) => c.id);
+  const membershipsMap = await getBatchMembershipStatus(communityIds);
+
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {await Promise.all(
-        communities.map(async (community) => {
-          const membership = await getMembershipStatus(community.id);
-          return (
-            <CommunityCard
-              key={community.id}
-              community={community}
-              membership={membership}
-            />
-          );
-        })
-      )}
+      {communities.map((community) => (
+        <CommunityCard
+          key={community.id}
+          community={community}
+          membership={membershipsMap[community.id]}
+        />
+      ))}
     </div>
   );
 }

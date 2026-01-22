@@ -27,6 +27,7 @@ export async function getCommunityById(id: string): Promise<Community | null> {
 
 /**
  * Get community with full details (members, events, owner)
+ * Note: events are filtered to only include upcoming events (startTime >= now)
  */
 export async function getCommunityWithDetails(slug: string) {
   return await prisma.community.findUnique({
@@ -54,6 +55,9 @@ export async function getCommunityWithDetails(slug: string) {
         orderBy: { joinedAt: "desc" },
       },
       events: {
+        where: {
+          startTime: { gte: new Date() },
+        },
         orderBy: { startTime: "asc" },
       },
       _count: {

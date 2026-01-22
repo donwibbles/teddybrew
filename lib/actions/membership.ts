@@ -296,3 +296,71 @@ export async function getMembershipStatus(communityId: string) {
     return { userId: null, isMember: false, isOwner: false, role: null };
   }
 }
+
+/**
+ * Get user's membership status for multiple communities in a single query
+ * Returns a map of communityId -> membership status
+ */
+export async function getBatchMembershipStatus(communityIds: string[]) {
+  try {
+    const { userId } = await verifySession();
+
+    const memberships = await prisma.member.findMany({
+      where: {
+        userId,
+        communityId: { in: communityIds },
+      },
+      select: { communityId: true, role: true },
+    });
+
+    // Build a map of communityId -> membership
+    const membershipMap = new Map(
+      memberships.map((m) => [m.communityId, m])
+    );
+
+    // Return a map of communityId -> status
+    const result: Record<
+      string,
+      {
+        userId: string | null;
+        isMember: boolean;
+        isOwner: boolean;
+        role: MemberRole | null;
+      }
+    > = {};
+
+    for (const communityId of communityIds) {
+      const membership = membershipMap.get(communityId);
+      result[communityId] = {
+        userId,
+        isMember: !!membership,
+        isOwner: membership?.role === MemberRole.OWNER,
+        role: membership?.role ?? null,
+      };
+    }
+
+    return result;
+  } catch {
+    // Return empty memberships for all communities if not authenticated
+    const result: Record<
+      string,
+      {
+        userId: string | null;
+        isMember: boolean;
+        isOwner: boolean;
+        role: MemberRole | null;
+      }
+    > = {};
+
+    for (const communityId of communityIds) {
+      result[communityId] = {
+        userId: null,
+        isMember: false,
+        isOwner: false,
+        role: null,
+      };
+    }
+
+    return result;
+  }
+}

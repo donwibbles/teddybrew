@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { z } from "zod";
 import { updateCommunity } from "@/lib/actions/community";
 import { CommunityType } from "@prisma/client";
@@ -65,9 +66,11 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
 
     if (result.success) {
       setSuccessMessage("Settings saved successfully");
+      toast.success("Settings updated!");
       router.refresh();
     } else {
       setServerError(result.error);
+      toast.error(result.error);
     }
 
     setIsSubmitting(false);

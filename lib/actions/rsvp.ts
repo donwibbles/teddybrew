@@ -42,13 +42,6 @@ export async function rsvpToEvent(input: unknown): Promise<ActionResult> {
         capacity: true,
         startTime: true,
         community: { select: { slug: true } },
-        _count: {
-          select: {
-            rsvps: {
-              where: { status: RSVPStatus.GOING },
-            },
-          },
-        },
       },
     });
 
@@ -70,44 +63,54 @@ export async function rsvpToEvent(input: unknown): Promise<ActionResult> {
       };
     }
 
-    // Check if user already has an RSVP
-    const existingRSVP = await prisma.rSVP.findUnique({
-      where: {
-        userId_eventId: {
-          userId,
-          eventId,
+    // Use a transaction to prevent race conditions on capacity
+    const result = await prisma.$transaction(async (tx) => {
+      // Check if user already has an RSVP
+      const existingRSVP = await tx.rSVP.findUnique({
+        where: {
+          userId_eventId: {
+            userId,
+            eventId,
+          },
         },
-      },
+      });
+
+      if (existingRSVP && existingRSVP.status === RSVPStatus.GOING) {
+        return { success: false as const, error: "You have already RSVP'd to this event" };
+      }
+
+      // Check capacity inside transaction to prevent race condition
+      if (event.capacity) {
+        const currentCount = await tx.rSVP.count({
+          where: { eventId, status: RSVPStatus.GOING },
+        });
+        if (currentCount >= event.capacity) {
+          return { success: false as const, error: "This event is full" };
+        }
+      }
+
+      if (existingRSVP) {
+        // Update existing RSVP from NOT_GOING to GOING
+        await tx.rSVP.update({
+          where: { id: existingRSVP.id },
+          data: { status: RSVPStatus.GOING },
+        });
+      } else {
+        // Create new RSVP
+        await tx.rSVP.create({
+          data: {
+            userId,
+            eventId,
+            status: RSVPStatus.GOING,
+          },
+        });
+      }
+
+      return { success: true as const };
     });
 
-    if (existingRSVP) {
-      if (existingRSVP.status === RSVPStatus.GOING) {
-        return { success: false, error: "You have already RSVP'd to this event" };
-      }
-      // Update existing RSVP from NOT_GOING to GOING
-      // But first check capacity
-      if (event.capacity && event._count.rsvps >= event.capacity) {
-        return { success: false, error: "This event is full" };
-      }
-
-      await prisma.rSVP.update({
-        where: { id: existingRSVP.id },
-        data: { status: RSVPStatus.GOING },
-      });
-    } else {
-      // Check capacity for new RSVP
-      if (event.capacity && event._count.rsvps >= event.capacity) {
-        return { success: false, error: "This event is full" };
-      }
-
-      // Create new RSVP
-      await prisma.rSVP.create({
-        data: {
-          userId,
-          eventId,
-          status: RSVPStatus.GOING,
-        },
-      });
+    if (!result.success) {
+      return result;
     }
 
     revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);

@@ -4,6 +4,7 @@ import { getEventWithDetails } from "@/lib/db/events";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { RSVPButton } from "@/components/event/rsvp-button";
 import { AttendeeList } from "@/components/event/attendee-list";
+import { PrivateCommunityLock } from "@/components/community/private-community-lock";
 import { RSVPStatus } from "@prisma/client";
 
 interface EventPageProps {
@@ -34,6 +35,30 @@ export default async function EventPage({ params }: EventPageProps) {
 
   // Get membership status
   const membership = await getMembershipStatus(event.communityId);
+
+  // Check if community is private and user is not a member
+  if (event.community.type === "PRIVATE" && !membership.isMember) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+          <Link
+            href={`/communities/${event.community.slug}`}
+            className="hover:text-primary-600"
+          >
+            {event.community.name}
+          </Link>
+          <span>/</span>
+          <span>Events</span>
+        </div>
+
+        <PrivateCommunityLock
+          communityId={event.communityId}
+          communityName={event.community.name}
+        />
+      </div>
+    );
+  }
 
   // Check if current user is going
   const userRsvp = event.rsvps.find(

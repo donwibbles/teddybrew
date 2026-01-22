@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { joinCommunity, leaveCommunity } from "@/lib/actions/membership";
 import { CommunityType } from "@prisma/client";
 
@@ -27,28 +28,28 @@ export function JoinLeaveButton({
     const result = await joinCommunity({ communityId });
 
     if (result.success) {
+      toast.success("Joined community!");
       router.refresh();
     } else {
       setError(result.error);
+      toast.error(result.error);
     }
 
     setIsLoading(false);
   };
 
   const handleLeave = async () => {
-    if (!confirm("Are you sure you want to leave this community?")) {
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     const result = await leaveCommunity({ communityId });
 
     if (result.success) {
+      toast.success("Left community");
       router.refresh();
     } else {
       setError(result.error);
+      toast.error(result.error);
     }
 
     setIsLoading(false);

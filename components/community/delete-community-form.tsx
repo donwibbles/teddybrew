@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { deleteCommunity } from "@/lib/actions/community";
 
 interface DeleteCommunityFormProps {
@@ -30,9 +31,11 @@ export function DeleteCommunityForm({
     });
 
     if (result.success) {
+      toast.success("Community deleted");
       router.push("/communities");
     } else {
       setError(result.error);
+      toast.error(result.error);
       setIsDeleting(false);
     }
   };

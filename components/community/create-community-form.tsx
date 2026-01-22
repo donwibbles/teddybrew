@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   createCommunitySchema,
   generateSlug,
@@ -51,9 +52,11 @@ export function CreateCommunityForm() {
     const result = await createCommunity(data);
 
     if (result.success) {
+      toast.success("Community created!");
       router.push(`/communities/${result.data.slug}`);
     } else {
       setServerError(result.error);
+      toast.error(result.error);
       setIsSubmitting(false);
     }
   };
