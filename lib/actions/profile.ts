@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/dal";
 import { updateProfileSchema, usernameSchema } from "@/lib/validations/profile";
 import { isUsernameAvailable, updateUserProfile } from "@/lib/db/users";
+import { checkProfileRateLimit } from "@/lib/rate-limit";
 
 /**
  * Action result types
@@ -21,6 +22,15 @@ export async function updateProfile(
   try {
     // Verify user is authenticated
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkProfileRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're updating your profile too quickly. Please wait before making changes.",
+      };
+    }
 
     // Validate input
     const parsed = updateProfileSchema.safeParse(input);

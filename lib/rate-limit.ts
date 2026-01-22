@@ -8,6 +8,11 @@ let _chatRateLimiter: Ratelimit | null = null;
 let _postRateLimiter: Ratelimit | null = null;
 let _commentRateLimiter: Ratelimit | null = null;
 let _voteRateLimiter: Ratelimit | null = null;
+let _eventRateLimiter: Ratelimit | null = null;
+let _communityRateLimiter: Ratelimit | null = null;
+let _membershipRateLimiter: Ratelimit | null = null;
+let _profileRateLimiter: Ratelimit | null = null;
+let _channelRateLimiter: Ratelimit | null = null;
 
 function getRedis(): Redis | null {
   if (_redis) return _redis;
@@ -106,6 +111,91 @@ function getVoteRateLimiter(): Ratelimit | null {
   });
 
   return _voteRateLimiter;
+}
+
+function getEventRateLimiter(): Ratelimit | null {
+  if (_eventRateLimiter) return _eventRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 5 events per hour
+  _eventRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:event",
+  });
+
+  return _eventRateLimiter;
+}
+
+function getCommunityRateLimiter(): Ratelimit | null {
+  if (_communityRateLimiter) return _communityRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 3 communities per hour
+  _communityRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(3, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:community",
+  });
+
+  return _communityRateLimiter;
+}
+
+function getMembershipRateLimiter(): Ratelimit | null {
+  if (_membershipRateLimiter) return _membershipRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 10 joins per hour
+  _membershipRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:membership",
+  });
+
+  return _membershipRateLimiter;
+}
+
+function getProfileRateLimiter(): Ratelimit | null {
+  if (_profileRateLimiter) return _profileRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 10 profile updates per hour
+  _profileRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:profile",
+  });
+
+  return _profileRateLimiter;
+}
+
+function getChannelRateLimiter(): Ratelimit | null {
+  if (_channelRateLimiter) return _channelRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 5 channels per hour
+  _channelRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:channel",
+  });
+
+  return _channelRateLimiter;
 }
 
 interface RateLimitResult {
@@ -226,6 +316,126 @@ export async function checkVoteRateLimit(
       success: true,
       remaining: 999,
       reset: Date.now() + 60000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check event rate limit: 5 events per hour
+ */
+export async function checkEventRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getEventRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check community rate limit: 3 communities per hour
+ */
+export async function checkCommunityRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getCommunityRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check membership rate limit: 10 joins per hour
+ */
+export async function checkMembershipRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getMembershipRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check profile rate limit: 10 updates per hour
+ */
+export async function checkProfileRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getProfileRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check channel rate limit: 5 channels per hour
+ */
+export async function checkChannelRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getChannelRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
     };
   }
 

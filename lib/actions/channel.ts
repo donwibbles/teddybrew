@@ -9,6 +9,7 @@ import {
   deleteChannelSchema,
 } from "@/lib/validations/chat";
 import type { ActionResult } from "./community";
+import { checkChannelRateLimit } from "@/lib/rate-limit";
 
 /**
  * Check if user is the owner of the community
@@ -43,6 +44,15 @@ export async function createChannel(
 ): Promise<ActionResult<{ channelId: string }>> {
   try {
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkChannelRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're creating channels too quickly. Please wait before creating another.",
+      };
+    }
 
     const parsed = createChannelSchema.safeParse(input);
     if (!parsed.success) {
@@ -105,6 +115,15 @@ export async function createChannel(
 export async function updateChannel(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkChannelRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're making changes too quickly. Please wait before updating.",
+      };
+    }
 
     const parsed = updateChannelSchema.safeParse(input);
     if (!parsed.success) {
@@ -172,6 +191,15 @@ export async function updateChannel(input: unknown): Promise<ActionResult> {
 export async function deleteChannel(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkChannelRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're making changes too quickly. Please wait before deleting.",
+      };
+    }
 
     const parsed = deleteChannelSchema.safeParse(input);
     if (!parsed.success) {

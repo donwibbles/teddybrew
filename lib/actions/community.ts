@@ -10,6 +10,7 @@ import {
   deleteCommunitySchema,
 } from "@/lib/validations/community";
 import { MemberRole } from "@prisma/client";
+import { checkCommunityRateLimit } from "@/lib/rate-limit";
 
 /**
  * Action result types
@@ -29,6 +30,15 @@ export async function createCommunity(
   try {
     // Verify user is authenticated
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkCommunityRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're creating communities too quickly. Please wait before creating another.",
+      };
+    }
 
     // Validate input
     const parsed = createCommunitySchema.safeParse(input);
@@ -107,6 +117,15 @@ export async function updateCommunity(
   try {
     // Verify user is authenticated
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkCommunityRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're making changes too quickly. Please wait before updating.",
+      };
+    }
 
     // Validate input
     const parsed = updateCommunitySchema.safeParse(input);

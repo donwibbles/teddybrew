@@ -12,6 +12,7 @@ import {
   addCoOrganizerSchema,
   removeCoOrganizerSchema,
 } from "@/lib/validations/event";
+import { checkEventRateLimit } from "@/lib/rate-limit";
 
 /**
  * Action result types
@@ -50,6 +51,15 @@ export async function createEvent(
 ): Promise<ActionResult<{ eventId: string; communitySlug: string }>> {
   try {
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkEventRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're creating events too quickly. Please wait before creating another.",
+      };
+    }
 
     // Validate input
     const parsed = createEventSchema.safeParse(input);
@@ -120,6 +130,15 @@ export async function createEvent(
 export async function updateEvent(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkEventRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're updating events too quickly. Please wait before making changes.",
+      };
+    }
 
     // Validate input
     const parsed = updateEventSchema.safeParse(input);
@@ -204,6 +223,15 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
 export async function deleteEvent(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
+
+    // Check rate limit
+    const rateLimit = await checkEventRateLimit(userId);
+    if (!rateLimit.success) {
+      return {
+        success: false,
+        error: "You're making changes too quickly. Please wait before deleting.",
+      };
+    }
 
     // Validate input
     const parsed = deleteEventSchema.safeParse(input);
