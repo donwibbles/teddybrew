@@ -12,13 +12,23 @@ datasource db {
 // User Model - Auth.js compatible
 model User {
   id            String    @id @default(cuid())
-  name          String?
+  name          String?   // Display name (public)
   username      String?   @unique
   email         String    @unique
   emailVerified DateTime?
   image         String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  // Private profile fields (for mail merge, internal use)
+  firstName     String?   @db.VarChar(50)
+  lastName      String?   @db.VarChar(50)
+
+  // Public profile fields
+  bio           String?   @db.VarChar(500)
+  interests     String?   @db.VarChar(500)
+  communityHope String?   @db.VarChar(500)
+  isPublic      Boolean   @default(true)
 
   // Relations
   accounts          Account[]

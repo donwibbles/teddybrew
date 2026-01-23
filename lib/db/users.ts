@@ -136,14 +136,117 @@ export async function isUsernameAvailable(username: string, excludeUserId?: stri
  */
 export async function updateUserProfile(
   userId: string,
-  data: { name?: string; username?: string }
+  data: {
+    firstName?: string;
+    lastName?: string;
+    name?: string;
+    username?: string;
+    bio?: string | null;
+    interests?: string | null;
+    communityHope?: string | null;
+    isPublic?: boolean;
+  }
 ): Promise<User> {
   return await prisma.user.update({
     where: { id: userId },
     data: {
+      firstName: data.firstName,
+      lastName: data.lastName,
       name: data.name,
       username: data.username,
+      bio: data.bio,
+      interests: data.interests,
+      communityHope: data.communityHope,
+      isPublic: data.isPublic,
       updatedAt: new Date(),
     },
   });
+}
+
+/**
+ * Public profile data type
+ */
+export type PublicProfile = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  image: string | null;
+  bio: string | null;
+  interests: string | null;
+  communityHope: string | null;
+  isPublic: boolean;
+  createdAt: Date;
+  communities: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    description: string | null;
+    memberCount: number;
+  }>;
+};
+
+/**
+ * Get user public profile by username
+ * Returns null if user not found
+ */
+export async function getUserPublicProfile(username: string): Promise<PublicProfile | null> {
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      id: true,
+      name: true,
+      username: true,
+      image: true,
+      bio: true,
+      interests: true,
+      communityHope: true,
+      isPublic: true,
+      createdAt: true,
+      memberships: {
+        where: {
+          community: {
+            type: "PUBLIC",
+          },
+        },
+        include: {
+          community: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              description: true,
+              _count: {
+                select: { members: true },
+              },
+            },
+          },
+        },
+        take: 10,
+        orderBy: { joinedAt: "desc" },
+      },
+    },
+  });
+
+  if (!user) {
+    return null;
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    username: user.username,
+    image: user.image,
+    bio: user.bio,
+    interests: user.interests,
+    communityHope: user.communityHope,
+    isPublic: user.isPublic,
+    createdAt: user.createdAt,
+    communities: user.memberships.map((m) => ({
+      id: m.community.id,
+      name: m.community.name,
+      slug: m.community.slug,
+      description: m.community.description,
+      memberCount: m.community._count.members,
+    })),
+  };
 }

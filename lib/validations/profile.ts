@@ -26,16 +26,70 @@ export const usernameSchema = z
  */
 export const nameSchema = z
   .string()
-  .min(1, "Name is required")
-  .max(50, "Name must be at most 50 characters")
+  .min(1, "Display name is required")
+  .max(50, "Display name must be at most 50 characters")
   .transform((val) => val.trim());
+
+/**
+ * First name validation (private, for mail merge)
+ */
+export const firstNameSchema = z
+  .string()
+  .min(1, "First name is required")
+  .max(50, "First name must be at most 50 characters")
+  .transform((val) => val.trim());
+
+/**
+ * Last name validation (private, for mail merge)
+ */
+export const lastNameSchema = z
+  .string()
+  .min(1, "Last name is required")
+  .max(50, "Last name must be at most 50 characters")
+  .transform((val) => val.trim());
+
+/**
+ * Bio validation (optional, max 500 chars)
+ */
+export const bioSchema = z
+  .string()
+  .max(500, "Bio must be at most 500 characters")
+  .transform((val) => val.trim())
+  .optional()
+  .nullable();
+
+/**
+ * Interests validation (optional, max 500 chars)
+ */
+export const interestsSchema = z
+  .string()
+  .max(500, "Interests must be at most 500 characters")
+  .transform((val) => val.trim())
+  .optional()
+  .nullable();
+
+/**
+ * Community hope validation (optional, max 500 chars)
+ */
+export const communityHopeSchema = z
+  .string()
+  .max(500, "Response must be at most 500 characters")
+  .transform((val) => val.trim())
+  .optional()
+  .nullable();
 
 /**
  * Profile update schema
  */
 export const updateProfileSchema = z.object({
+  firstName: firstNameSchema,
+  lastName: lastNameSchema,
   name: nameSchema,
   username: usernameSchema,
+  bio: bioSchema,
+  interests: interestsSchema,
+  communityHope: communityHopeSchema,
+  isPublic: z.boolean().optional(),
 });
 
 export type UpdateProfileInput = z.input<typeof updateProfileSchema>;

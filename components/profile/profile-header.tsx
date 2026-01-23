@@ -1,16 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { ProfileEditForm } from "./profile-edit-form";
+import { ExternalLink } from "lucide-react";
 
 interface ProfileHeaderProps {
   user: {
+    firstName?: string | null;
+    lastName?: string | null;
     name: string | null;
     username: string | null;
     email: string | null;
     image: string | null;
+    bio?: string | null;
+    interests?: string | null;
+    communityHope?: string | null;
+    isPublic?: boolean;
   };
   stats: {
     communitiesOwned: number;
@@ -65,8 +73,14 @@ export function ProfileHeader({ user, stats, isNewUser }: ProfileHeaderProps) {
                 <h2 className="text-lg font-semibold text-neutral-900 mb-4">Edit Profile</h2>
               )}
               <ProfileEditForm
+                initialFirstName={user.firstName}
+                initialLastName={user.lastName}
                 initialName={user.name}
                 initialUsername={user.username}
+                initialBio={user.bio}
+                initialInterests={user.interests}
+                initialCommunityHope={user.communityHope}
+                initialIsPublic={user.isPublic ?? true}
                 onCancel={!isNewUser ? () => setIsEditing(false) : undefined}
                 isOnboarding={isNewUser}
               />
@@ -96,6 +110,9 @@ export function ProfileHeader({ user, stats, isNewUser }: ProfileHeaderProps) {
                 <p className="text-neutral-600">@{user.username}</p>
               )}
               <p className="text-sm text-neutral-500 mt-1">{user.email}</p>
+              {user.bio && (
+                <p className="text-neutral-700 mt-3">{user.bio}</p>
+              )}
               <div className="flex flex-wrap gap-4 mt-3 text-sm text-neutral-500">
                 <span>
                   <strong className="text-neutral-900">{stats.communitiesOwned + stats.communitiesJoined}</strong> communities
@@ -107,6 +124,15 @@ export function ProfileHeader({ user, stats, isNewUser }: ProfileHeaderProps) {
                   <strong className="text-neutral-900">{stats.upcomingRsvps}</strong> upcoming RSVPs
                 </span>
               </div>
+              {user.username && (
+                <Link
+                  href={`/u/${user.username}`}
+                  className="inline-flex items-center gap-1.5 mt-3 text-sm text-primary-600 hover:text-primary-700"
+                >
+                  View public profile
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </Link>
+              )}
             </div>
           </div>
           <button

@@ -7,17 +7,43 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { updateProfileSchema, type UpdateProfileInput } from "@/lib/validations/profile";
 import { updateProfile, checkUsernameAvailability } from "@/lib/actions/profile";
+import { Lock } from "lucide-react";
 
 interface ProfileEditFormProps {
+  initialFirstName?: string | null;
+  initialLastName?: string | null;
   initialName?: string | null;
   initialUsername?: string | null;
+  initialBio?: string | null;
+  initialInterests?: string | null;
+  initialCommunityHope?: string | null;
+  initialIsPublic?: boolean;
   onCancel?: () => void;
   isOnboarding?: boolean;
 }
 
+/**
+ * Generate default display name from first and last name
+ * Format: "FirstName L." (first name + first letter of last name)
+ */
+function generateDisplayName(firstName: string, lastName: string): string {
+  const first = firstName.trim();
+  const lastInitial = lastName.trim().charAt(0).toUpperCase();
+  if (first && lastInitial) {
+    return `${first} ${lastInitial}.`;
+  }
+  return first || "";
+}
+
 export function ProfileEditForm({
+  initialFirstName,
+  initialLastName,
   initialName,
   initialUsername,
+  initialBio,
+  initialInterests,
+  initialCommunityHope,
+  initialIsPublic = true,
   onCancel,
   isOnboarding = false,
 }: ProfileEditFormProps) {
@@ -25,21 +51,39 @@ export function ProfileEditForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const [hasManuallyEditedDisplayName, setHasManuallyEditedDisplayName] = useState(!isOnboarding);
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<UpdateProfileInput>({
     resolver: zodResolver(updateProfileSchema),
     defaultValues: {
+      firstName: initialFirstName || "",
+      lastName: initialLastName || "",
       name: initialName || "",
       username: initialUsername || "",
+      bio: initialBio || "",
+      interests: initialInterests || "",
+      communityHope: initialCommunityHope || "",
+      isPublic: initialIsPublic,
     },
   });
 
   const username = watch("username");
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
+
+  // Auto-populate display name during onboarding when first/last name changes
+  useEffect(() => {
+    if (isOnboarding && !hasManuallyEditedDisplayName && firstName) {
+      const displayName = generateDisplayName(firstName, lastName || "");
+      setValue("name", displayName, { shouldDirty: true });
+    }
+  }, [firstName, lastName, isOnboarding, hasManuallyEditedDisplayName, setValue]);
 
   // Debounced username availability check
   const checkUsername = useCallback(async (value: string) => {
@@ -103,7 +147,7 @@ export function ProfileEditForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
       {serverError && (
         <div
           role="alert"
@@ -113,79 +157,252 @@ export function ProfileEditForm({
         </div>
       )}
 
-      {/* Name field */}
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-neutral-700 mb-1"
-        >
-          Display Name <span className="text-error-500">*</span>
-        </label>
-        <input
-          id="name"
-          type="text"
-          {...register("name")}
-          placeholder="Your display name"
-          disabled={isSubmitting}
-          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-50 disabled:text-neutral-500"
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-error-600">{errors.name.message}</p>
-        )}
+      {/* Private Information Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 pb-2 border-b border-neutral-200">
+          <Lock className="h-4 w-4 text-neutral-400" />
+          <h3 className="text-sm font-medium text-neutral-600 uppercase tracking-wide">
+            Private Information
+          </h3>
+        </div>
+        <p className="text-sm text-neutral-500">
+          Your name is only visible to you and community administrators. It won&apos;t be shown publicly.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* First Name */}
+          <div>
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              First Name <span className="text-error-500">*</span>
+            </label>
+            <input
+              id="firstName"
+              type="text"
+              {...register("firstName")}
+              placeholder="Your first name"
+              disabled={isSubmitting}
+              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                         disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+            {errors.firstName && (
+              <p className="mt-1 text-sm text-error-600">{errors.firstName.message}</p>
+            )}
+          </div>
+
+          {/* Last Name */}
+          <div>
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Last Name <span className="text-error-500">*</span>
+            </label>
+            <input
+              id="lastName"
+              type="text"
+              {...register("lastName")}
+              placeholder="Your last name"
+              disabled={isSubmitting}
+              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                         disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+            {errors.lastName && (
+              <p className="mt-1 text-sm text-error-600">{errors.lastName.message}</p>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Username field */}
-      <div>
-        <label
-          htmlFor="username"
-          className="block text-sm font-medium text-neutral-700 mb-1"
-        >
-          Username <span className="text-error-500">*</span>
-        </label>
-        <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">@</span>
+      {/* Public Profile Section */}
+      <div className="space-y-4">
+        <div className="pb-2 border-b border-neutral-200">
+          <h3 className="text-sm font-medium text-neutral-600 uppercase tracking-wide">
+            Public Profile
+          </h3>
+        </div>
+        <p className="text-sm text-neutral-500">
+          This information is visible to other users on your public profile and in communities.
+        </p>
+
+        {/* Display Name field */}
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-neutral-700 mb-1"
+          >
+            Display Name <span className="text-error-500">*</span>
+          </label>
           <input
-            id="username"
+            id="name"
             type="text"
-            {...register("username")}
-            placeholder="username"
+            {...register("name", {
+              onChange: () => setHasManuallyEditedDisplayName(true),
+            })}
+            placeholder="How others will see you"
             disabled={isSubmitting}
-            className="w-full pl-8 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                        disabled:bg-neutral-50 disabled:text-neutral-500"
           />
-          {usernameStatus !== "idle" && (
-            <span className="absolute right-4 top-1/2 -translate-y-1/2">
-              {usernameStatus === "checking" && (
-                <LoadingSpinner className="h-4 w-4 text-neutral-400" />
-              )}
-              {usernameStatus === "available" && (
-                <svg className="h-4 w-4 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-              {usernameStatus === "taken" && (
-                <svg className="h-4 w-4 text-error-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              )}
-            </span>
+          {errors.name && (
+            <p className="mt-1 text-sm text-error-600">{errors.name.message}</p>
           )}
+          <p className="mt-1 text-xs text-neutral-500">
+            This is how other users will see you in chat and communities
+          </p>
         </div>
-        {errors.username && (
-          <p className="mt-1 text-sm text-error-600">{errors.username.message}</p>
-        )}
-        {usernameStatus === "taken" && !errors.username && (
-          <p className="mt-1 text-sm text-error-600">This username is already taken</p>
-        )}
-        {usernameStatus === "available" && !errors.username && (
-          <p className="mt-1 text-sm text-success-600">Username is available</p>
-        )}
-        <p className="mt-1 text-xs text-neutral-500">
-          3-20 characters. Letters, numbers, and underscores only.
-        </p>
+
+        {/* Username field */}
+        <div>
+          <label
+            htmlFor="username"
+            className="block text-sm font-medium text-neutral-700 mb-1"
+          >
+            Username <span className="text-error-500">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">@</span>
+            <input
+              id="username"
+              type="text"
+              {...register("username")}
+              placeholder="username"
+              disabled={isSubmitting}
+              className="w-full pl-8 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                         disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+            {usernameStatus !== "idle" && (
+              <span className="absolute right-4 top-1/2 -translate-y-1/2">
+                {usernameStatus === "checking" && (
+                  <LoadingSpinner className="h-4 w-4 text-neutral-400" />
+                )}
+                {usernameStatus === "available" && (
+                  <svg className="h-4 w-4 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                {usernameStatus === "taken" && (
+                  <svg className="h-4 w-4 text-error-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+              </span>
+            )}
+          </div>
+          {errors.username && (
+            <p className="mt-1 text-sm text-error-600">{errors.username.message}</p>
+          )}
+          {usernameStatus === "taken" && !errors.username && (
+            <p className="mt-1 text-sm text-error-600">This username is already taken</p>
+          )}
+          {usernameStatus === "available" && !errors.username && (
+            <p className="mt-1 text-sm text-success-600">Username is available</p>
+          )}
+          <p className="mt-1 text-xs text-neutral-500">
+            Used for @mentions and your profile URL. 3-20 characters, letters, numbers, and underscores only.
+          </p>
+        </div>
+
+        {/* Bio field */}
+        <div>
+          <label
+            htmlFor="bio"
+            className="block text-sm font-medium text-neutral-700 mb-1"
+          >
+            About You
+          </label>
+          <textarea
+            id="bio"
+            {...register("bio")}
+            rows={3}
+            placeholder="Tell others a bit about yourself..."
+            disabled={isSubmitting}
+            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                       disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+          />
+          {errors.bio && (
+            <p className="mt-1 text-sm text-error-600">{errors.bio.message}</p>
+          )}
+          <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
+        </div>
+
+        {/* Interests field */}
+        <div>
+          <label
+            htmlFor="interests"
+            className="block text-sm font-medium text-neutral-700 mb-1"
+          >
+            What issues matter most to you?
+          </label>
+          <textarea
+            id="interests"
+            {...register("interests")}
+            rows={3}
+            placeholder="Share what causes or topics you care about..."
+            disabled={isSubmitting}
+            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                       disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+          />
+          {errors.interests && (
+            <p className="mt-1 text-sm text-error-600">{errors.interests.message}</p>
+          )}
+          <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
+        </div>
+
+        {/* Community Hope field */}
+        <div>
+          <label
+            htmlFor="communityHope"
+            className="block text-sm font-medium text-neutral-700 mb-1"
+          >
+            What gives you hope about building community?
+          </label>
+          <textarea
+            id="communityHope"
+            {...register("communityHope")}
+            rows={3}
+            placeholder="Share what inspires you about connecting with others..."
+            disabled={isSubmitting}
+            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                       disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+          />
+          {errors.communityHope && (
+            <p className="mt-1 text-sm text-error-600">{errors.communityHope.message}</p>
+          )}
+          <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
+        </div>
+
+        {/* Privacy toggle */}
+        <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+          <input
+            type="checkbox"
+            id="isPublic"
+            {...register("isPublic")}
+            disabled={isSubmitting}
+            className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+                       focus:ring-primary-500 disabled:opacity-50"
+          />
+          <div>
+            <label
+              htmlFor="isPublic"
+              className="block text-sm font-medium text-neutral-900 cursor-pointer"
+            >
+              Allow others to view your profile
+            </label>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              When enabled, other users can view your profile at /u/{watch("username") || "username"}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Submit buttons */}

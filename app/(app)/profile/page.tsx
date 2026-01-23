@@ -35,18 +35,24 @@ export default async function ProfilePage() {
 
   const joinedCommunities = memberCommunities.filter((c) => c.ownerId !== userId);
 
-  // Check if this is a new user (no name and no username set)
-  const isNewUser = !user.name && !user.username;
+  // Check if this is a new user (no firstName/lastName and no username set)
+  const isNewUser = !user.firstName && !user.lastName && !user.username;
 
   return (
     <div className="space-y-8">
       {/* Profile Header with Edit */}
       <ProfileHeader
         user={{
+          firstName: user.firstName,
+          lastName: user.lastName,
           name: user.name,
           username: user.username,
           email: user.email,
           image: session.user.image ?? null,
+          bio: user.bio,
+          interests: user.interests,
+          communityHope: user.communityHope,
+          isPublic: user.isPublic,
         }}
         stats={stats}
         isNewUser={isNewUser}

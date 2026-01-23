@@ -14,7 +14,7 @@ export type ActionResult<T = void> =
   | { success: false; error: string };
 
 /**
- * Update user profile (name and username)
+ * Update user profile (name, username, bio, interests, communityHope, isPublic)
  */
 export async function updateProfile(
   input: unknown
@@ -38,7 +38,7 @@ export async function updateProfile(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { name, username } = parsed.data;
+    const { firstName, lastName, name, username, bio, interests, communityHope, isPublic } = parsed.data;
 
     // Check username availability (excluding current user)
     const available = await isUsernameAvailable(username, userId);
@@ -47,10 +47,23 @@ export async function updateProfile(
     }
 
     // Update profile
-    const updatedUser = await updateUserProfile(userId, { name, username });
+    const updatedUser = await updateUserProfile(userId, {
+      firstName,
+      lastName,
+      name,
+      username,
+      bio: bio || null,
+      interests: interests || null,
+      communityHope: communityHope || null,
+      isPublic: isPublic ?? true,
+    });
 
     revalidatePath("/profile");
     revalidatePath("/settings");
+    // Revalidate public profile page
+    if (updatedUser.username) {
+      revalidatePath(`/u/${updatedUser.username}`);
+    }
 
     return {
       success: true,
