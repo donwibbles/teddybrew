@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// Skip validation during build (secrets not available in Docker build phase)
+const skipValidation = process.env.SKIP_ENV_VALIDATION === "1";
+
 // Environment variable schema
 const envSchema = z.object({
   // Node environment
@@ -30,6 +33,12 @@ const envSchema = z.object({
 
 // Validate environment variables
 function validateEnv() {
+  // Skip validation during Docker build (secrets not available)
+  if (skipValidation) {
+    console.warn("⚠️ Skipping env validation (SKIP_ENV_VALIDATION=1)");
+    return process.env as unknown as z.infer<typeof envSchema>;
+  }
+
   try {
     const parsed = envSchema.parse(process.env);
     return parsed;

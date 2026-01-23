@@ -18,6 +18,8 @@ COPY . .
 ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 RUN npx prisma generate
 
+# Skip env validation during build (secrets injected at runtime)
+ENV SKIP_ENV_VALIDATION="1"
 RUN npm run build
 
 # Production image, copy all the files and run next
