@@ -7,12 +7,20 @@ import { ChatInput } from "./chat-input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAblyChannel, type AblyMessage } from "@/hooks/use-ably";
 import { sendChatMessage, deleteChatMessage, getChatMessages } from "@/lib/actions/chat";
+import { toggleReaction } from "@/lib/actions/reaction";
 import { toast } from "sonner";
+import type { EmojiKey } from "@/lib/constants/emoji";
 
 interface Author {
   id: string;
   name: string | null;
   image: string | null;
+}
+
+interface ReplyTo {
+  id: string;
+  content: string;
+  author: { id: string; name: string | null };
 }
 
 interface Message {
@@ -22,6 +30,15 @@ interface Message {
   authorId: string;
   author: Author;
   createdAt: string;
+  replyToId?: string | null;
+  replyTo?: ReplyTo | null;
+  reactionCounts: Record<string, number>;
+}
+
+interface ReplyingTo {
+  id: string;
+  authorName: string;
+  content: string;
 }
 
 interface ChatRoomProps {
@@ -48,6 +65,7 @@ export function ChatRoom({
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<ReplyingTo | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldScrollRef = useRef(true);
@@ -65,7 +83,7 @@ export function ChatRoom({
       setMessages((prev) => {
         // Avoid duplicates
         if (prev.some((m) => m.id === messageData.id)) return prev;
-        return [...prev, messageData];
+        return [...prev, { ...messageData, reactionCounts: messageData.reactionCounts || {} }];
       });
       shouldScrollRef.current = true;
     }, [])
@@ -81,6 +99,23 @@ export function ChatRoom({
     }, [])
   );
 
+  // Listen for reaction updates
+  useAblyChannel(
+    ablyChannelName,
+    "reaction-update",
+    useCallback((ablyMessage: AblyMessage) => {
+      const { messageId, counts } = ablyMessage.data as {
+        messageId: string;
+        counts: Record<string, number>;
+      };
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, reactionCounts: counts } : m
+        )
+      );
+    }, [])
+  );
+
   // Load initial messages
   useEffect(() => {
     async function loadMessages() {
@@ -88,6 +123,7 @@ export function ChatRoom({
       setMessages([]);
       setNextCursor(undefined);
       setHasMore(false);
+      setReplyingTo(null);
 
       const result = await getChatMessages({
         channelId,
@@ -101,6 +137,7 @@ export function ChatRoom({
             m.createdAt instanceof Date
               ? m.createdAt.toISOString()
               : m.createdAt,
+          reactionCounts: m.reactionCounts || {},
         })) as Message[]
       );
       setNextCursor(result.nextCursor);
@@ -138,6 +175,7 @@ export function ChatRoom({
         ...m,
         createdAt:
           m.createdAt instanceof Date ? m.createdAt.toISOString() : m.createdAt,
+        reactionCounts: m.reactionCounts || {},
       })) as Message[]),
       ...prev,
     ]);
@@ -146,10 +184,10 @@ export function ChatRoom({
     setIsLoadingMore(false);
   };
 
-  // Send message
-  const handleSend = async (content: string) => {
+  // Send message (with optional reply)
+  const handleSend = async (content: string, replyToId?: string) => {
     setIsSending(true);
-    const result = await sendChatMessage({ channelId, content });
+    const result = await sendChatMessage({ channelId, content, replyToId });
 
     if (!result.success) {
       toast.error(result.error);
@@ -174,6 +212,58 @@ export function ChatRoom({
       next.delete(messageId);
       return next;
     });
+  };
+
+  // Start replying to a message
+  const handleReply = (messageId: string) => {
+    const message = messages.find((m) => m.id === messageId);
+    if (message) {
+      setReplyingTo({
+        id: message.id,
+        authorName: message.author.name || "Anonymous",
+        content: message.content,
+      });
+    }
+  };
+
+  // Scroll to a specific message
+  const handleScrollToMessage = (messageId: string) => {
+    const element = document.getElementById(`message-${messageId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Highlight effect
+      element.classList.add("bg-primary-50");
+      setTimeout(() => {
+        element.classList.remove("bg-primary-50");
+      }, 2000);
+    }
+  };
+
+  // Toggle reaction on a message (optimistic update)
+  const handleToggleReaction = async (messageId: string, emoji: EmojiKey) => {
+    // Optimistic update
+    setMessages((prev) =>
+      prev.map((m) => {
+        if (m.id !== messageId) return m;
+        const currentCount = m.reactionCounts[emoji] || 0;
+        // Toggle: if exists, remove; otherwise add 1
+        // This is a simple heuristic - server is source of truth
+        const newCount = currentCount > 0 ? currentCount - 1 : currentCount + 1;
+        return {
+          ...m,
+          reactionCounts: {
+            ...m.reactionCounts,
+            [emoji]: newCount,
+          },
+        };
+      })
+    );
+
+    const result = await toggleReaction({ messageId, emoji });
+    if (!result.success) {
+      toast.error(result.error);
+      // Revert on error - but Ably will sync correct state anyway
+    }
   };
 
   return (
@@ -242,6 +332,12 @@ export function ChatRoom({
                 }
                 onDelete={handleDelete}
                 isDeleting={deletingIds.has(message.id)}
+                replyToId={message.replyToId}
+                replyTo={message.replyTo}
+                onReply={handleReply}
+                onScrollToMessage={handleScrollToMessage}
+                reactionCounts={message.reactionCounts}
+                onToggleReaction={handleToggleReaction}
               />
             ))}
             <div ref={messagesEndRef} />
@@ -254,6 +350,8 @@ export function ChatRoom({
         onSend={handleSend}
         disabled={isSending || !isConnected}
         channelName={channelName}
+        replyingTo={replyingTo}
+        onCancelReply={() => setReplyingTo(null)}
       />
     </div>
   );

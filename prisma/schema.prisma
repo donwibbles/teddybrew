@@ -42,6 +42,7 @@ model User {
   // Chat & Forum relations
   messages          Message[]     @relation("MessageAuthor")
   deletedMessages   Message[]     @relation("MessageDeletedBy")
+  messageReactions  MessageReaction[]
   posts             Post[]        @relation("PostAuthor")
   deletedPosts      Post[]        @relation("PostDeletedBy")
   comments          Comment[]     @relation("CommentAuthor")
@@ -156,42 +157,63 @@ model Event {
   id          String    @id @default(cuid())
   title       String
   description String?
-  startTime   DateTime
-  endTime     DateTime?
-  location    String?
-  capacity    Int?      // null = unlimited
+  location    String?   // Default location (sessions can override)
+  capacity    Int?      // Default capacity (sessions can override)
   communityId String
   organizerId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  // Virtual event fields
+  isVirtual     Boolean  @default(false)
+  meetingUrl    String?  @db.VarChar(500)
+  chatChannelId String?  @unique
+
   // Relations
-  community    Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  organizer    User      @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
-  coOrganizers User[]    @relation("EventCoOrganizers")
-  rsvps        RSVP[]
+  community    Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  organizer    User           @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
+  coOrganizers User[]         @relation("EventCoOrganizers")
+  sessions     EventSession[] // Every event has 1+ sessions
+  chatChannel  ChatChannel?   @relation(fields: [chatChannelId], references: [id], onDelete: SetNull)
 
   @@index([communityId])
   @@index([organizerId])
+}
+
+// Event Session - Each event has one or more sessions
+model EventSession {
+  id        String    @id @default(cuid())
+  eventId   String
+  title     String?   // Optional: "Day 1", "Morning Session", etc.
+  startTime DateTime
+  endTime   DateTime?
+  location  String?   // Override event location (optional)
+  capacity  Int?      // Override event capacity (optional)
+  createdAt DateTime  @default(now())
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  rsvps RSVP[]
+
+  @@index([eventId])
   @@index([startTime])
 }
 
-// RSVP Model
+// RSVP Model - Links to Session (not Event directly)
 model RSVP {
   id        String     @id @default(cuid())
   userId    String
-  eventId   String
+  sessionId String
   status    RSVPStatus @default(GOING)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 
   // Relations
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, eventId])
+  @@unique([userId, sessionId])
   @@index([userId])
-  @@index([eventId])
+  @@index([sessionId])
   @@index([status])
 }
 
@@ -213,6 +235,9 @@ model ChatChannel {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Event channel link (null for regular channels)
+  event Event?
+
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   messages  Message[]
 
@@ -231,12 +256,36 @@ model Message {
   deletedAt   DateTime?
   deletedById String?
 
+  // Reply support (single-level threading)
+  replyToId String?
+  replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies   Message[] @relation("MessageReplies")
+
   channel   ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   author    User        @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   deletedBy User?       @relation("MessageDeletedBy", fields: [deletedById], references: [id])
 
+  // Reactions
+  reactions MessageReaction[]
+
   @@index([channelId, createdAt(sort: Desc)])
   @@index([authorId])
+  @@index([replyToId])
+}
+
+// Message Reaction - emoji reactions on chat messages
+model MessageReaction {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  emoji     String   @db.VarChar(10) // e.g., "thumbsup", "heart"
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji]) // One per emoji per user per message
+  @@index([messageId])
 }
 
 // ============ FORUM SYSTEM ============

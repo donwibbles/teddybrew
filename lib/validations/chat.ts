@@ -66,6 +66,7 @@ export type DeleteChannelInput = z.infer<typeof deleteChannelSchema>;
 export const sendMessageSchema = z.object({
   channelId: z.string().min(1, "Channel ID is required"),
   content: messageContentSchema,
+  replyToId: z.string().optional(), // For reply threading
 });
 
 export type SendMessageInput = z.infer<typeof sendMessageSchema>;

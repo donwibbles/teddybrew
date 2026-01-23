@@ -42,9 +42,9 @@ async function isOrganizer(userId: string, eventId: string): Promise<boolean> {
 }
 
 /**
- * Create a new event
+ * Create a new event with sessions
  * - User must be a member of the community
- * - Date must be in the future
+ * - All sessions must be in the future
  */
 export async function createEvent(
   input: unknown
@@ -67,8 +67,16 @@ export async function createEvent(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, title, description, startTime, endTime, location, capacity } =
-      parsed.data;
+    const {
+      communityId,
+      title,
+      description,
+      location,
+      capacity,
+      sessions,
+      isVirtual,
+      meetingUrl,
+    } = parsed.data;
 
     // Check if user is a member of the community
     const memberCheck = await isMember(userId, communityId);
@@ -94,22 +102,53 @@ export async function createEvent(
       ? sanitizeText(description)
       : undefined;
 
-    // Create event
-    const event = await prisma.event.create({
-      data: {
-        title,
-        description: sanitizedDescription,
-        startTime,
-        endTime: endTime || null,
-        location: location || null,
-        capacity: capacity || null,
-        communityId,
-        organizerId: userId,
-      },
+    // Create event with sessions (and chat channel if virtual) in a transaction
+    const event = await prisma.$transaction(async (tx) => {
+      // Create chat channel if virtual event
+      let chatChannelId: string | undefined;
+      if (isVirtual) {
+        // Generate a unique channel name based on event title
+        const channelName = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50)}`;
+
+        const channel = await tx.chatChannel.create({
+          data: {
+            name: channelName,
+            description: `Chat for ${title}`,
+            communityId,
+            isDefault: false,
+          },
+        });
+        chatChannelId = channel.id;
+      }
+
+      // Create the event
+      return await tx.event.create({
+        data: {
+          title,
+          description: sanitizedDescription,
+          location: location || null,
+          capacity: capacity || null,
+          communityId,
+          organizerId: userId,
+          isVirtual: isVirtual || false,
+          meetingUrl: meetingUrl || null,
+          chatChannelId: chatChannelId || null,
+          sessions: {
+            create: sessions.map((session) => ({
+              title: session.title || null,
+              startTime: session.startTime,
+              endTime: session.endTime || null,
+              location: session.location || null,
+              capacity: session.capacity || null,
+            })),
+          },
+        },
+      });
     });
 
     revalidatePath(`/communities/${community.slug}`);
     revalidatePath(`/communities/${community.slug}/events`);
+    revalidatePath(`/communities/${community.slug}/chat`);
     revalidatePath("/events");
 
     return {
@@ -123,9 +162,9 @@ export async function createEvent(
 }
 
 /**
- * Update an event
+ * Update an event and its sessions
  * - Only organizers (creator + co-organizers) can update
- * - Date must be in the future
+ * - Sessions not in the list will be deleted (along with their RSVPs)
  */
 export async function updateEvent(input: unknown): Promise<ActionResult> {
   try {
@@ -146,8 +185,16 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { eventId, title, description, startTime, endTime, location, capacity } =
-      parsed.data;
+    const {
+      eventId,
+      title,
+      description,
+      location,
+      capacity,
+      sessions,
+      isVirtual,
+      meetingUrl,
+    } = parsed.data;
 
     // Check if user is an organizer
     const canEdit = await isOrganizer(userId, eventId);
@@ -158,13 +205,16 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       };
     }
 
-    // Get event with community for revalidation and validation
+    // Get event with community for revalidation
     const event = await prisma.event.findUnique({
       where: { id: eventId },
       select: {
-        startTime: true,
-        endTime: true,
-        community: { select: { slug: true } }
+        title: true,
+        isVirtual: true,
+        chatChannelId: true,
+        communityId: true,
+        community: { select: { slug: true } },
+        sessions: { select: { id: true } },
       },
     });
 
@@ -172,36 +222,91 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       return { success: false, error: "Event not found" };
     }
 
-    // Validate endTime against existing/new startTime
-    const effectiveStartTime = startTime || event.startTime;
-    const effectiveEndTime = endTime !== undefined ? endTime : event.endTime;
-
-    if (effectiveEndTime && effectiveEndTime <= effectiveStartTime) {
-      return { success: false, error: "End time must be after start time" };
-    }
-
-    // Validate that endTime is not in the past
-    if (effectiveEndTime && effectiveEndTime <= new Date()) {
-      return { success: false, error: "End time must be in the future" };
-    }
-
     // Sanitize description
     const sanitizedDescription =
       description !== undefined ? sanitizeText(description) : undefined;
 
-    // Update event
-    await prisma.event.update({
-      where: { id: eventId },
-      data: {
-        ...(title && { title }),
-        ...(sanitizedDescription !== undefined && {
-          description: sanitizedDescription || null,
-        }),
-        ...(startTime && { startTime }),
-        ...(endTime !== undefined && { endTime: endTime || null }),
-        ...(location !== undefined && { location: location || null }),
-        ...(capacity !== undefined && { capacity: capacity || null }),
-      },
+    // Use transaction for atomic update
+    await prisma.$transaction(async (tx) => {
+      // Handle virtual event changes
+      let chatChannelId = event.chatChannelId;
+
+      // If changing from non-virtual to virtual, create chat channel
+      if (isVirtual && !event.isVirtual && !event.chatChannelId) {
+        const eventTitle = title || event.title;
+        const channelName = `${eventTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50)}`;
+
+        const channel = await tx.chatChannel.create({
+          data: {
+            name: channelName,
+            description: `Chat for ${eventTitle}`,
+            communityId: event.communityId,
+            isDefault: false,
+          },
+        });
+        chatChannelId = channel.id;
+      }
+
+      // Update event base fields
+      await tx.event.update({
+        where: { id: eventId },
+        data: {
+          ...(title && { title }),
+          ...(sanitizedDescription !== undefined && {
+            description: sanitizedDescription || null,
+          }),
+          ...(location !== undefined && { location: location || null }),
+          ...(capacity !== undefined && { capacity: capacity || null }),
+          ...(isVirtual !== undefined && { isVirtual }),
+          ...(meetingUrl !== undefined && { meetingUrl: meetingUrl || null }),
+          ...(chatChannelId !== event.chatChannelId && { chatChannelId }),
+        },
+      });
+
+      // Handle sessions if provided
+      if (sessions) {
+        const existingIds = event.sessions.map((s) => s.id);
+        const newSessionIds = sessions
+          .filter((s) => s.id)
+          .map((s) => s.id as string);
+
+        // Delete sessions that are no longer in the list
+        const toDelete = existingIds.filter((id) => !newSessionIds.includes(id));
+        if (toDelete.length > 0) {
+          await tx.eventSession.deleteMany({
+            where: { id: { in: toDelete } },
+          });
+        }
+
+        // Update existing and create new sessions
+        for (const session of sessions) {
+          if (session.id && existingIds.includes(session.id)) {
+            // Update existing session
+            await tx.eventSession.update({
+              where: { id: session.id },
+              data: {
+                title: session.title || null,
+                startTime: session.startTime,
+                endTime: session.endTime || null,
+                location: session.location || null,
+                capacity: session.capacity || null,
+              },
+            });
+          } else {
+            // Create new session
+            await tx.eventSession.create({
+              data: {
+                eventId,
+                title: session.title || null,
+                startTime: session.startTime,
+                endTime: session.endTime || null,
+                location: session.location || null,
+                capacity: session.capacity || null,
+              },
+            });
+          }
+        }
+      }
     });
 
     revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);
@@ -432,8 +537,10 @@ export async function searchEvents(
           // Only show events from PUBLIC communities when browsing all events
           // (when communityId is specified, the page-level auth handles privacy)
           !communityId ? { community: { type: "PUBLIC" } } : {},
-          // Past/future filter
-          showPast ? {} : { startTime: { gte: now } },
+          // Past/future filter based on sessions
+          showPast
+            ? { sessions: { every: { startTime: { lt: now } } } }
+            : { sessions: { some: { startTime: { gte: now } } } },
           // Search query
           trimmedQuery
             ? {
@@ -466,13 +573,25 @@ export async function searchEvents(
             image: true,
           },
         },
-        _count: {
+        sessions: {
+          orderBy: { startTime: "asc" },
           select: {
-            rsvps: true,
+            id: true,
+            startTime: true,
+            endTime: true,
+            _count: { select: { rsvps: true } },
           },
         },
       },
-      orderBy: { startTime: showPast ? "desc" : "asc" },
+    });
+
+    // Sort events by first session's startTime
+    events.sort((a, b) => {
+      const aStart = a.sessions[0]?.startTime || new Date(0);
+      const bStart = b.sessions[0]?.startTime || new Date(0);
+      return showPast
+        ? bStart.getTime() - aStart.getTime()
+        : aStart.getTime() - bStart.getTime();
     });
 
     return events;
@@ -513,6 +632,17 @@ export async function getEventForEdit(eventId: string) {
             email: true,
             image: true,
           },
+        },
+        sessions: {
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            endTime: true,
+            location: true,
+            capacity: true,
+          },
+          orderBy: { startTime: "asc" },
         },
       },
     });

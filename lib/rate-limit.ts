@@ -5,6 +5,7 @@ import { Redis } from "@upstash/redis";
 let _redis: Redis | null = null;
 let _authRateLimiter: Ratelimit | null = null;
 let _chatRateLimiter: Ratelimit | null = null;
+let _reactionRateLimiter: Ratelimit | null = null;
 let _postRateLimiter: Ratelimit | null = null;
 let _commentRateLimiter: Ratelimit | null = null;
 let _voteRateLimiter: Ratelimit | null = null;
@@ -60,6 +61,23 @@ function getChatRateLimiter(): Ratelimit | null {
   });
 
   return _chatRateLimiter;
+}
+
+function getReactionRateLimiter(): Ratelimit | null {
+  if (_reactionRateLimiter) return _reactionRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 20 reactions per minute
+  _reactionRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, "1 m"),
+    analytics: true,
+    prefix: "ratelimit:reaction",
+  });
+
+  return _reactionRateLimiter;
 }
 
 function getPostRateLimiter(): Ratelimit | null {
@@ -244,6 +262,30 @@ export async function checkChatRateLimit(
       success: true,
       remaining: 999,
       reset: Date.now() + 1000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check reaction rate limit: 20 reactions per minute
+ */
+export async function checkReactionRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getReactionRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 60000,
     };
   }
 

@@ -5,7 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { isMember } from "@/lib/db/members";
 import { RSVPStatus } from "@prisma/client";
-import { rsvpEventSchema, cancelRsvpSchema } from "@/lib/validations/event";
+import {
+  rsvpSessionSchema,
+  cancelRsvpSchema,
+  rsvpAllSessionsSchema,
+} from "@/lib/validations/event";
 
 /**
  * Action result types
@@ -15,47 +19,53 @@ export type ActionResult<T = void> =
   | { success: false; error: string };
 
 /**
- * RSVP to an event (mark as GOING)
+ * RSVP to a session (mark as GOING)
  * - User must be a member of the community
- * - Event must not be at capacity
- * - Event must be in the future
- * - User cannot RSVP twice
+ * - Session must not be at capacity
+ * - Session must be in the future
+ * - User cannot RSVP twice to same session
  */
-export async function rsvpToEvent(input: unknown): Promise<ActionResult> {
+export async function rsvpToSession(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
 
     // Validate input
-    const parsed = rsvpEventSchema.safeParse(input);
+    const parsed = rsvpSessionSchema.safeParse(input);
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { eventId } = parsed.data;
+    const { sessionId } = parsed.data;
 
-    // Get event with capacity info and community
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
+    // Get session with event and community info
+    const session = await prisma.eventSession.findUnique({
+      where: { id: sessionId },
       select: {
         id: true,
-        communityId: true,
-        capacity: true,
         startTime: true,
-        community: { select: { slug: true } },
+        capacity: true,
+        event: {
+          select: {
+            id: true,
+            communityId: true,
+            capacity: true,
+            community: { select: { slug: true } },
+          },
+        },
       },
     });
 
-    if (!event) {
-      return { success: false, error: "Event not found" };
+    if (!session) {
+      return { success: false, error: "Session not found" };
     }
 
-    // Check if event is in the future
-    if (event.startTime <= new Date()) {
-      return { success: false, error: "Cannot RSVP to past events" };
+    // Check if session is in the future
+    if (session.startTime <= new Date()) {
+      return { success: false, error: "Cannot RSVP to past sessions" };
     }
 
     // Check if user is a member of the community
-    const memberCheck = await isMember(userId, event.communityId);
+    const memberCheck = await isMember(userId, session.event.communityId);
     if (!memberCheck) {
       return {
         success: false,
@@ -63,29 +73,35 @@ export async function rsvpToEvent(input: unknown): Promise<ActionResult> {
       };
     }
 
+    // Determine effective capacity (session overrides event)
+    const effectiveCapacity = session.capacity ?? session.event.capacity;
+
     // Use a transaction to prevent race conditions on capacity
     const result = await prisma.$transaction(async (tx) => {
-      // Check if user already has an RSVP
+      // Check if user already has an RSVP to this session
       const existingRSVP = await tx.rSVP.findUnique({
         where: {
-          userId_eventId: {
+          userId_sessionId: {
             userId,
-            eventId,
+            sessionId,
           },
         },
       });
 
       if (existingRSVP && existingRSVP.status === RSVPStatus.GOING) {
-        return { success: false as const, error: "You have already RSVP'd to this event" };
+        return {
+          success: false as const,
+          error: "You have already RSVP'd to this session",
+        };
       }
 
       // Check capacity inside transaction to prevent race condition
-      if (event.capacity) {
+      if (effectiveCapacity) {
         const currentCount = await tx.rSVP.count({
-          where: { eventId, status: RSVPStatus.GOING },
+          where: { sessionId, status: RSVPStatus.GOING },
         });
-        if (currentCount >= event.capacity) {
-          return { success: false as const, error: "This event is full" };
+        if (currentCount >= effectiveCapacity) {
+          return { success: false as const, error: "This session is full" };
         }
       }
 
@@ -100,7 +116,7 @@ export async function rsvpToEvent(input: unknown): Promise<ActionResult> {
         await tx.rSVP.create({
           data: {
             userId,
-            eventId,
+            sessionId,
             status: RSVPStatus.GOING,
           },
         });
@@ -113,19 +129,21 @@ export async function rsvpToEvent(input: unknown): Promise<ActionResult> {
       return result;
     }
 
-    revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);
+    revalidatePath(
+      `/communities/${session.event.community.slug}/events/${session.event.id}`
+    );
     revalidatePath("/events");
     revalidatePath("/my-events");
 
     return { success: true, data: undefined };
   } catch (error) {
-    console.error("Failed to RSVP to event:", error);
-    return { success: false, error: "Failed to RSVP to event" };
+    console.error("Failed to RSVP to session:", error);
+    return { success: false, error: "Failed to RSVP to session" };
   }
 }
 
 /**
- * Cancel RSVP to an event
+ * Cancel RSVP to a session
  * - User must have an existing RSVP
  */
 export async function cancelRsvp(input: unknown): Promise<ActionResult> {
@@ -138,40 +156,47 @@ export async function cancelRsvp(input: unknown): Promise<ActionResult> {
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { eventId } = parsed.data;
+    const { sessionId } = parsed.data;
 
-    // Get event for revalidation
-    const event = await prisma.event.findUnique({
-      where: { id: eventId },
+    // Get session with event for revalidation
+    const session = await prisma.eventSession.findUnique({
+      where: { id: sessionId },
       select: {
-        community: { select: { slug: true } },
+        event: {
+          select: {
+            id: true,
+            community: { select: { slug: true } },
+          },
+        },
       },
     });
 
-    if (!event) {
-      return { success: false, error: "Event not found" };
+    if (!session) {
+      return { success: false, error: "Session not found" };
     }
 
     // Check if user has an RSVP
     const existingRSVP = await prisma.rSVP.findUnique({
       where: {
-        userId_eventId: {
+        userId_sessionId: {
           userId,
-          eventId,
+          sessionId,
         },
       },
     });
 
     if (!existingRSVP) {
-      return { success: false, error: "You have not RSVP'd to this event" };
+      return { success: false, error: "You have not RSVP'd to this session" };
     }
 
-    // Delete the RSVP entirely (cleaner than setting to NOT_GOING)
+    // Delete the RSVP entirely
     await prisma.rSVP.delete({
       where: { id: existingRSVP.id },
     });
 
-    revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);
+    revalidatePath(
+      `/communities/${session.event.community.slug}/events/${session.event.id}`
+    );
     revalidatePath("/events");
     revalidatePath("/my-events");
 
@@ -183,9 +208,96 @@ export async function cancelRsvp(input: unknown): Promise<ActionResult> {
 }
 
 /**
- * Get RSVP status for current user on an event
+ * RSVP to all sessions of an event at once
  */
-export async function getRsvpStatus(eventId: string): Promise<{
+export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = rsvpAllSessionsSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { eventId } = parsed.data;
+
+    // Get event with sessions
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      select: {
+        id: true,
+        communityId: true,
+        capacity: true,
+        community: { select: { slug: true } },
+        sessions: {
+          where: { startTime: { gt: new Date() } },
+          select: { id: true, capacity: true },
+        },
+      },
+    });
+
+    if (!event) {
+      return { success: false, error: "Event not found" };
+    }
+
+    if (event.sessions.length === 0) {
+      return { success: false, error: "No upcoming sessions available" };
+    }
+
+    // Check membership
+    const memberCheck = await isMember(userId, event.communityId);
+    if (!memberCheck) {
+      return {
+        success: false,
+        error: "You must be a member of this community to RSVP",
+      };
+    }
+
+    // Create RSVPs for all sessions
+    await prisma.$transaction(async (tx) => {
+      for (const session of event.sessions) {
+        // Check if already RSVP'd
+        const existing = await tx.rSVP.findUnique({
+          where: { userId_sessionId: { userId, sessionId: session.id } },
+        });
+
+        if (!existing) {
+          // Check capacity
+          const effectiveCapacity = session.capacity ?? event.capacity;
+          if (effectiveCapacity) {
+            const count = await tx.rSVP.count({
+              where: { sessionId: session.id, status: RSVPStatus.GOING },
+            });
+            if (count >= effectiveCapacity) continue; // Skip full sessions
+          }
+
+          await tx.rSVP.create({
+            data: { userId, sessionId: session.id, status: RSVPStatus.GOING },
+          });
+        } else if (existing.status !== RSVPStatus.GOING) {
+          await tx.rSVP.update({
+            where: { id: existing.id },
+            data: { status: RSVPStatus.GOING },
+          });
+        }
+      }
+    });
+
+    revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);
+    revalidatePath("/events");
+    revalidatePath("/my-events");
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Failed to RSVP to all sessions:", error);
+    return { success: false, error: "Failed to RSVP to all sessions" };
+  }
+}
+
+/**
+ * Get RSVP status for current user on a session
+ */
+export async function getSessionRsvpStatus(sessionId: string): Promise<{
   hasRsvp: boolean;
   status: RSVPStatus | null;
 }> {
@@ -194,9 +306,9 @@ export async function getRsvpStatus(eventId: string): Promise<{
 
     const rsvp = await prisma.rSVP.findUnique({
       where: {
-        userId_eventId: {
+        userId_sessionId: {
           userId,
-          eventId,
+          sessionId,
         },
       },
     });
@@ -207,5 +319,40 @@ export async function getRsvpStatus(eventId: string): Promise<{
     };
   } catch {
     return { hasRsvp: false, status: null };
+  }
+}
+
+/**
+ * Get RSVP status for current user on all sessions of an event
+ */
+export async function getEventRsvpStatus(eventId: string): Promise<{
+  isAttending: boolean;
+  sessionsAttending: string[];
+  totalSessions: number;
+}> {
+  try {
+    const { userId } = await verifySession();
+
+    const sessions = await prisma.eventSession.findMany({
+      where: { eventId },
+      select: { id: true },
+    });
+
+    const rsvps = await prisma.rSVP.findMany({
+      where: {
+        userId,
+        sessionId: { in: sessions.map((s) => s.id) },
+        status: RSVPStatus.GOING,
+      },
+      select: { sessionId: true },
+    });
+
+    return {
+      isAttending: rsvps.length > 0,
+      sessionsAttending: rsvps.map((r) => r.sessionId),
+      totalSessions: sessions.length,
+    };
+  } catch {
+    return { isAttending: false, sessionsAttending: [], totalSessions: 0 };
   }
 }

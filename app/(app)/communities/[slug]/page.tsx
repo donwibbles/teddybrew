@@ -216,13 +216,15 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
                   >
                     <h3 className="font-medium text-neutral-900">{event.title}</h3>
                     <p className="text-sm text-neutral-500 mt-1">
-                      {new Date(event.startTime).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        month: "short",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
+                      {event.sessions[0]?.startTime
+                        ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })
+                        : "No sessions"}
                       {event.location && ` • ${event.location}`}
                     </p>
                   </Link>

@@ -159,11 +159,13 @@ export default async function ProfilePage() {
                     <div>
                       <p className="font-medium text-neutral-900">{event.title}</p>
                       <p className="text-sm text-neutral-500">
-                        {new Date(event.startTime).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {event.sessions[0]?.startTime
+                          ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : "No sessions"}
                       </p>
                     </div>
                     <Badge>Organizer</Badge>
@@ -180,11 +182,13 @@ export default async function ProfilePage() {
                       <div>
                         <p className="font-medium text-neutral-900">{event.title}</p>
                         <p className="text-sm text-neutral-500">
-                          {new Date(event.startTime).toLocaleDateString("en-US", {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {event.sessions[0]?.startTime
+                            ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "No sessions"}
                         </p>
                       </div>
                       <Badge variant="secondary">Attending</Badge>
@@ -220,12 +224,14 @@ export default async function ProfilePage() {
                     <div>
                       <p className="font-medium text-neutral-900">{event.title}</p>
                       <p className="text-sm text-neutral-500">
-                        {new Date(event.startTime).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {event.sessions[0]?.startTime
+                          ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })
+                          : "No sessions"}
                       </p>
                     </div>
                     <span className="text-neutral-400">&rarr;</span>

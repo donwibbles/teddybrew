@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { MessageSquare, Video, ExternalLink } from "lucide-react";
 import { getEventWithDetails } from "@/lib/db/events";
 import { getMembershipStatus } from "@/lib/actions/membership";
-import { RSVPButton } from "@/components/event/rsvp-button";
-import { AttendeeList } from "@/components/event/attendee-list";
+import { SessionList } from "@/components/event/session-list";
 import { PrivateCommunityLock } from "@/components/community/private-community-lock";
-import { RSVPStatus } from "@prisma/client";
 
 interface EventPageProps {
   params: Promise<{ slug: string; eventId: string }>;
@@ -60,38 +59,20 @@ export default async function EventPage({ params }: EventPageProps) {
     );
   }
 
-  // Check if current user is going
-  const userRsvp = event.rsvps.find(
-    (rsvp) => rsvp.user.id === membership.userId && rsvp.status === RSVPStatus.GOING
+  // Check if user is attending any session
+  const isGoing = event.sessions.some((session) =>
+    session.rsvps.some((rsvp) => rsvp.user.id === membership.userId)
   );
-  const isGoing = !!userRsvp;
 
-  // Calculate capacity status
-  const goingCount = event.rsvps.filter((r) => r.status === RSVPStatus.GOING).length;
-  const isPast = event.startTime < new Date();
+  // Check if all sessions are in the past
+  const isPast =
+    event.sessions.length > 0 &&
+    event.sessions.every((s) => new Date(s.startTime) < new Date());
 
   // Check if user can edit (organizer or co-organizer)
   const canEdit =
     membership.userId === event.organizerId ||
     event.coOrganizers.some((co) => co.id === membership.userId);
-
-  // Format dates
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
-  };
-
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      timeZoneName: "short",
-    }).format(date);
-  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -122,33 +103,20 @@ export default async function EventPage({ params }: EventPageProps) {
             </h1>
           </div>
 
-          {/* Date & Time */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-primary-50 rounded-lg">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-primary-600"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div>
-                <p className="font-medium text-neutral-900">
-                  {formatDate(event.startTime)}
-                </p>
-                <p className="text-sm text-neutral-600">
-                  {formatTime(event.startTime)}
-                  {event.endTime && ` - ${formatTime(event.endTime)}`}
-                </p>
-              </div>
-            </div>
+          {/* Sessions */}
+          <div className="bg-white rounded-lg border border-neutral-200 p-6">
+            <h2 className="font-medium text-neutral-900 mb-4">
+              {event.sessions.length > 1
+                ? `Sessions (${event.sessions.length})`
+                : "When"}
+            </h2>
+            <SessionList
+              sessions={event.sessions}
+              eventCapacity={event.capacity}
+              eventLocation={event.location}
+              currentUserId={membership.userId}
+              isMember={membership.isMember}
+            />
           </div>
 
           {/* Location */}
@@ -174,6 +142,54 @@ export default async function EventPage({ params }: EventPageProps) {
                   <p className="text-sm text-neutral-600">{event.location}</p>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Virtual Event Info */}
+          {event.isVirtual && (
+            <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-4">
+              <div className="flex items-center gap-2">
+                <Video className="h-5 w-5 text-primary-600" />
+                <span className="font-medium text-neutral-900">Virtual Event</span>
+              </div>
+
+              {/* Meeting URL */}
+              {event.meetingUrl && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary-50 rounded-lg">
+                    <ExternalLink className="h-4 w-4 text-primary-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-neutral-900">Meeting Link</p>
+                    <a
+                      href={event.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary-600 hover:text-primary-700 truncate block"
+                    >
+                      {event.meetingUrl}
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* Event Chat Link - Only show to attendees */}
+              {event.chatChannelId && isGoing && (
+                <Link
+                  href={`/communities/${slug}/chat?channel=${event.chatChannelId}`}
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Join Event Chat
+                </Link>
+              )}
+
+              {/* Message for non-attendees */}
+              {event.chatChannelId && !isGoing && membership.isMember && (
+                <p className="text-sm text-neutral-500 text-center">
+                  RSVP to access the event chat
+                </p>
+              )}
             </div>
           )}
 
@@ -245,22 +261,134 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Attendees */}
           <div className="bg-white rounded-lg border border-neutral-200 p-6">
-            <AttendeeList attendees={event.rsvps} />
+            <h2 className="font-medium text-neutral-900 mb-4">Attendees</h2>
+            {(() => {
+              // Collect unique attendees across all sessions
+              const attendeeMap = new Map<
+                string,
+                { user: { id: string; name: string | null; image: string | null }; sessionCount: number }
+              >();
+              event.sessions.forEach((session) => {
+                session.rsvps.forEach((rsvp) => {
+                  const existing = attendeeMap.get(rsvp.user.id);
+                  if (existing) {
+                    existing.sessionCount++;
+                  } else {
+                    attendeeMap.set(rsvp.user.id, {
+                      user: rsvp.user,
+                      sessionCount: 1,
+                    });
+                  }
+                });
+              });
+              const attendees = Array.from(attendeeMap.values());
+              const totalSessions = event.sessions.length;
+
+              if (attendees.length === 0) {
+                return (
+                  <p className="text-sm text-neutral-500">
+                    No attendees yet. Be the first to RSVP!
+                  </p>
+                );
+              }
+
+              return (
+                <div className="space-y-3">
+                  {attendees.slice(0, 10).map(({ user, sessionCount }) => (
+                    <div key={user.id} className="flex items-center gap-3">
+                      {user.image ? (
+                        <img
+                          src={user.image}
+                          alt={user.name || "Attendee"}
+                          className="w-8 h-8 rounded-full"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                          <span className="text-primary-700 text-sm font-medium">
+                            {(user.name || "?").charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-neutral-900 truncate">
+                          {user.name || "Anonymous"}
+                        </p>
+                        {totalSessions > 1 && (
+                          <p className="text-xs text-neutral-500">
+                            {sessionCount} of {totalSessions} sessions
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {attendees.length > 10 && (
+                    <p className="text-sm text-neutral-500">
+                      +{attendees.length - 10} more attendees
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* RSVP Card */}
+          {/* Attendance Summary Card */}
           <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-6">
-            <RSVPButton
-              eventId={event.id}
-              isGoing={isGoing}
-              isPast={isPast}
-              isMember={membership.isMember}
-              currentCount={goingCount}
-              capacity={event.capacity}
-            />
+            {(() => {
+              // Calculate total unique attendees
+              const uniqueAttendees = new Set<string>();
+              event.sessions.forEach((session) => {
+                session.rsvps.forEach((rsvp) => {
+                  uniqueAttendees.add(rsvp.user.id);
+                });
+              });
+              const totalAttendees = uniqueAttendees.size;
+
+              return (
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-primary-600"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                    </svg>
+                    <span className="text-2xl font-semibold text-neutral-900">
+                      {totalAttendees}
+                    </span>
+                  </div>
+                  <p className="text-sm text-neutral-600">
+                    {totalAttendees === 1 ? "person attending" : "people attending"}
+                  </p>
+                  {isGoing && (
+                    <div className="mt-3 inline-flex items-center gap-1 px-3 py-1 bg-success-100 text-success-700 text-sm rounded-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      You&apos;re going
+                    </div>
+                  )}
+                  {isPast && (
+                    <p className="mt-2 text-xs text-neutral-500">
+                      This event has ended
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Edit button for organizers */}
             {canEdit && (

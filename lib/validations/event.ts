@@ -30,14 +30,12 @@ export const eventCapacitySchema = z
   .optional()
   .nullable();
 
-// Date validation - must be in the future
-const futureDateSchema = z
+// Session title (optional)
+export const sessionTitleSchema = z
   .string()
-  .or(z.date())
-  .transform((val) => new Date(val))
-  .refine((date) => date > new Date(), {
-    message: "Date must be in the future",
-  });
+  .max(200, "Session title must be at most 200 characters")
+  .optional()
+  .transform((val) => val?.trim() || undefined);
 
 // Optional end date - must be after start date
 const optionalEndDateSchema = z
@@ -47,18 +45,18 @@ const optionalEndDateSchema = z
   .optional()
   .nullable();
 
-/**
- * Schema for creating a new event
- */
-export const createEventSchema = z
+// Session schema for multi-session events
+export const sessionSchema = z
   .object({
-    communityId: z.string().min(1, "Community ID is required"),
-    title: eventTitleSchema,
-    description: eventDescriptionSchema,
-    startTime: futureDateSchema,
+    id: z.string().optional(), // For existing sessions during edit
+    title: sessionTitleSchema,
+    startTime: z
+      .string()
+      .or(z.date())
+      .transform((val) => new Date(val)),
     endTime: optionalEndDateSchema,
-    location: eventLocationSchema,
-    capacity: eventCapacitySchema,
+    location: eventLocationSchema, // Override event location
+    capacity: eventCapacitySchema, // Override event capacity
   })
   .refine(
     (data) => {
@@ -73,49 +71,82 @@ export const createEventSchema = z
     }
   );
 
+// Meeting URL validation
+export const meetingUrlSchema = z
+  .string()
+  .max(500, "Meeting URL must be at most 500 characters")
+  .url("Must be a valid URL")
+  .optional()
+  .or(z.literal(""))
+  .transform((val) => val?.trim() || undefined);
+
+/**
+ * Schema for creating a new event
+ * Events can have multiple sessions - if no sessions provided, one is auto-created
+ */
+export const createEventSchema = z
+  .object({
+    communityId: z.string().min(1, "Community ID is required"),
+    title: eventTitleSchema,
+    description: eventDescriptionSchema,
+    location: eventLocationSchema, // Default location
+    capacity: eventCapacitySchema, // Default capacity
+    // Virtual event fields
+    isVirtual: z.boolean().optional().default(false),
+    meetingUrl: meetingUrlSchema,
+    // Sessions - at least one required
+    sessions: z
+      .array(sessionSchema)
+      .min(1, "At least one session is required")
+      .max(50, "Maximum 50 sessions allowed"),
+  })
+  .refine(
+    (data) => {
+      // Ensure all sessions have future start times
+      const now = new Date();
+      return data.sessions.every((s) => s.startTime > now);
+    },
+    {
+      message: "All sessions must be in the future",
+      path: ["sessions"],
+    }
+  )
+;
+
 export type CreateEventInput = z.infer<typeof createEventSchema>;
+
+// Session update schema - includes id for existing sessions
+export const sessionUpdateSchema = z.object({
+  id: z.string().optional(), // Existing session ID (omit for new sessions)
+  title: sessionTitleSchema,
+  startTime: z
+    .string()
+    .or(z.date())
+    .transform((val) => new Date(val)),
+  endTime: optionalEndDateSchema,
+  location: eventLocationSchema,
+  capacity: eventCapacitySchema,
+});
 
 /**
  * Schema for updating an event
  */
-export const updateEventSchema = z
-  .object({
-    eventId: z.string().min(1, "Event ID is required"),
-    title: eventTitleSchema.optional(),
-    description: eventDescriptionSchema,
-    startTime: z
-      .string()
-      .or(z.date())
-      .transform((val) => new Date(val))
-      .optional(),
-    endTime: optionalEndDateSchema,
-    location: eventLocationSchema,
-    capacity: eventCapacitySchema,
-  })
-  .refine(
-    (data) => {
-      if (data.startTime && data.startTime <= new Date()) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Start time must be in the future",
-      path: ["startTime"],
-    }
-  )
-  .refine(
-    (data) => {
-      if (data.endTime && data.startTime && data.endTime <= data.startTime) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "End time must be after start time",
-      path: ["endTime"],
-    }
-  );
+export const updateEventSchema = z.object({
+  eventId: z.string().min(1, "Event ID is required"),
+  title: eventTitleSchema.optional(),
+  description: eventDescriptionSchema,
+  location: eventLocationSchema,
+  capacity: eventCapacitySchema,
+  // Virtual event fields
+  isVirtual: z.boolean().optional(),
+  meetingUrl: meetingUrlSchema,
+  // Sessions to update/add - all sessions not in this list will be deleted
+  sessions: z
+    .array(sessionUpdateSchema)
+    .min(1, "At least one session is required")
+    .max(50, "Maximum 50 sessions allowed")
+    .optional(),
+});
 
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 
@@ -129,22 +160,31 @@ export const deleteEventSchema = z.object({
 export type DeleteEventInput = z.infer<typeof deleteEventSchema>;
 
 /**
- * Schema for RSVP to an event
+ * Schema for RSVP to a session
  */
-export const rsvpEventSchema = z.object({
-  eventId: z.string().min(1, "Event ID is required"),
+export const rsvpSessionSchema = z.object({
+  sessionId: z.string().min(1, "Session ID is required"),
 });
 
-export type RSVPEventInput = z.infer<typeof rsvpEventSchema>;
+export type RSVPSessionInput = z.infer<typeof rsvpSessionSchema>;
 
 /**
- * Schema for canceling RSVP
+ * Schema for canceling RSVP to a session
  */
 export const cancelRsvpSchema = z.object({
-  eventId: z.string().min(1, "Event ID is required"),
+  sessionId: z.string().min(1, "Session ID is required"),
 });
 
 export type CancelRSVPInput = z.infer<typeof cancelRsvpSchema>;
+
+/**
+ * Schema for RSVP to all sessions of an event at once
+ */
+export const rsvpAllSessionsSchema = z.object({
+  eventId: z.string().min(1, "Event ID is required"),
+});
+
+export type RSVPAllSessionsInput = z.infer<typeof rsvpAllSessionsSchema>;
 
 /**
  * Schema for adding a co-organizer

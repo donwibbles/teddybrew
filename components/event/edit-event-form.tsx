@@ -2,24 +2,35 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { updateEventSchema } from "@/lib/validations/event";
-import { z } from "zod";
 import { updateEvent, deleteEvent } from "@/lib/actions/event";
+import { AddSessionForm } from "./add-session-form";
 
-// Form input type (before Zod transforms)
-type UpdateEventFormInput = z.input<typeof updateEventSchema>;
+interface Session {
+  id?: string;
+  title?: string;
+  startTime: string;
+  endTime?: string;
+  location?: string;
+  capacity?: number;
+}
 
 interface EditEventFormProps {
   event: {
     id: string;
     title: string;
     description: string | null;
-    startTime: Date;
-    endTime: Date | null;
     location: string | null;
     capacity: number | null;
+    isVirtual?: boolean;
+    meetingUrl?: string | null;
+    sessions: Array<{
+      id: string;
+      title: string | null;
+      startTime: Date;
+      endTime: Date | null;
+      location: string | null;
+      capacity: number | null;
+    }>;
   };
   communitySlug: string;
   isCreator: boolean;
@@ -36,11 +47,15 @@ export function EditEventForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const [timezone, setTimezone] = useState<string>("");
 
-  // Get user's timezone on mount
-  useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setTimezone(tz);
-  }, []);
+  // Form state
+  const [title, setTitle] = useState(event.title);
+  const [description, setDescription] = useState(event.description || "");
+  const [location, setLocation] = useState(event.location || "");
+  const [capacity, setCapacity] = useState<number | undefined>(
+    event.capacity ?? undefined
+  );
+  const [isVirtual, setIsVirtual] = useState(event.isVirtual || false);
+  const [meetingUrl, setMeetingUrl] = useState(event.meetingUrl || "");
 
   // Format date for datetime-local input
   const formatDateForInput = (date: Date) => {
@@ -49,29 +64,59 @@ export function EditEventForm({
     return d.toISOString().slice(0, 16);
   };
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<UpdateEventFormInput>({
-    resolver: zodResolver(updateEventSchema),
-    defaultValues: {
-      eventId: event.id,
-      title: event.title,
-      description: event.description || "",
-      startTime: formatDateForInput(event.startTime),
-      endTime: event.endTime ? formatDateForInput(event.endTime) : "",
-      location: event.location || "",
-      capacity: event.capacity || undefined,
-    },
-  });
+  const [sessions, setSessions] = useState<Session[]>(
+    event.sessions.map((s) => ({
+      id: s.id,
+      title: s.title || "",
+      startTime: formatDateForInput(s.startTime),
+      endTime: s.endTime ? formatDateForInput(s.endTime) : "",
+      location: s.location || "",
+      capacity: s.capacity ?? undefined,
+    }))
+  );
 
-  const startTime = watch("startTime");
+  // Get user's timezone on mount
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    setTimezone(tz);
+  }, []);
 
-  const onSubmit = async (data: UpdateEventFormInput) => {
+  // Get minimum date (now) for datetime-local input
+  const getMinDateTime = () => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
     setServerError(null);
+
+    // Validate sessions have start times
+    if (sessions.some((s) => !s.startTime)) {
+      setServerError("All sessions must have a start time");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const data = {
+      eventId: event.id,
+      title,
+      description: description || undefined,
+      location: location || undefined,
+      capacity: capacity || undefined,
+      isVirtual,
+      meetingUrl: meetingUrl || undefined,
+      sessions: sessions.map((s) => ({
+        id: s.id,
+        title: s.title || undefined,
+        startTime: s.startTime,
+        endTime: s.endTime || undefined,
+        location: s.location || undefined,
+        capacity: s.capacity || undefined,
+      })),
+    };
 
     const result = await updateEvent(data);
 
@@ -85,7 +130,11 @@ export function EditEventForm({
   };
 
   const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this event? This cannot be undone.")) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this event? This cannot be undone."
+      )
+    ) {
       return;
     }
 
@@ -103,7 +152,7 @@ export function EditEventForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       {serverError && (
         <div
           role="alert"
@@ -112,9 +161,6 @@ export function EditEventForm({
           {serverError}
         </div>
       )}
-
-      {/* Hidden event ID */}
-      <input type="hidden" {...register("eventId")} />
 
       {/* Title field */}
       <div>
@@ -127,15 +173,16 @@ export function EditEventForm({
         <input
           id="title"
           type="text"
-          {...register("title")}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           disabled={isSubmitting || isDeleting}
+          required
+          minLength={3}
+          maxLength={200}
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500"
         />
-        {errors.title && (
-          <p className="mt-1 text-sm text-error-600">{errors.title.message}</p>
-        )}
       </div>
 
       {/* Description field */}
@@ -148,18 +195,15 @@ export function EditEventForm({
         </label>
         <textarea
           id="description"
-          {...register("description")}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           rows={4}
           disabled={isSubmitting || isDeleting}
+          maxLength={5000}
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
         />
-        {errors.description && (
-          <p className="mt-1 text-sm text-error-600">
-            {errors.description.message}
-          </p>
-        )}
       </div>
 
       {/* Timezone notice */}
@@ -171,55 +215,13 @@ export function EditEventForm({
         </div>
       )}
 
-      {/* Date/Time fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="startTime"
-            className="block text-sm font-medium text-neutral-700 mb-1"
-          >
-            Start Date & Time <span className="text-error-500">*</span>
-          </label>
-          <input
-            id="startTime"
-            type="datetime-local"
-            {...register("startTime")}
-            disabled={isSubmitting || isDeleting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900
-                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
-          />
-          {errors.startTime && (
-            <p className="mt-1 text-sm text-error-600">
-              {errors.startTime.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label
-            htmlFor="endTime"
-            className="block text-sm font-medium text-neutral-700 mb-1"
-          >
-            End Date & Time
-          </label>
-          <input
-            id="endTime"
-            type="datetime-local"
-            {...register("endTime")}
-            min={(startTime as string) || undefined}
-            disabled={isSubmitting || isDeleting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900
-                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
-          />
-          {errors.endTime && (
-            <p className="mt-1 text-sm text-error-600">
-              {errors.endTime.message}
-            </p>
-          )}
-        </div>
-      </div>
+      {/* Sessions */}
+      <AddSessionForm
+        sessions={sessions}
+        onChange={setSessions}
+        minDateTime={getMinDateTime()}
+        disabled={isSubmitting || isDeleting}
+      />
 
       {/* Location field */}
       <div>
@@ -227,20 +229,22 @@ export function EditEventForm({
           htmlFor="location"
           className="block text-sm font-medium text-neutral-700 mb-1"
         >
-          Location
+          Default Location
         </label>
         <input
           id="location"
           type="text"
-          {...register("location")}
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
           disabled={isSubmitting || isDeleting}
+          maxLength={500}
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500"
         />
-        {errors.location && (
-          <p className="mt-1 text-sm text-error-600">
-            {errors.location.message}
+        {sessions.length > 1 && (
+          <p className="mt-1 text-xs text-neutral-500">
+            This location applies to all sessions unless overridden.
           </p>
         )}
       </div>
@@ -251,14 +255,15 @@ export function EditEventForm({
           htmlFor="capacity"
           className="block text-sm font-medium text-neutral-700 mb-1"
         >
-          Capacity Limit
+          Default Capacity Limit
         </label>
         <input
           id="capacity"
           type="number"
-          {...register("capacity", {
-            setValueAs: (v) => v === "" || v === null ? undefined : Number(v) || undefined
-          })}
+          value={capacity ?? ""}
+          onChange={(e) =>
+            setCapacity(e.target.value ? parseInt(e.target.value) : undefined)
+          }
           placeholder="Leave empty for unlimited"
           min={1}
           max={10000}
@@ -267,10 +272,54 @@ export function EditEventForm({
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500"
         />
-        {errors.capacity && (
-          <p className="mt-1 text-sm text-error-600">
-            {errors.capacity.message}
-          </p>
+        <p className="mt-1 text-xs text-neutral-500">
+          Maximum attendees per session. Leave empty for no limit.
+        </p>
+      </div>
+
+      {/* Virtual Event Toggle */}
+      <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isVirtual}
+            onChange={(e) => setIsVirtual(e.target.checked)}
+            disabled={isSubmitting || isDeleting}
+            className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500
+                       disabled:opacity-50"
+          />
+          <div>
+            <span className="font-medium text-neutral-900">Virtual Event</span>
+            <p className="text-sm text-neutral-500">
+              Enable a dedicated chat channel for event attendees
+            </p>
+          </div>
+        </label>
+
+        {/* Meeting URL (shown when virtual) */}
+        {isVirtual && (
+          <div className="mt-4">
+            <label
+              htmlFor="meetingUrl"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Meeting URL
+            </label>
+            <input
+              id="meetingUrl"
+              type="url"
+              value={meetingUrl}
+              onChange={(e) => setMeetingUrl(e.target.value)}
+              placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+              disabled={isSubmitting || isDeleting}
+              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                         disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+            <p className="mt-1 text-xs text-neutral-500">
+              Optional: Provide a link to your video call or virtual meeting
+            </p>
+          </div>
         )}
       </div>
 
@@ -288,7 +337,12 @@ export function EditEventForm({
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || isDeleting}
+          disabled={
+            isSubmitting ||
+            isDeleting ||
+            !title.trim() ||
+            sessions.some((s) => !s.startTime)
+          }
           className="flex-1 px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -304,7 +358,8 @@ export function EditEventForm({
             Danger Zone
           </h3>
           <p className="text-sm text-neutral-600 mb-4">
-            Deleting this event will remove all RSVPs. This action cannot be undone.
+            Deleting this event will remove all sessions and RSVPs. This action
+            cannot be undone.
           </p>
           <button
             type="button"

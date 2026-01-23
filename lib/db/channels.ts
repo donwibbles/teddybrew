@@ -2,10 +2,19 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * Get all channels for a community
+ * Includes event info for event channels
  */
 export async function getChannels(communityId: string) {
   return prisma.chatChannel.findMany({
     where: { communityId },
+    include: {
+      event: {
+        select: {
+          id: true,
+          title: true,
+        },
+      },
+    },
     orderBy: [{ isDefault: "desc" }, { name: "asc" }],
   });
 }
@@ -77,6 +86,18 @@ export async function getChannelMessages(
           image: true,
         },
       },
+      // Efficient replyTo - only fields needed for preview
+      replyTo: {
+        select: {
+          id: true,
+          content: true,
+          author: { select: { id: true, name: true } },
+        },
+      },
+      // Get reactions for aggregation
+      reactions: {
+        select: { emoji: true },
+      },
     },
   });
 
@@ -84,9 +105,35 @@ export async function getChannelMessages(
   const items = hasMore ? messages.slice(0, -1) : messages;
   const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
 
+  // Transform messages to include reaction counts
+  const transformedItems = items.map((msg) => {
+    const reactionCounts: Record<string, number> = {};
+    msg.reactions.forEach((r) => {
+      reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
+    });
+
+    return {
+      id: msg.id,
+      content: msg.content,
+      channelId: msg.channelId,
+      authorId: msg.authorId,
+      author: msg.author,
+      createdAt: msg.createdAt,
+      replyToId: msg.replyToId,
+      replyTo: msg.replyTo
+        ? {
+            id: msg.replyTo.id,
+            content: msg.replyTo.content.slice(0, 100),
+            author: msg.replyTo.author,
+          }
+        : null,
+      reactionCounts,
+    };
+  });
+
   // Reverse to get chronological order (oldest first)
   return {
-    messages: items.reverse(),
+    messages: transformedItems.reverse(),
     nextCursor,
     hasMore,
   };

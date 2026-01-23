@@ -17,7 +17,7 @@ export async function getEventById(id: string): Promise<Event | null> {
 }
 
 /**
- * Get event with full details (community, organizer, RSVPs)
+ * Get event with full details (community, organizer, sessions with RSVPs)
  */
 export async function getEventWithDetails(id: string) {
   return await prisma.event.findUnique({
@@ -46,21 +46,25 @@ export async function getEventWithDetails(id: string) {
           image: true,
         },
       },
-      rsvps: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
+          rsvps: {
+            where: { status: "GOING" },
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true,
+                },
+              },
             },
+            orderBy: { createdAt: "asc" },
           },
-        },
-        orderBy: { createdAt: "asc" },
-      },
-      _count: {
-        select: {
-          rsvps: true,
+          _count: {
+            select: { rsvps: true },
+          },
         },
       },
     },
@@ -68,10 +72,10 @@ export async function getEventWithDetails(id: string) {
 }
 
 /**
- * Get all events for a community
+ * Get all events for a community with session info
  */
 export async function getCommunityEvents(communityId: string) {
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: { communityId },
     include: {
       organizer: {
@@ -81,25 +85,37 @@ export async function getCommunityEvents(communityId: string) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "asc" },
+  });
+
+  // Sort by first session's start time
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return aStart.getTime() - bStart.getTime();
   });
 }
 
 /**
- * Get upcoming events for a community
+ * Get upcoming events for a community (events with at least one future session)
  */
 export async function getUpcomingCommunityEvents(communityId: string) {
   const now = new Date();
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
       communityId,
-      startTime: { gte: now },
+      sessions: {
+        some: { startTime: { gte: now } },
+      },
     },
     include: {
       organizer: {
@@ -109,25 +125,36 @@ export async function getUpcomingCommunityEvents(communityId: string) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "asc" },
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return aStart.getTime() - bStart.getTime();
   });
 }
 
 /**
- * Get past events for a community
+ * Get past events for a community (all sessions in the past)
  */
 export async function getPastCommunityEvents(communityId: string) {
   const now = new Date();
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
       communityId,
-      startTime: { lt: now },
+      sessions: {
+        every: { startTime: { lt: now } },
+      },
     },
     include: {
       organizer: {
@@ -137,13 +164,22 @@ export async function getPastCommunityEvents(communityId: string) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "desc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "desc" },
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return bStart.getTime() - aStart.getTime();
   });
 }
 
@@ -151,7 +187,7 @@ export async function getPastCommunityEvents(communityId: string) {
  * Get events organized by a user
  */
 export async function getEventsByOrganizer(organizerId: string) {
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: { organizerId },
     include: {
       community: {
@@ -161,24 +197,34 @@ export async function getEventsByOrganizer(organizerId: string) {
           name: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "desc" },
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return bStart.getTime() - aStart.getTime();
   });
 }
 
 /**
- * Get upcoming events across all communities
+ * Get upcoming events across all communities (events with at least one future session)
  */
 export async function getUpcomingEvents(limit?: number) {
   const now = new Date();
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
-      startTime: { gte: now },
+      sessions: {
+        some: { startTime: { gte: now } },
+      },
     },
     include: {
       community: {
@@ -196,52 +242,64 @@ export async function getUpcomingEvents(limit?: number) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "asc" },
-    take: limit,
+    take: limit ? limit * 2 : undefined, // Get more to account for sorting
   });
+
+  // Sort by first session start time
+  const sorted = events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return aStart.getTime() - bStart.getTime();
+  });
+
+  return limit ? sorted.slice(0, limit) : sorted;
 }
 
 /**
- * Check if event is at capacity
+ * Check if a session is at capacity
  */
-export async function isEventFull(eventId: string): Promise<boolean> {
-  const event = await prisma.event.findUnique({
-    where: { id: eventId },
+export async function isSessionFull(sessionId: string): Promise<boolean> {
+  const session = await prisma.eventSession.findUnique({
+    where: { id: sessionId },
     select: {
       capacity: true,
+      event: { select: { capacity: true } },
       _count: {
-        select: {
-          rsvps: true,
-        },
+        select: { rsvps: true },
       },
     },
   });
 
-  if (!event || !event.capacity) {
-    return false; // No capacity limit
-  }
+  if (!session) return false;
 
-  return event._count.rsvps >= event.capacity;
+  const effectiveCapacity = session.capacity ?? session.event.capacity;
+  if (!effectiveCapacity) return false;
+
+  return session._count.rsvps >= effectiveCapacity;
 }
 
 /**
- * Get events organized by a user (including co-organized)
+ * Get events organized by a user (including co-organized) with future sessions
  */
 export async function getUserOrganizedEvents(userId: string) {
   const now = new Date();
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
       OR: [
         { organizerId: userId },
         { coOrganizers: { some: { id: userId } } },
       ],
-      startTime: { gte: now },
+      sessions: { some: { startTime: { gte: now } } },
     },
     include: {
       community: {
@@ -258,28 +316,40 @@ export async function getUserOrganizedEvents(userId: string) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          rsvps: {
+            where: { userId, status: "GOING" },
+            select: { userId: true },
+          },
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "asc" },
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return aStart.getTime() - bStart.getTime();
   });
 }
 
 /**
- * Get events user is attending (has RSVP'd GOING)
+ * Get events user is attending (has RSVP'd GOING to any session)
  */
 export async function getUserAttendingEvents(userId: string) {
   const now = new Date();
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
-      startTime: { gte: now },
-      rsvps: {
+      sessions: {
         some: {
-          userId,
-          status: "GOING",
+          startTime: { gte: now },
+          rsvps: { some: { userId, status: "GOING" } },
         },
       },
     },
@@ -298,13 +368,26 @@ export async function getUserAttendingEvents(userId: string) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "asc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          rsvps: {
+            where: { userId, status: "GOING" },
+            select: { userId: true },
+          },
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "asc" },
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return aStart.getTime() - bStart.getTime();
   });
 }
 
@@ -313,13 +396,13 @@ export async function getUserAttendingEvents(userId: string) {
  */
 export async function getUserPastEvents(userId: string) {
   const now = new Date();
-  return await prisma.event.findMany({
+  const events = await prisma.event.findMany({
     where: {
-      startTime: { lt: now },
+      sessions: { every: { startTime: { lt: now } } },
       OR: [
         { organizerId: userId },
         { coOrganizers: { some: { id: userId } } },
-        { rsvps: { some: { userId, status: "GOING" } } },
+        { sessions: { some: { rsvps: { some: { userId, status: "GOING" } } } } },
       ],
     },
     include: {
@@ -337,13 +420,26 @@ export async function getUserPastEvents(userId: string) {
           image: true,
         },
       },
-      _count: {
+      sessions: {
+        orderBy: { startTime: "desc" },
         select: {
-          rsvps: true,
+          id: true,
+          startTime: true,
+          endTime: true,
+          rsvps: {
+            where: { userId, status: "GOING" },
+            select: { userId: true },
+          },
+          _count: { select: { rsvps: true } },
         },
       },
     },
-    orderBy: { startTime: "desc" },
     take: 20,
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return bStart.getTime() - aStart.getTime();
   });
 }

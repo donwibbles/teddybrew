@@ -56,21 +56,29 @@ export async function getUserWithUpcomingEvents(userId: string) {
     include: {
       organizedEvents: {
         where: {
-          startTime: { gte: now },
+          sessions: { some: { startTime: { gte: now } } },
         },
-        orderBy: { startTime: "asc" },
+        include: {
+          sessions: {
+            orderBy: { startTime: "asc" },
+          },
+        },
       },
       rsvps: {
         where: {
           status: "GOING",
-          event: {
+          session: {
             startTime: { gte: now },
           },
         },
         include: {
-          event: true,
+          session: {
+            include: {
+              event: true,
+            },
+          },
         },
-        orderBy: { event: { startTime: "asc" } },
+        orderBy: { session: { startTime: "asc" } },
       },
     },
   });
@@ -95,7 +103,7 @@ export async function getUserDashboardStats(userId: string) {
       where: {
         userId,
         status: "GOING",
-        event: { startTime: { gte: now } },
+        session: { startTime: { gte: now } },
       },
     }),
   ]);

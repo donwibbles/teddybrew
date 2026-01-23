@@ -1,13 +1,18 @@
 import Link from "next/link";
-import { RSVPStatus } from "@prisma/client";
+
+interface Session {
+  id: string;
+  startTime: Date;
+  endTime: Date | null;
+  _count: { rsvps: number };
+  rsvps?: Array<{ userId: string }>;
+}
 
 interface EventCardProps {
   event: {
     id: string;
     title: string;
     description: string | null;
-    startTime: Date;
-    endTime: Date | null;
     location: string | null;
     capacity: number | null;
     community: {
@@ -18,13 +23,7 @@ interface EventCardProps {
       name: string | null;
       image: string | null;
     };
-    _count: {
-      rsvps: number;
-    };
-    rsvps?: Array<{
-      status: RSVPStatus;
-      userId: string;
-    }>;
+    sessions: Session[];
   };
   currentUserId?: string;
   showCommunity?: boolean;
@@ -35,27 +34,59 @@ export function EventCard({
   currentUserId,
   showCommunity = true,
 }: EventCardProps) {
-  const isPast = event.startTime < new Date();
+  const now = new Date();
+  const sessions = event.sessions || [];
+  const firstSession = sessions[0];
+  const lastSession = sessions[sessions.length - 1];
+
+  // Check if all sessions are in the past
+  const isPast = sessions.length > 0 && sessions.every((s) => new Date(s.startTime) < now);
+
+  // Check if user is attending any session
   const isGoing =
     currentUserId &&
-    event.rsvps?.some(
-      (r) => r.userId === currentUserId && r.status === RSVPStatus.GOING
+    sessions.some((s) =>
+      s.rsvps?.some((r) => r.userId === currentUserId)
     );
-  const isFull = event.capacity && event._count.rsvps >= event.capacity;
+
+  // Total RSVP count (unique users across sessions would need deduplication, using sum for simplicity)
+  const totalRsvps = sessions.reduce((sum, s) => sum + s._count.rsvps, 0);
+
+  // Check if event is full (simplified: if first session is full)
+  const isFull = event.capacity && firstSession && firstSession._count.rsvps >= event.capacity;
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
-    }).format(date);
+    }).format(new Date(date));
   };
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
-    }).format(date);
+    }).format(new Date(date));
+  };
+
+  // Format date range for multi-session events
+  const getDateDisplay = () => {
+    if (!firstSession) return "No sessions";
+
+    if (sessions.length === 1) {
+      return `${formatDate(firstSession.startTime)} at ${formatTime(firstSession.startTime)}`;
+    }
+
+    // Multi-session: show date range
+    const startDate = formatDate(firstSession.startTime);
+    const endDate = lastSession ? formatDate(lastSession.startTime) : startDate;
+
+    if (startDate === endDate) {
+      return `${startDate} - ${sessions.length} sessions`;
+    }
+
+    return `${startDate} - ${endDate} - ${sessions.length} sessions`;
   };
 
   return (
@@ -111,9 +142,7 @@ export function EventCard({
               clipRule="evenodd"
             />
           </svg>
-          <span>
-            {formatDate(event.startTime)} at {formatTime(event.startTime)}
-          </span>
+          <span>{getDateDisplay()}</span>
         </div>
 
         {/* Location */}
@@ -168,8 +197,8 @@ export function EventCard({
               <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
             </svg>
             <span>
-              {event._count.rsvps}
-              {event.capacity && ` / ${event.capacity}`}
+              {totalRsvps} attending
+              {event.capacity && ` (${event.capacity} max/session)`}
             </span>
           </div>
         </div>

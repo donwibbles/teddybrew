@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createEventSchema } from "@/lib/validations/event";
-import { z } from "zod";
 import { createEvent } from "@/lib/actions/event";
+import { AddSessionForm } from "./add-session-form";
 
-// Form input type (before Zod transforms)
-type CreateEventFormInput = z.input<typeof createEventSchema>;
+interface Session {
+  title?: string;
+  startTime: string;
+  endTime?: string;
+  location?: string;
+  capacity?: number;
+}
 
 interface CreateEventFormProps {
   communityId: string;
@@ -25,6 +27,17 @@ export function CreateEventForm({
   const [serverError, setServerError] = useState<string | null>(null);
   const [timezone, setTimezone] = useState<string>("");
 
+  // Form state
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [capacity, setCapacity] = useState<number | undefined>(undefined);
+  const [isVirtual, setIsVirtual] = useState(false);
+  const [meetingUrl, setMeetingUrl] = useState("");
+  const [sessions, setSessions] = useState<Session[]>([
+    { startTime: "", endTime: "" },
+  ]);
+
   // Get user's timezone on mount
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -38,34 +51,41 @@ export function CreateEventForm({
     return now.toISOString().slice(0, 16);
   };
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<CreateEventFormInput>({
-    resolver: zodResolver(createEventSchema),
-    defaultValues: {
-      communityId,
-      title: "",
-      description: "",
-      startTime: "",
-      endTime: "",
-      location: "",
-      capacity: undefined,
-    },
-  });
-
-  const startTime = watch("startTime");
-
-  const onSubmit = async (data: CreateEventFormInput) => {
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
     setServerError(null);
+
+    // Validate sessions have start times
+    if (sessions.some((s) => !s.startTime)) {
+      setServerError("All sessions must have a start time");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const data = {
+      communityId,
+      title,
+      description: description || undefined,
+      location: location || undefined,
+      capacity: capacity || undefined,
+      isVirtual,
+      meetingUrl: meetingUrl || undefined,
+      sessions: sessions.map((s) => ({
+        title: s.title || undefined,
+        startTime: s.startTime,
+        endTime: s.endTime || undefined,
+        location: s.location || undefined,
+        capacity: s.capacity || undefined,
+      })),
+    };
 
     const result = await createEvent(data);
 
     if (result.success) {
-      router.push(`/communities/${result.data.communitySlug}/events/${result.data.eventId}`);
+      router.push(
+        `/communities/${result.data.communitySlug}/events/${result.data.eventId}`
+      );
     } else {
       setServerError(result.error);
       setIsSubmitting(false);
@@ -73,7 +93,7 @@ export function CreateEventForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
       {serverError && (
         <div
           role="alert"
@@ -82,9 +102,6 @@ export function CreateEventForm({
           {serverError}
         </div>
       )}
-
-      {/* Hidden community ID */}
-      <input type="hidden" {...register("communityId")} />
 
       {/* Community display (read-only) */}
       <div>
@@ -105,16 +122,17 @@ export function CreateEventForm({
         <input
           id="title"
           type="text"
-          {...register("title")}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Monthly Meetup"
           disabled={isSubmitting}
+          required
+          minLength={3}
+          maxLength={200}
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500"
         />
-        {errors.title && (
-          <p className="mt-1 text-sm text-error-600">{errors.title.message}</p>
-        )}
       </div>
 
       {/* Description field */}
@@ -127,19 +145,16 @@ export function CreateEventForm({
         </label>
         <textarea
           id="description"
-          {...register("description")}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Tell people what this event is about..."
           rows={4}
           disabled={isSubmitting}
+          maxLength={5000}
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
         />
-        {errors.description && (
-          <p className="mt-1 text-sm text-error-600">
-            {errors.description.message}
-          </p>
-        )}
       </div>
 
       {/* Timezone notice */}
@@ -151,96 +166,56 @@ export function CreateEventForm({
         </div>
       )}
 
-      {/* Date/Time fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label
-            htmlFor="startTime"
-            className="block text-sm font-medium text-neutral-700 mb-1"
-          >
-            Start Date & Time <span className="text-error-500">*</span>
-          </label>
-          <input
-            id="startTime"
-            type="datetime-local"
-            {...register("startTime")}
-            min={getMinDateTime()}
-            disabled={isSubmitting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900
-                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
-          />
-          {errors.startTime && (
-            <p className="mt-1 text-sm text-error-600">
-              {errors.startTime.message}
-            </p>
-          )}
-        </div>
+      {/* Sessions */}
+      <AddSessionForm
+        sessions={sessions}
+        onChange={setSessions}
+        minDateTime={getMinDateTime()}
+        disabled={isSubmitting}
+      />
 
-        <div>
-          <label
-            htmlFor="endTime"
-            className="block text-sm font-medium text-neutral-700 mb-1"
-          >
-            End Date & Time
-          </label>
-          <input
-            id="endTime"
-            type="datetime-local"
-            {...register("endTime")}
-            min={(startTime as string) || getMinDateTime()}
-            disabled={isSubmitting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900
-                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
-          />
-          {errors.endTime && (
-            <p className="mt-1 text-sm text-error-600">
-              {errors.endTime.message}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Location field */}
+      {/* Location field (default for all sessions) */}
       <div>
         <label
           htmlFor="location"
           className="block text-sm font-medium text-neutral-700 mb-1"
         >
-          Location
+          Default Location
         </label>
         <input
           id="location"
           type="text"
-          {...register("location")}
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
           placeholder="123 Main St, City or Online (Zoom link)"
           disabled={isSubmitting}
+          maxLength={500}
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500"
         />
-        {errors.location && (
-          <p className="mt-1 text-sm text-error-600">
-            {errors.location.message}
+        {sessions.length > 1 && (
+          <p className="mt-1 text-xs text-neutral-500">
+            This location applies to all sessions unless overridden.
           </p>
         )}
       </div>
 
-      {/* Capacity field */}
+      {/* Capacity field (default for all sessions) */}
       <div>
         <label
           htmlFor="capacity"
           className="block text-sm font-medium text-neutral-700 mb-1"
         >
-          Capacity Limit
+          Default Capacity Limit
         </label>
         <input
           id="capacity"
           type="number"
-          {...register("capacity", {
-            setValueAs: (v) => v === "" || v === null ? undefined : Number(v) || undefined
-          })}
+          value={capacity ?? ""}
+          onChange={(e) =>
+            setCapacity(e.target.value ? parseInt(e.target.value) : undefined)
+          }
           placeholder="Leave empty for unlimited"
           min={1}
           max={10000}
@@ -249,14 +224,55 @@ export function CreateEventForm({
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500"
         />
-        {errors.capacity && (
-          <p className="mt-1 text-sm text-error-600">
-            {errors.capacity.message}
-          </p>
-        )}
         <p className="mt-1 text-xs text-neutral-500">
-          Maximum number of attendees. Leave empty for no limit.
+          Maximum attendees per session. Leave empty for no limit.
         </p>
+      </div>
+
+      {/* Virtual Event Toggle */}
+      <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isVirtual}
+            onChange={(e) => setIsVirtual(e.target.checked)}
+            disabled={isSubmitting}
+            className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500
+                       disabled:opacity-50"
+          />
+          <div>
+            <span className="font-medium text-neutral-900">Virtual Event</span>
+            <p className="text-sm text-neutral-500">
+              Enable a dedicated chat channel for event attendees
+            </p>
+          </div>
+        </label>
+
+        {/* Meeting URL (shown when virtual) */}
+        {isVirtual && (
+          <div className="mt-4">
+            <label
+              htmlFor="meetingUrl"
+              className="block text-sm font-medium text-neutral-700 mb-1"
+            >
+              Meeting URL
+            </label>
+            <input
+              id="meetingUrl"
+              type="url"
+              value={meetingUrl}
+              onChange={(e) => setMeetingUrl(e.target.value)}
+              placeholder="https://zoom.us/j/... or https://meet.google.com/..."
+              disabled={isSubmitting}
+              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                         disabled:bg-neutral-50 disabled:text-neutral-500"
+            />
+            <p className="mt-1 text-xs text-neutral-500">
+              Optional: Provide a link to your video call or virtual meeting
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Submit buttons */}
@@ -273,7 +289,7 @@ export function CreateEventForm({
         </button>
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || !title.trim() || sessions.some((s) => !s.startTime)}
           className="flex-1 px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

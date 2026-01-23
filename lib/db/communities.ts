@@ -27,10 +27,10 @@ export async function getCommunityById(id: string): Promise<Community | null> {
 
 /**
  * Get community with full details (members, events, owner)
- * Note: events are filtered to only include upcoming events (startTime >= now)
+ * Note: events are filtered to only include events with upcoming sessions
  */
 export async function getCommunityWithDetails(slug: string) {
-  return await prisma.community.findUnique({
+  const community = await prisma.community.findUnique({
     where: { slug },
     include: {
       owner: {
@@ -56,9 +56,26 @@ export async function getCommunityWithDetails(slug: string) {
       },
       events: {
         where: {
-          startTime: { gte: new Date() },
+          sessions: { some: { startTime: { gte: new Date() } } },
         },
-        orderBy: { startTime: "asc" },
+        include: {
+          sessions: {
+            orderBy: { startTime: "asc" },
+            select: {
+              id: true,
+              startTime: true,
+              endTime: true,
+              _count: { select: { rsvps: true } },
+            },
+          },
+          organizer: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
       },
       _count: {
         select: {
@@ -68,6 +85,17 @@ export async function getCommunityWithDetails(slug: string) {
       },
     },
   });
+
+  // Sort events by first session's startTime
+  if (community?.events) {
+    community.events.sort((a, b) => {
+      const aStart = a.sessions[0]?.startTime || new Date(0);
+      const bStart = b.sessions[0]?.startTime || new Date(0);
+      return aStart.getTime() - bStart.getTime();
+    });
+  }
+
+  return community;
 }
 
 /**

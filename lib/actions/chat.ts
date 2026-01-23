@@ -38,6 +38,63 @@ async function isOwner(communityId: string, userId: string): Promise<boolean> {
 }
 
 /**
+ * Verify user has access to a channel
+ * - Community membership required for all channels
+ * - For event channels, also requires RSVP status GOING to any session
+ */
+async function verifyChannelAccess(
+  channelId: string,
+  userId: string
+): Promise<{ hasAccess: boolean; error?: string; communityId?: string }> {
+  const channel = await prisma.chatChannel.findUnique({
+    where: { id: channelId },
+    include: {
+      event: {
+        select: {
+          id: true,
+          sessions: {
+            select: { id: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!channel) {
+    return { hasAccess: false, error: "Channel not found" };
+  }
+
+  // Check community membership
+  const membershipCheck = await isMember(channel.communityId, userId);
+  if (!membershipCheck) {
+    return { hasAccess: false, error: "You must be a community member" };
+  }
+
+  // If event channel, also require RSVP
+  if (channel.event) {
+    const sessionIds = channel.event.sessions.map((s) => s.id);
+    if (sessionIds.length > 0) {
+      const rsvp = await prisma.rSVP.findFirst({
+        where: {
+          userId,
+          sessionId: { in: sessionIds },
+          status: "GOING",
+        },
+      });
+
+      if (!rsvp) {
+        return {
+          hasAccess: false,
+          error: "You must RSVP to the event to access this channel",
+        };
+      }
+    }
+  }
+
+  return { hasAccess: true, communityId: channel.communityId };
+}
+
+/**
  * Send a chat message
  */
 export async function sendChatMessage(
@@ -51,7 +108,7 @@ export async function sendChatMessage(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { channelId, content } = parsed.data;
+    const { channelId, content, replyToId } = parsed.data;
 
     // Rate limiting (Redis-based, works across instances)
     const rateLimit = await checkChatRateLimit(userId);
@@ -59,21 +116,46 @@ export async function sendChatMessage(
       return { success: false, error: "Please wait before sending another message" };
     }
 
-    // Get channel with community info
-    const channel = await prisma.chatChannel.findUnique({
-      where: { id: channelId },
-      include: {
-        community: { select: { id: true } },
-      },
-    });
-
-    if (!channel) {
-      return { success: false, error: "Channel not found" };
+    // Verify channel access (includes RSVP check for event channels)
+    const accessCheck = await verifyChannelAccess(channelId, userId);
+    if (!accessCheck.hasAccess) {
+      return { success: false, error: accessCheck.error || "Access denied" };
     }
 
-    // Check membership
-    if (!(await isMember(channel.communityId, userId))) {
-      return { success: false, error: "You must be a member to send messages" };
+    // Validate reply if provided
+    let replyToData = null;
+    if (replyToId) {
+      const replyToMessage = await prisma.message.findUnique({
+        where: { id: replyToId },
+        select: {
+          id: true,
+          channelId: true,
+          replyToId: true,
+          deletedAt: true,
+          content: true,
+          author: { select: { id: true, name: true } },
+        },
+      });
+
+      if (!replyToMessage) {
+        return { success: false, error: "Message not found" };
+      }
+      if (replyToMessage.channelId !== channelId) {
+        return { success: false, error: "Cannot reply to message in different channel" };
+      }
+      if (replyToMessage.replyToId !== null) {
+        return { success: false, error: "Cannot reply to a reply" };
+      }
+      if (replyToMessage.deletedAt !== null) {
+        return { success: false, error: "Cannot reply to deleted message" };
+      }
+
+      // Store minimal reply data for Ably broadcast
+      replyToData = {
+        id: replyToMessage.id,
+        content: replyToMessage.content.slice(0, 100),
+        author: replyToMessage.author,
+      };
     }
 
     // Sanitize content
@@ -85,6 +167,7 @@ export async function sendChatMessage(
         content: sanitizedContent,
         channelId,
         authorId: userId,
+        replyToId: replyToId || null,
       },
       include: {
         author: {
@@ -96,7 +179,7 @@ export async function sendChatMessage(
     // Publish to Ably channel
     try {
       await publishToChannel(
-        getChatChannelName(channel.communityId, channelId),
+        getChatChannelName(accessCheck.communityId!, channelId),
         "message",
         {
           id: message.id,
@@ -105,6 +188,9 @@ export async function sendChatMessage(
           authorId: message.authorId,
           author: message.author,
           createdAt: message.createdAt.toISOString(),
+          replyToId: message.replyToId,
+          replyTo: replyToData,
+          reactionCounts: {},
         }
       );
     } catch (ablyError) {
@@ -219,7 +305,7 @@ export async function getChatMessages(input: unknown) {
       return { messages: [], nextCursor: undefined, hasMore: false };
     }
 
-    // Get messages
+    // Get messages with replyTo and reaction counts
     const messages = await prisma.message.findMany({
       where: {
         channelId,
@@ -233,6 +319,18 @@ export async function getChatMessages(input: unknown) {
         author: {
           select: { id: true, name: true, image: true },
         },
+        // Efficient replyTo - only fields needed for preview
+        replyTo: {
+          select: {
+            id: true,
+            content: true,
+            author: { select: { id: true, name: true } },
+          },
+        },
+        // Get reactions for aggregation
+        reactions: {
+          select: { emoji: true },
+        },
       },
     });
 
@@ -240,8 +338,35 @@ export async function getChatMessages(input: unknown) {
     const items = hasMore ? messages.slice(0, -1) : messages;
     const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
 
+    // Transform messages to include reaction counts
+    const transformedItems = items.map((msg) => {
+      // Calculate reaction counts from reactions array
+      const reactionCounts: Record<string, number> = {};
+      msg.reactions.forEach((r) => {
+        reactionCounts[r.emoji] = (reactionCounts[r.emoji] || 0) + 1;
+      });
+
+      return {
+        id: msg.id,
+        content: msg.content,
+        channelId: msg.channelId,
+        authorId: msg.authorId,
+        author: msg.author,
+        createdAt: msg.createdAt,
+        replyToId: msg.replyToId,
+        replyTo: msg.replyTo
+          ? {
+              id: msg.replyTo.id,
+              content: msg.replyTo.content.slice(0, 100), // Truncate for preview
+              author: msg.replyTo.author,
+            }
+          : null,
+        reactionCounts,
+      };
+    });
+
     return {
-      messages: items.reverse(), // Chronological order
+      messages: transformedItems.reverse(), // Chronological order
       nextCursor,
       hasMore,
     };

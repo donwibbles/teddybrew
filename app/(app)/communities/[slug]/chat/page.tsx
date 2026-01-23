@@ -7,6 +7,7 @@ import { ChatLayout } from "@/components/chat/chat-layout";
 
 interface ChatPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ channel?: string }>;
 }
 
 export async function generateMetadata({ params }: ChatPageProps) {
@@ -23,8 +24,9 @@ export async function generateMetadata({ params }: ChatPageProps) {
   };
 }
 
-export default async function ChatPage({ params }: ChatPageProps) {
+export default async function ChatPage({ params, searchParams }: ChatPageProps) {
   const { slug } = await params;
+  const { channel: channelParam } = await searchParams;
   const community = await getCommunityWithDetails(slug);
 
   if (!community) {
@@ -46,8 +48,11 @@ export default async function ChatPage({ params }: ChatPageProps) {
   // Get channels for this community
   const channels = await getChannels(community.id);
 
-  // Find default channel
+  // Use channel from query param if provided and valid, otherwise default
   const defaultChannel = channels.find((c) => c.isDefault) || channels[0];
+  const selectedChannelId = channelParam && channels.some((c) => c.id === channelParam)
+    ? channelParam
+    : defaultChannel?.id;
 
   const currentUser = {
     id: session.user.id!,
@@ -69,7 +74,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
         channels={channels}
         currentUser={currentUser}
         isOwner={membership.isOwner}
-        defaultChannelId={defaultChannel?.id}
+        defaultChannelId={selectedChannelId}
       />
     </div>
   );

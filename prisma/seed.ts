@@ -207,124 +207,164 @@ async function main() {
   const lastWeek = new Date(now);
   lastWeek.setDate(lastWeek.getDate() - 7);
 
+  // Create events with sessions
   const event1 = await prisma.event.create({
     data: {
       title: "AI & Machine Learning Workshop",
       description: "Hands-on workshop covering the fundamentals of AI and machine learning. Bring your laptop!",
-      startTime: nextWeek,
-      endTime: new Date(nextWeek.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
       location: "Tech Hub, 123 Innovation St",
       capacity: 30,
       communityId: techCommunity.id,
       organizerId: users[0].id, // Alice
+      sessions: {
+        create: {
+          startTime: nextWeek,
+          endTime: new Date(nextWeek.getTime() + 3 * 60 * 60 * 1000), // 3 hours later
+        },
+      },
     },
+    include: { sessions: true },
   });
 
   const event2 = await prisma.event.create({
     data: {
       title: "Discussing 'The Midnight Library'",
       description: "Our monthly book club meeting to discuss Matt Haig's bestseller. Tea and snacks provided!",
-      startTime: tomorrow,
-      endTime: new Date(tomorrow.getTime() + 2 * 60 * 60 * 1000), // 2 hours later
       location: "Cozy Corner Café, Downtown",
       capacity: 15,
       communityId: bookClub.id,
       organizerId: users[2].id, // Carol
+      sessions: {
+        create: {
+          startTime: tomorrow,
+          endTime: new Date(tomorrow.getTime() + 2 * 60 * 60 * 1000), // 2 hours later
+        },
+      },
     },
+    include: { sessions: true },
   });
 
   const event3 = await prisma.event.create({
     data: {
       title: "Saturday Morning 5K Run",
       description: "Weekly group run through the park. All fitness levels welcome!",
-      startTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
-      endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000 + 1.5 * 60 * 60 * 1000), // 1.5 hours later
       location: "Central Park North Entrance",
       capacity: null, // Unlimited
       communityId: fitnessGroup.id,
       organizerId: users[4].id, // Emma
+      sessions: {
+        create: {
+          startTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+          endTime: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000 + 1.5 * 60 * 60 * 1000), // 1.5 hours later
+        },
+      },
     },
+    include: { sessions: true },
   });
 
   const event4 = await prisma.event.create({
     data: {
       title: "React 19 Deep Dive",
       description: "Exploring the new features in React 19 with live coding examples. Past event.",
-      startTime: lastWeek,
-      endTime: new Date(lastWeek.getTime() + 2.5 * 60 * 60 * 1000), // 2.5 hours later
       location: "Online - Zoom link in description",
       capacity: 50,
       communityId: techCommunity.id,
       organizerId: users[5].id, // Frank
+      sessions: {
+        create: {
+          startTime: lastWeek,
+          endTime: new Date(lastWeek.getTime() + 2.5 * 60 * 60 * 1000), // 2.5 hours later
+        },
+      },
     },
+    include: { sessions: true },
   });
 
+  // Multi-session event (hackathon with two sessions)
   const event5 = await prisma.event.create({
     data: {
       title: "Hackathon: Build for Good",
       description: "48-hour hackathon focused on creating apps that make a positive social impact. Teams of 2-5 people.",
-      startTime: twoWeeks,
-      endTime: new Date(twoWeeks.getTime() + 48 * 60 * 60 * 1000), // 48 hours later
       location: "Innovation Lab, Suite 400",
       capacity: 40,
       communityId: techCommunity.id,
       organizerId: users[0].id, // Alice
+      sessions: {
+        create: [
+          {
+            title: "Day 1 - Kickoff",
+            startTime: twoWeeks,
+            endTime: new Date(twoWeeks.getTime() + 12 * 60 * 60 * 1000), // 12 hours
+          },
+          {
+            title: "Day 2 - Presentations",
+            startTime: new Date(twoWeeks.getTime() + 24 * 60 * 60 * 1000),
+            endTime: new Date(twoWeeks.getTime() + 48 * 60 * 60 * 1000), // 48 hours total
+          },
+        ],
+      },
     },
+    include: { sessions: true },
   });
 
-  console.log(`✅ Created 5 events`);
+  console.log(`✅ Created 5 events with sessions`);
 
-  // Create RSVPs
+  // Create RSVPs (using session IDs)
   console.log("✋ Creating RSVPs...");
 
   // Event 1 RSVPs (AI Workshop)
   await prisma.rSVP.createMany({
     data: [
-      { userId: users[1].id, eventId: event1.id, status: RSVPStatus.GOING }, // Bob
-      { userId: users[3].id, eventId: event1.id, status: RSVPStatus.GOING }, // David
-      { userId: users[5].id, eventId: event1.id, status: RSVPStatus.GOING }, // Frank
-      { userId: users[7].id, eventId: event1.id, status: RSVPStatus.GOING }, // Henry
-      { userId: users[9].id, eventId: event1.id, status: RSVPStatus.NOT_GOING }, // Jack
+      { userId: users[1].id, sessionId: event1.sessions[0].id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, sessionId: event1.sessions[0].id, status: RSVPStatus.GOING }, // David
+      { userId: users[5].id, sessionId: event1.sessions[0].id, status: RSVPStatus.GOING }, // Frank
+      { userId: users[7].id, sessionId: event1.sessions[0].id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[9].id, sessionId: event1.sessions[0].id, status: RSVPStatus.NOT_GOING }, // Jack
     ],
   });
 
   // Event 2 RSVPs (Book Club)
   await prisma.rSVP.createMany({
     data: [
-      { userId: users[1].id, eventId: event2.id, status: RSVPStatus.GOING }, // Bob
-      { userId: users[4].id, eventId: event2.id, status: RSVPStatus.GOING }, // Emma
-      { userId: users[6].id, eventId: event2.id, status: RSVPStatus.GOING }, // Grace
-      { userId: users[8].id, eventId: event2.id, status: RSVPStatus.NOT_GOING }, // Iris
+      { userId: users[1].id, sessionId: event2.sessions[0].id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[4].id, sessionId: event2.sessions[0].id, status: RSVPStatus.GOING }, // Emma
+      { userId: users[6].id, sessionId: event2.sessions[0].id, status: RSVPStatus.GOING }, // Grace
+      { userId: users[8].id, sessionId: event2.sessions[0].id, status: RSVPStatus.NOT_GOING }, // Iris
     ],
   });
 
   // Event 3 RSVPs (5K Run)
   await prisma.rSVP.createMany({
     data: [
-      { userId: users[0].id, eventId: event3.id, status: RSVPStatus.GOING }, // Alice
-      { userId: users[3].id, eventId: event3.id, status: RSVPStatus.GOING }, // David
-      { userId: users[7].id, eventId: event3.id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[0].id, sessionId: event3.sessions[0].id, status: RSVPStatus.GOING }, // Alice
+      { userId: users[3].id, sessionId: event3.sessions[0].id, status: RSVPStatus.GOING }, // David
+      { userId: users[7].id, sessionId: event3.sessions[0].id, status: RSVPStatus.GOING }, // Henry
     ],
   });
 
   // Event 4 RSVPs (Past event)
   await prisma.rSVP.createMany({
     data: [
-      { userId: users[1].id, eventId: event4.id, status: RSVPStatus.GOING }, // Bob
-      { userId: users[3].id, eventId: event4.id, status: RSVPStatus.GOING }, // David
-      { userId: users[7].id, eventId: event4.id, status: RSVPStatus.GOING }, // Henry
-      { userId: users[9].id, eventId: event4.id, status: RSVPStatus.GOING }, // Jack
+      { userId: users[1].id, sessionId: event4.sessions[0].id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, sessionId: event4.sessions[0].id, status: RSVPStatus.GOING }, // David
+      { userId: users[7].id, sessionId: event4.sessions[0].id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[9].id, sessionId: event4.sessions[0].id, status: RSVPStatus.GOING }, // Jack
     ],
   });
 
-  // Event 5 RSVPs (Hackathon)
+  // Event 5 RSVPs (Hackathon - multi-session, some users RSVP to both)
   await prisma.rSVP.createMany({
     data: [
-      { userId: users[1].id, eventId: event5.id, status: RSVPStatus.GOING }, // Bob
-      { userId: users[3].id, eventId: event5.id, status: RSVPStatus.GOING }, // David
-      { userId: users[5].id, eventId: event5.id, status: RSVPStatus.GOING }, // Frank
-      { userId: users[7].id, eventId: event5.id, status: RSVPStatus.GOING }, // Henry
-      { userId: users[9].id, eventId: event5.id, status: RSVPStatus.GOING }, // Jack
+      // Day 1 RSVPs
+      { userId: users[1].id, sessionId: event5.sessions[0].id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, sessionId: event5.sessions[0].id, status: RSVPStatus.GOING }, // David
+      { userId: users[5].id, sessionId: event5.sessions[0].id, status: RSVPStatus.GOING }, // Frank
+      { userId: users[7].id, sessionId: event5.sessions[0].id, status: RSVPStatus.GOING }, // Henry
+      { userId: users[9].id, sessionId: event5.sessions[0].id, status: RSVPStatus.GOING }, // Jack
+      // Day 2 RSVPs (some overlap)
+      { userId: users[1].id, sessionId: event5.sessions[1].id, status: RSVPStatus.GOING }, // Bob
+      { userId: users[3].id, sessionId: event5.sessions[1].id, status: RSVPStatus.GOING }, // David
+      { userId: users[5].id, sessionId: event5.sessions[1].id, status: RSVPStatus.GOING }, // Frank
     ],
   });
 

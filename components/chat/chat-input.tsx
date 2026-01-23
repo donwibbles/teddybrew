@@ -1,14 +1,22 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Send } from "lucide-react";
+import { Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+interface ReplyingTo {
+  id: string;
+  authorName: string;
+  content: string;
+}
+
 interface ChatInputProps {
-  onSend: (content: string) => void;
+  onSend: (content: string, replyToId?: string) => void;
   disabled?: boolean;
   placeholder?: string;
   channelName?: string;
+  replyingTo?: ReplyingTo | null;
+  onCancelReply?: () => void;
 }
 
 export function ChatInput({
@@ -16,6 +24,8 @@ export function ChatInput({
   disabled,
   placeholder,
   channelName,
+  replyingTo,
+  onCancelReply,
 }: ChatInputProps) {
   const [content, setContent] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -29,11 +39,19 @@ export function ChatInput({
     }
   }, [content]);
 
+  // Focus input when replying
+  useEffect(() => {
+    if (replyingTo && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [replyingTo]);
+
   const handleSubmit = () => {
     const trimmed = content.trim();
     if (trimmed && !disabled) {
-      onSend(trimmed);
+      onSend(trimmed, replyingTo?.id);
       setContent("");
+      onCancelReply?.();
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
@@ -46,6 +64,10 @@ export function ChatInput({
       e.preventDefault();
       handleSubmit();
     }
+    // Cancel reply on Escape
+    if (e.key === "Escape" && replyingTo) {
+      onCancelReply?.();
+    }
   };
 
   const defaultPlaceholder = channelName
@@ -54,13 +76,40 @@ export function ChatInput({
 
   return (
     <div className="p-4 border-t border-neutral-200 bg-white">
+      {/* Replying indicator */}
+      {replyingTo && (
+        <div className="flex items-center justify-between mb-2 px-3 py-2 bg-neutral-100 rounded-lg text-sm">
+          <div className="min-w-0 flex-1">
+            <span className="text-neutral-500">Replying to </span>
+            <span className="font-medium text-neutral-700">
+              {replyingTo.authorName}
+            </span>
+            <p className="text-neutral-500 text-xs truncate">
+              {replyingTo.content.slice(0, 50)}
+              {replyingTo.content.length > 50 && "..."}
+            </p>
+          </div>
+          <button
+            onClick={onCancelReply}
+            className="p-1 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-200 rounded transition-colors ml-2"
+            title="Cancel reply"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-2 items-end">
         <textarea
           ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder || defaultPlaceholder}
+          placeholder={
+            replyingTo
+              ? `Reply to ${replyingTo.authorName}...`
+              : placeholder || defaultPlaceholder
+          }
           disabled={disabled}
           rows={1}
           maxLength={2000}
@@ -81,6 +130,7 @@ export function ChatInput({
       </div>
       <p className="mt-1 text-xs text-neutral-400">
         Press Enter to send, Shift+Enter for new line
+        {replyingTo && ", Escape to cancel"}
       </p>
     </div>
   );

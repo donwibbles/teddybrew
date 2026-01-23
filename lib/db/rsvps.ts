@@ -4,51 +4,54 @@ import { prisma } from "@/lib/prisma";
 import { RSVP, RSVPStatus } from "@prisma/client";
 
 /**
- * RSVP database queries
+ * RSVP database queries (session-based)
  */
 
 /**
- * Get user's RSVP for an event
+ * Get user's RSVP for a session
  */
-export async function getUserRSVP(
+export async function getUserSessionRSVP(
   userId: string,
-  eventId: string
+  sessionId: string
 ): Promise<RSVP | null> {
   return await prisma.rSVP.findUnique({
     where: {
-      userId_eventId: {
+      userId_sessionId: {
         userId,
-        eventId,
+        sessionId,
       },
     },
   });
 }
 
 /**
- * Check if user has RSVP'd to an event
+ * Check if user has RSVP'd to a session
  */
-export async function hasRSVP(userId: string, eventId: string): Promise<boolean> {
-  const rsvp = await getUserRSVP(userId, eventId);
+export async function hasSessionRSVP(
+  userId: string,
+  sessionId: string
+): Promise<boolean> {
+  const rsvp = await getUserSessionRSVP(userId, sessionId);
   return !!rsvp;
 }
 
 /**
- * Check if user is going to an event
+ * Check if user is going to a session
  */
-export async function isUserGoing(
+export async function isUserGoingToSession(
   userId: string,
-  eventId: string
+  sessionId: string
 ): Promise<boolean> {
-  const rsvp = await getUserRSVP(userId, eventId);
+  const rsvp = await getUserSessionRSVP(userId, sessionId);
   return rsvp?.status === RSVPStatus.GOING;
 }
 
 /**
- * Get all RSVPs for an event
+ * Get all RSVPs for a session
  */
-export async function getEventRSVPs(eventId: string) {
+export async function getSessionRSVPs(sessionId: string) {
   return await prisma.rSVP.findMany({
-    where: { eventId },
+    where: { sessionId },
     include: {
       user: {
         select: {
@@ -64,12 +67,12 @@ export async function getEventRSVPs(eventId: string) {
 }
 
 /**
- * Get GOING RSVPs for an event
+ * Get GOING RSVPs for a session
  */
-export async function getGoingRSVPs(eventId: string) {
+export async function getGoingSessionRSVPs(sessionId: string) {
   return await prisma.rSVP.findMany({
     where: {
-      eventId,
+      sessionId,
       status: RSVPStatus.GOING,
     },
     include: {
@@ -87,19 +90,59 @@ export async function getGoingRSVPs(eventId: string) {
 }
 
 /**
- * Get count of GOING RSVPs for an event
+ * Get count of GOING RSVPs for a session
  */
-export async function getGoingCount(eventId: string): Promise<number> {
+export async function getSessionGoingCount(sessionId: string): Promise<number> {
   return await prisma.rSVP.count({
     where: {
-      eventId,
+      sessionId,
       status: RSVPStatus.GOING,
     },
   });
 }
 
 /**
- * Get user's upcoming RSVPs
+ * Get user's RSVPs for an event (across all sessions)
+ */
+export async function getUserEventRSVPs(userId: string, eventId: string) {
+  return await prisma.rSVP.findMany({
+    where: {
+      userId,
+      status: RSVPStatus.GOING,
+      session: { eventId },
+    },
+    include: {
+      session: {
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          endTime: true,
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Check if user is attending any session of an event
+ */
+export async function isUserAttendingEvent(
+  userId: string,
+  eventId: string
+): Promise<boolean> {
+  const count = await prisma.rSVP.count({
+    where: {
+      userId,
+      status: RSVPStatus.GOING,
+      session: { eventId },
+    },
+  });
+  return count > 0;
+}
+
+/**
+ * Get user's upcoming RSVPs (sessions in the future)
  */
 export async function getUserUpcomingRSVPs(userId: string) {
   const now = new Date();
@@ -107,36 +150,40 @@ export async function getUserUpcomingRSVPs(userId: string) {
     where: {
       userId,
       status: RSVPStatus.GOING,
-      event: {
+      session: {
         startTime: { gte: now },
       },
     },
     include: {
-      event: {
+      session: {
         include: {
-          community: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
-            },
-          },
-          organizer: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
+          event: {
+            include: {
+              community: {
+                select: {
+                  id: true,
+                  slug: true,
+                  name: true,
+                },
+              },
+              organizer: {
+                select: {
+                  id: true,
+                  name: true,
+                  image: true,
+                },
+              },
             },
           },
         },
       },
     },
-    orderBy: { event: { startTime: "asc" } },
+    orderBy: { session: { startTime: "asc" } },
   });
 }
 
 /**
- * Get user's past RSVPs
+ * Get user's past RSVPs (sessions in the past)
  */
 export async function getUserPastRSVPs(userId: string) {
   const now = new Date();
@@ -144,23 +191,42 @@ export async function getUserPastRSVPs(userId: string) {
     where: {
       userId,
       status: RSVPStatus.GOING,
-      event: {
+      session: {
         startTime: { lt: now },
       },
     },
     include: {
-      event: {
+      session: {
         include: {
-          community: {
-            select: {
-              id: true,
-              slug: true,
-              name: true,
+          event: {
+            include: {
+              community: {
+                select: {
+                  id: true,
+                  slug: true,
+                  name: true,
+                },
+              },
             },
           },
         },
       },
     },
-    orderBy: { event: { startTime: "desc" } },
+    orderBy: { session: { startTime: "desc" } },
   });
+}
+
+/**
+ * Get unique attendee count for an event (across all sessions)
+ */
+export async function getEventAttendeeCount(eventId: string): Promise<number> {
+  const rsvps = await prisma.rSVP.findMany({
+    where: {
+      status: RSVPStatus.GOING,
+      session: { eventId },
+    },
+    select: { userId: true },
+    distinct: ["userId"],
+  });
+  return rsvps.length;
 }

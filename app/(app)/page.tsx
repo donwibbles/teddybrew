@@ -30,7 +30,11 @@ export default async function DashboardPage() {
   ].slice(0, 5);
 
   const upcomingEvents = [...organizedEvents, ...attendingEvents]
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+    .sort((a, b) => {
+      const aTime = a.sessions[0]?.startTime || new Date(0);
+      const bTime = b.sessions[0]?.startTime || new Date(0);
+      return new Date(aTime).getTime() - new Date(bTime).getTime();
+    })
     .slice(0, 5);
 
   return (
@@ -159,13 +163,15 @@ export default async function DashboardPage() {
                     <div>
                       <p className="font-medium text-neutral-900">{event.title}</p>
                       <p className="text-sm text-neutral-500">
-                        {new Date(event.startTime).toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                          hour: "numeric",
-                          minute: "2-digit",
-                        })}
+                        {event.sessions[0]?.startTime
+                          ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })
+                          : "No sessions"}
                       </p>
                       <p className="text-sm text-neutral-400">{event.community.name}</p>
                     </div>
