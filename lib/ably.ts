@@ -36,10 +36,11 @@ export async function generateAblyTokenRequest(
   capability[`user:${userId}:notifications`] = ["subscribe"];
 
   for (const communityId of communityIds) {
-    // Chat channels - can subscribe and publish
+    // Chat channels - subscribe and presence only
+    // SECURITY: publish removed - all publishing is server-side to enforce
+    // rate limits and RSVP checks
     capability[`community:${communityId}:chat:*`] = [
       "subscribe",
-      "publish",
       "presence",
     ];
     // Presence channel - can subscribe and enter

@@ -224,26 +224,6 @@ export function useAblyChannel(
     };
   }, [channelName, eventName, queueMessage]);
 
-  const publish = useCallback(async (event: string, data: unknown) => {
-    if (!channelRef.current) {
-      throw new Error("Channel not connected");
-    }
-    try {
-      await channelRef.current.publish(event, data);
-    } catch (err) {
-      // Handle rate limit errors gracefully
-      if (err instanceof Error && err.message.includes("Rate limit")) {
-        console.warn("Ably rate limit hit, message queued for retry");
-        // Retry after a delay
-        setTimeout(() => {
-          channelRef.current?.publish(event, data).catch(console.error);
-        }, 1000);
-      } else {
-        throw err;
-      }
-    }
-  }, []);
-
   const clearMessages = useCallback(() => {
     setMessages([]);
     processedIdsRef.current.clear();
@@ -253,7 +233,6 @@ export function useAblyChannel(
     messages,
     isConnected,
     error,
-    publish,
     clearMessages,
   };
 }

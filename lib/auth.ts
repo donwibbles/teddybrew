@@ -15,9 +15,23 @@ export interface Session {
   expires: string;
 }
 
+// Custom adapter that handles missing records gracefully
+// Fixes: "No record was found for a delete" error when session doesn't exist
+const basePrismaAdapter = PrismaAdapter(prisma);
+const customAdapter = {
+  ...basePrismaAdapter,
+  // Use deleteMany instead of delete to avoid errors when session doesn't exist
+  deleteSession: async (sessionToken: string) => {
+    await prisma.session.deleteMany({
+      where: { sessionToken },
+    });
+    return null;
+  },
+};
+
 // Auth.js v5 configuration
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: customAdapter,
   providers: [
     Resend({
       apiKey: process.env.RESEND_API_KEY,

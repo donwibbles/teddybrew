@@ -47,6 +47,8 @@ export async function updateProfile(
     }
 
     // Update profile
+    // SECURITY: Only include isPublic if explicitly provided to prevent
+    // accidentally flipping private profiles to public on partial updates
     const updatedUser = await updateUserProfile(userId, {
       firstName,
       lastName,
@@ -55,7 +57,7 @@ export async function updateProfile(
       bio: bio || null,
       interests: interests || null,
       communityHope: communityHope || null,
-      isPublic: isPublic ?? true,
+      ...(isPublic !== undefined && { isPublic }),
     });
 
     revalidatePath("/profile");

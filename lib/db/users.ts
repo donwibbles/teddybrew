@@ -165,7 +165,8 @@ export async function updateUserProfile(
       bio: data.bio,
       interests: data.interests,
       communityHope: data.communityHope,
-      isPublic: data.isPublic,
+      // SECURITY: Only update isPublic if explicitly provided
+      ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
       updatedAt: new Date(),
     },
   });

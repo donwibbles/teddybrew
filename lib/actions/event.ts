@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { verifySession } from "@/lib/dal";
 import { sanitizeText } from "@/lib/utils/sanitize";
 import { isMember } from "@/lib/db/members";
+import { generateUniqueChannelName } from "@/lib/db/channels";
 import {
   createEventSchema,
   updateEventSchema,
@@ -102,14 +103,16 @@ export async function createEvent(
       ? sanitizeText(description)
       : undefined;
 
+    // Generate unique channel name outside transaction if needed
+    const channelName = isVirtual
+      ? await generateUniqueChannelName(communityId, title)
+      : null;
+
     // Create event with sessions (and chat channel if virtual) in a transaction
     const event = await prisma.$transaction(async (tx) => {
       // Create chat channel if virtual event
       let chatChannelId: string | undefined;
-      if (isVirtual) {
-        // Generate a unique channel name based on event title
-        const channelName = `${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50)}`;
-
+      if (isVirtual && channelName) {
         const channel = await tx.chatChannel.create({
           data: {
             name: channelName,
@@ -234,11 +237,16 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       // If changing from non-virtual to virtual, create chat channel
       if (isVirtual && !event.isVirtual && !event.chatChannelId) {
         const eventTitle = title || event.title;
-        const channelName = `${eventTitle.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 50)}`;
+        // Note: generateUniqueChannelName must be called outside transaction
+        // but we're inside, so we'll use the pre-generated name passed in
+        const uniqueChannelName = await generateUniqueChannelName(
+          event.communityId,
+          eventTitle
+        );
 
         const channel = await tx.chatChannel.create({
           data: {
-            name: channelName,
+            name: uniqueChannelName,
             description: `Chat for ${eventTitle}`,
             communityId: event.communityId,
             isDefault: false,

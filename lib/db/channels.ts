@@ -156,3 +156,26 @@ export async function isChannelNameUnique(
   });
   return !existing;
 }
+
+/**
+ * Generate a unique channel name for a community
+ * Appends a random suffix if the base name is already taken
+ */
+export async function generateUniqueChannelName(
+  communityId: string,
+  baseTitle: string
+): Promise<string> {
+  const baseName = baseTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40);
+
+  if (await isChannelNameUnique(communityId, baseName)) {
+    return baseName;
+  }
+
+  // Append random suffix for uniqueness
+  const suffix = Math.random().toString(36).substring(2, 8);
+  return `${baseName}-${suffix}`;
+}

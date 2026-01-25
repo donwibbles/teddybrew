@@ -5,26 +5,8 @@ import { verifySession } from "@/lib/dal";
 import { toggleReactionSchema } from "@/lib/validations/reaction";
 import { publishToChannel, getChatChannelName } from "@/lib/ably";
 import { checkReactionRateLimit } from "@/lib/rate-limit";
+import { verifyChannelAccess } from "./chat";
 import type { ActionResult } from "./community";
-
-/**
- * Check if user has access to a channel
- * - Must be a community member
- * - For event channels (Phase 3), must also have RSVP status GOING
- */
-async function checkChannelAccess(
-  userId: string,
-  communityId: string
-): Promise<boolean> {
-  // Check community membership
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-  });
-
-  return !!membership;
-}
 
 /**
  * Toggle a reaction on a message (add or remove)
@@ -72,10 +54,10 @@ export async function toggleReaction(
       return { success: false, error: "Cannot react to deleted message" };
     }
 
-    // Authorization: Check access to this channel
-    const hasAccess = await checkChannelAccess(userId, message.channel.communityId);
-    if (!hasAccess) {
-      return { success: false, error: "Access denied" };
+    // Authorization: Check access to this channel (includes RSVP check for event channels)
+    const accessCheck = await verifyChannelAccess(message.channelId, userId);
+    if (!accessCheck.hasAccess) {
+      return { success: false, error: accessCheck.error || "Access denied" };
     }
 
     // Toggle reaction (add or remove)

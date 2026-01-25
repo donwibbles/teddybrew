@@ -42,7 +42,7 @@ async function isOwner(communityId: string, userId: string): Promise<boolean> {
  * - Community membership required for all channels
  * - For event channels, also requires RSVP status GOING to any session
  */
-async function verifyChannelAccess(
+export async function verifyChannelAccess(
   channelId: string,
   userId: string
 ): Promise<{ hasAccess: boolean; error?: string; communityId?: string }> {
