@@ -4,6 +4,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, Pin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { RoleBadge } from "@/components/ui/role-badge";
 import { VoteButton } from "./vote-button";
 import { MarkdownPreview } from "./markdown-renderer";
 
@@ -11,6 +12,7 @@ interface Author {
   id: string;
   name: string | null;
   image: string | null;
+  role?: string | null;
 }
 
 interface PostCardProps {
@@ -96,6 +98,7 @@ export function PostCard({
                 </AvatarFallback>
               </Avatar>
               <span>{author.name || "Anonymous"}</span>
+              {author.role && <RoleBadge role={author.role} size="sm" />}
             </div>
             <span>·</span>
             <span>{timeAgo}</span>

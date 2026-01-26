@@ -16,31 +16,7 @@ import { checkCommentRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
 import { sendNotification } from "./notification";
 import { NotificationType } from "@prisma/client";
 import type { ActionResult } from "./community";
-
-/**
- * Check if user is a member of the community
- */
-async function isMember(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-  });
-  return !!membership;
-}
-
-/**
- * Check if user is the owner of the community
- */
-async function isOwner(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-    select: { role: true },
-  });
-  return membership?.role === "OWNER";
-}
+import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
 
 /**
  * Create a comment
@@ -82,7 +58,7 @@ export async function createComment(
     }
 
     // Check membership
-    if (!(await isMember(post.communityId, userId))) {
+    if (!(await isMember(userId, post.communityId))) {
       return { success: false, error: "You must be a member to comment" };
     }
 
@@ -263,11 +239,11 @@ export async function deleteComment(input: unknown): Promise<ActionResult> {
       return { success: false, error: "Comment not found" };
     }
 
-    // Check permission: author or community owner
+    // Check permission: author or moderator/owner
     const isAuthor = comment.authorId === userId;
-    const isCommunityOwner = await isOwner(comment.post.communityId, userId);
+    const canMod = await canModerate(userId, comment.post.communityId);
 
-    if (!isAuthor && !isCommunityOwner) {
+    if (!isAuthor && !canMod) {
       return { success: false, error: "You can only delete your own comments" };
     }
 
@@ -286,6 +262,18 @@ export async function deleteComment(input: unknown): Promise<ActionResult> {
         data: { commentCount: { decrement: 1 } },
       });
     });
+
+    // Log moderation action if not author
+    if (!isAuthor && canMod) {
+      logModerationAction({
+        communityId: comment.post.communityId,
+        moderatorId: userId,
+        action: "DELETE_COMMENT",
+        targetType: "Comment",
+        targetId: commentId,
+        targetTitle: comment.content.slice(0, 100),
+      }).catch((err) => console.error("Failed to log moderation action:", err));
+    }
 
     revalidatePath(
       `/communities/${comment.post.community.slug}/forum/${comment.postId}`
@@ -335,7 +323,7 @@ export async function voteComment(
     }
 
     // Check membership
-    if (!(await isMember(comment.post.communityId, userId))) {
+    if (!(await isMember(userId, comment.post.communityId))) {
       return { success: false, error: "You must be a member to vote" };
     }
 

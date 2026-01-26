@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { MemberRole } from "@prisma/client";
-import { Users } from "lucide-react";
-import { removeMember } from "@/lib/actions/membership";
+import { Users, ShieldCheck, ShieldOff } from "lucide-react";
+import { removeMember, promoteMember, demoteMember } from "@/lib/actions/membership";
 import { EmptyState } from "@/components/ui/empty-state";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 interface Member {
   id: string;
@@ -22,14 +23,16 @@ interface Member {
 interface MemberManagementListProps {
   members: Member[];
   communityId: string;
+  isOwner: boolean;
 }
 
 export function MemberManagementList({
   members,
   communityId,
+  isOwner,
 }: MemberManagementListProps) {
   const router = useRouter();
-  const [removingId, setRemovingId] = useState<string | null>(null);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleRemove = async (memberId: string, memberName: string) => {
@@ -41,7 +44,7 @@ export function MemberManagementList({
       return;
     }
 
-    setRemovingId(memberId);
+    setActionInProgress(memberId);
     setError(null);
 
     const result = await removeMember({ communityId, memberId });
@@ -52,7 +55,53 @@ export function MemberManagementList({
       setError(result.error);
     }
 
-    setRemovingId(null);
+    setActionInProgress(null);
+  };
+
+  const handlePromote = async (memberId: string, memberName: string) => {
+    if (
+      !confirm(
+        `Promote ${memberName} to moderator? They will be able to delete posts, comments, and messages.`
+      )
+    ) {
+      return;
+    }
+
+    setActionInProgress(memberId);
+    setError(null);
+
+    const result = await promoteMember({ communityId, memberId });
+
+    if (result.success) {
+      router.refresh();
+    } else {
+      setError(result.error);
+    }
+
+    setActionInProgress(null);
+  };
+
+  const handleDemote = async (memberId: string, memberName: string) => {
+    if (
+      !confirm(
+        `Demote ${memberName} from moderator? They will no longer be able to moderate content.`
+      )
+    ) {
+      return;
+    }
+
+    setActionInProgress(memberId);
+    setError(null);
+
+    const result = await demoteMember({ communityId, memberId });
+
+    if (result.success) {
+      router.refresh();
+    } else {
+      setError(result.error);
+    }
+
+    setActionInProgress(null);
   };
 
   return (
@@ -95,11 +144,7 @@ export function MemberManagementList({
                   <p className="text-sm font-medium text-neutral-900 truncate">
                     {member.user.name || member.user.email}
                   </p>
-                  {member.role === MemberRole.OWNER && (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">
-                      Owner
-                    </span>
-                  )}
+                  <RoleBadge role={member.role} />
                 </div>
                 <p className="text-xs text-neutral-500">
                   {member.user.email}
@@ -114,19 +159,53 @@ export function MemberManagementList({
               </div>
             </div>
 
-            {/* Actions */}
-            {member.role !== MemberRole.OWNER && (
-              <button
-                type="button"
-                onClick={() =>
-                  handleRemove(member.id, member.user.name || member.user.email)
-                }
-                disabled={removingId === member.id}
-                className="flex-shrink-0 px-3 py-1.5 text-sm text-error-600 hover:text-error-700 hover:bg-error-50
-                           rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {removingId === member.id ? "Removing..." : "Remove"}
-              </button>
+            {/* Actions - Only show to owner */}
+            {isOwner && member.role !== MemberRole.OWNER && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Promote/Demote button */}
+                {member.role === MemberRole.MEMBER ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handlePromote(member.id, member.user.name || member.user.email)
+                    }
+                    disabled={actionInProgress === member.id}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50
+                               rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Promote to Moderator"
+                  >
+                    <ShieldCheck className="w-4 h-4" />
+                    <span className="hidden sm:inline">Promote</span>
+                  </button>
+                ) : member.role === MemberRole.MODERATOR ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDemote(member.id, member.user.name || member.user.email)
+                    }
+                    disabled={actionInProgress === member.id}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-700 hover:bg-neutral-50
+                               rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Demote to Member"
+                  >
+                    <ShieldOff className="w-4 h-4" />
+                    <span className="hidden sm:inline">Demote</span>
+                  </button>
+                ) : null}
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleRemove(member.id, member.user.name || member.user.email)
+                  }
+                  disabled={actionInProgress === member.id}
+                  className="px-3 py-1.5 text-sm text-error-600 hover:text-error-700 hover:bg-error-50
+                             rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {actionInProgress === member.id ? "..." : "Remove"}
+                </button>
+              </div>
             )}
           </li>
         ))}

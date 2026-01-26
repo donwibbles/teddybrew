@@ -11,11 +11,13 @@ import { VoteButton } from "./vote-button";
 import { MarkdownRenderer } from "./markdown-renderer";
 import { deletePost, pinPost } from "@/lib/actions/post";
 import { toast } from "sonner";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 interface Author {
   id: string;
   name: string | null;
   image: string | null;
+  role?: string | null;
 }
 
 interface PostDetailProps {
@@ -30,7 +32,7 @@ interface PostDetailProps {
   isPinned: boolean;
   communitySlug: string;
   isAuthor: boolean;
-  isOwner: boolean;
+  canModerate: boolean;
 }
 
 export function PostDetail({
@@ -45,7 +47,7 @@ export function PostDetail({
   isPinned,
   communitySlug,
   isAuthor,
-  isOwner,
+  canModerate,
 }: PostDetailProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -142,6 +144,7 @@ export function PostDetail({
                 <span className="font-medium text-neutral-700">
                   {author.name || "Anonymous"}
                 </span>
+                {author.role && <RoleBadge role={author.role} size="sm" />}
               </div>
               <span>·</span>
               <span>{timeAgo}</span>
@@ -159,7 +162,7 @@ export function PostDetail({
             </div>
 
             {/* Actions */}
-            {(isAuthor || isOwner) && (
+            {(isAuthor || canModerate) && (
               <div className="flex items-center gap-2 pt-4 border-t border-neutral-100">
                 {isAuthor && (
                   <Link href={`/communities/${communitySlug}/forum/${id}/edit`}>
@@ -170,7 +173,7 @@ export function PostDetail({
                   </Link>
                 )}
 
-                {isOwner && (
+                {canModerate && (
                   <Button variant="ghost" size="sm" onClick={handlePin}>
                     <Pin className="h-4 w-4 mr-1.5" />
                     {isPinned ? "Unpin" : "Pin"}

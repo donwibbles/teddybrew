@@ -14,7 +14,7 @@ import {
 } from "@/lib/validations/post";
 import { publishToChannel, getForumChannelName } from "@/lib/ably";
 import { checkPostRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
-import { isMember, isOwner } from "@/lib/db/members";
+import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
 import type { ActionResult } from "./community";
 
 /**
@@ -165,11 +165,11 @@ export async function deletePost(input: unknown): Promise<ActionResult> {
       return { success: false, error: "Post not found" };
     }
 
-    // Check permission: author or community owner
+    // Check permission: author or moderator/owner
     const isAuthor = post.authorId === userId;
-    const isCommunityOwner = await isOwner(userId, post.communityId);
+    const canMod = await canModerate(userId, post.communityId);
 
-    if (!isAuthor && !isCommunityOwner) {
+    if (!isAuthor && !canMod) {
       return { success: false, error: "You can only delete your own posts" };
     }
 
@@ -181,6 +181,18 @@ export async function deletePost(input: unknown): Promise<ActionResult> {
         deletedById: userId,
       },
     });
+
+    // Log moderation action if not author
+    if (!isAuthor && canMod) {
+      logModerationAction({
+        communityId: post.communityId,
+        moderatorId: userId,
+        action: "DELETE_POST",
+        targetType: "Post",
+        targetId: postId,
+        targetTitle: post.title,
+      }).catch((err) => console.error("Failed to log moderation action:", err));
+    }
 
     revalidatePath(`/communities/${post.community.slug}/forum`);
 
@@ -269,7 +281,7 @@ export async function votePost(
 }
 
 /**
- * Pin/unpin a post (owner only)
+ * Pin/unpin a post (owner or moderator)
  */
 export async function pinPost(input: unknown): Promise<ActionResult> {
   try {
@@ -292,15 +304,25 @@ export async function pinPost(input: unknown): Promise<ActionResult> {
       return { success: false, error: "Post not found" };
     }
 
-    // Only owner can pin
-    if (!(await isOwner(userId, post.communityId))) {
-      return { success: false, error: "Only community owners can pin posts" };
+    // Only owner or moderator can pin
+    if (!(await canModerate(userId, post.communityId))) {
+      return { success: false, error: "Only moderators and owners can pin posts" };
     }
 
     await prisma.post.update({
       where: { id: postId },
       data: { isPinned },
     });
+
+    // Log moderation action
+    logModerationAction({
+      communityId: post.communityId,
+      moderatorId: userId,
+      action: isPinned ? "PIN_POST" : "UNPIN_POST",
+      targetType: "Post",
+      targetId: postId,
+      targetTitle: post.title,
+    }).catch((err) => console.error("Failed to log moderation action:", err));
 
     revalidatePath(`/communities/${post.community.slug}/forum`);
 

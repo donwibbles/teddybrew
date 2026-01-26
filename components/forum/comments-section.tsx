@@ -10,6 +10,7 @@ interface Author {
   id: string;
   name: string | null;
   image: string | null;
+  role?: string | null;
 }
 
 interface Comment {
@@ -29,7 +30,7 @@ interface CommentsSectionProps {
   comments: Comment[];
   commentCount: number;
   currentUserId?: string;
-  isOwner: boolean;
+  canModerate: boolean;
   isMember: boolean;
   currentSort: "best" | "new";
   basePath: string;
@@ -45,7 +46,7 @@ export function CommentsSection({
   comments,
   commentCount,
   currentUserId,
-  isOwner,
+  canModerate,
   isMember,
   currentSort,
   basePath,
@@ -127,7 +128,7 @@ export function CommentsSection({
           postId={postId}
           comments={comments}
           currentUserId={currentUserId}
-          isOwner={isOwner}
+          canModerate={canModerate}
         />
       </div>
     </div>

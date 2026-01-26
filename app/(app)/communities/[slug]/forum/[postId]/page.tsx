@@ -80,7 +80,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         isPinned={post.isPinned}
         communitySlug={post.community.slug}
         isAuthor={isAuthor}
-        isOwner={membership.isOwner}
+        canModerate={membership.canModerate}
       />
 
       {/* Comments Section */}
@@ -89,7 +89,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         comments={comments}
         commentCount={post.commentCount}
         currentUserId={userId || undefined}
-        isOwner={membership.isOwner}
+        canModerate={membership.canModerate}
         isMember={membership.isMember}
         currentSort={sort}
         basePath={`/communities/${slug}/forum/${postId}`}

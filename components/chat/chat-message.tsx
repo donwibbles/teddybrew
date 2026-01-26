@@ -8,12 +8,14 @@ import { ReplyPreview } from "./reply-preview";
 import { MessageReactions } from "./message-reactions";
 import { EmojiPicker } from "./emoji-picker";
 import { cn } from "@/lib/utils";
+import { RoleBadge } from "@/components/ui/role-badge";
 import type { EmojiKey } from "@/lib/constants/emoji";
 
 interface Author {
   id: string;
   name: string | null;
   image: string | null;
+  role?: string | null;
 }
 
 interface ReplyTo {
@@ -113,7 +115,7 @@ export function ChatMessage({
           />
         )}
 
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-center gap-2">
           <span
             className={cn(
               "font-medium text-sm",
@@ -122,6 +124,7 @@ export function ChatMessage({
           >
             {author.name || "Anonymous"}
           </span>
+          {author.role && <RoleBadge role={author.role} size="sm" />}
           <span className="text-xs text-neutral-400">{timeAgo}</span>
         </div>
         <p className="text-sm text-neutral-700 break-words whitespace-pre-wrap">

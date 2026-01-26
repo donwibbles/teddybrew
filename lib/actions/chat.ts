@@ -11,31 +11,7 @@ import {
 import { publishToChannel, getChatChannelName } from "@/lib/ably";
 import { checkChatRateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "./community";
-
-/**
- * Check if user is a member of the community
- */
-async function isMember(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-  });
-  return !!membership;
-}
-
-/**
- * Check if user is the owner of the community
- */
-async function isOwner(communityId: string, userId: string): Promise<boolean> {
-  const membership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: { userId, communityId },
-    },
-    select: { role: true },
-  });
-  return membership?.role === "OWNER";
-}
+import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
 
 /**
  * Verify user has access to a channel
@@ -65,7 +41,7 @@ export async function verifyChannelAccess(
   }
 
   // Check community membership
-  const membershipCheck = await isMember(channel.communityId, userId);
+  const membershipCheck = await isMember(userId, channel.communityId);
   if (!membershipCheck) {
     return { hasAccess: false, error: "You must be a community member" };
   }
@@ -161,7 +137,7 @@ export async function sendChatMessage(
     // Sanitize content
     const sanitizedContent = sanitizeText(content);
 
-    // Create message
+    // Create message and get author's role
     const message = await prisma.message.create({
       data: {
         content: sanitizedContent,
@@ -171,7 +147,15 @@ export async function sendChatMessage(
       },
       include: {
         author: {
-          select: { id: true, name: true, image: true },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            memberships: {
+              where: { communityId: accessCheck.communityId! },
+              select: { role: true },
+            },
+          },
         },
       },
     });
@@ -192,7 +176,12 @@ export async function sendChatMessage(
           content: message.content,
           channelId: message.channelId,
           authorId: message.authorId,
-          author: message.author,
+          author: {
+            id: message.author.id,
+            name: message.author.name,
+            image: message.author.image,
+            role: message.author.memberships[0]?.role ?? null,
+          },
           createdAt: message.createdAt.toISOString(),
           replyToId: message.replyToId,
           replyTo: replyToData,
@@ -214,7 +203,7 @@ export async function sendChatMessage(
 /**
  * Delete a chat message (soft delete)
  * - Author can delete their own messages
- * - Community owner can delete any message
+ * - Community owner or moderator can delete any message
  */
 export async function deleteChatMessage(input: unknown): Promise<ActionResult> {
   try {
@@ -247,11 +236,11 @@ export async function deleteChatMessage(input: unknown): Promise<ActionResult> {
       return { success: false, error: "Message already deleted" };
     }
 
-    // Check permission: author or community owner
+    // Check permission: author or moderator/owner
     const isMessageAuthor = message.authorId === userId;
-    const isCommunityOwner = await isOwner(message.channel.communityId, userId);
+    const canMod = await canModerate(userId, message.channel.communityId);
 
-    if (!isMessageAuthor && !isCommunityOwner) {
+    if (!isMessageAuthor && !canMod) {
       return { success: false, error: "You can only delete your own messages" };
     }
 
@@ -263,6 +252,18 @@ export async function deleteChatMessage(input: unknown): Promise<ActionResult> {
         deletedById: userId,
       },
     });
+
+    // Log moderation action if not author
+    if (!isMessageAuthor && canMod) {
+      logModerationAction({
+        communityId: message.channel.communityId,
+        moderatorId: userId,
+        action: "DELETE_MESSAGE",
+        targetType: "Message",
+        targetId: messageId,
+        targetTitle: message.content.slice(0, 100),
+      }).catch((err) => console.error("Failed to log moderation action:", err));
+    }
 
     // Notify via Ably
     try {
@@ -307,11 +308,11 @@ export async function getChatMessages(input: unknown) {
     }
 
     // Check membership
-    if (!(await isMember(channel.communityId, userId))) {
+    if (!(await isMember(userId, channel.communityId))) {
       return { messages: [], nextCursor: undefined, hasMore: false };
     }
 
-    // Get messages with replyTo and reaction counts
+    // Get messages with replyTo, reaction counts, and author role
     const messages = await prisma.message.findMany({
       where: {
         channelId,
@@ -323,7 +324,15 @@ export async function getChatMessages(input: unknown) {
       orderBy: { createdAt: "desc" },
       include: {
         author: {
-          select: { id: true, name: true, image: true },
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            memberships: {
+              where: { communityId: channel.communityId },
+              select: { role: true },
+            },
+          },
         },
         // Efficient replyTo - only fields needed for preview
         replyTo: {
@@ -344,7 +353,7 @@ export async function getChatMessages(input: unknown) {
     const items = hasMore ? messages.slice(0, -1) : messages;
     const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
 
-    // Transform messages to include reaction counts
+    // Transform messages to include reaction counts and author role
     const transformedItems = items.map((msg) => {
       // Calculate reaction counts from reactions array
       const reactionCounts: Record<string, number> = {};
@@ -357,7 +366,12 @@ export async function getChatMessages(input: unknown) {
         content: msg.content,
         channelId: msg.channelId,
         authorId: msg.authorId,
-        author: msg.author,
+        author: {
+          id: msg.author.id,
+          name: msg.author.name,
+          image: msg.author.image,
+          role: msg.author.memberships[0]?.role ?? null,
+        },
         createdAt: msg.createdAt,
         replyToId: msg.replyToId,
         replyTo: msg.replyTo

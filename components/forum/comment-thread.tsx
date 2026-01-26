@@ -13,11 +13,13 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { MAX_COMMENT_DEPTH } from "@/lib/validations/comment";
 import { EmptyState } from "@/components/ui/empty-state";
+import { RoleBadge } from "@/components/ui/role-badge";
 
 interface Author {
   id: string;
   name: string | null;
   image: string | null;
+  role?: string | null;
 }
 
 interface Comment {
@@ -36,14 +38,14 @@ interface CommentItemProps {
   comment: Comment;
   postId: string;
   currentUserId?: string;
-  isOwner: boolean;
+  canModerate: boolean;
 }
 
 function CommentItem({
   comment,
   postId,
   currentUserId,
-  isOwner,
+  canModerate,
 }: CommentItemProps) {
   const router = useRouter();
   const [isReplying, setIsReplying] = useState(false);
@@ -65,7 +67,7 @@ function CommentItem({
       .slice(0, 2) || "?";
 
   const isAuthor = currentUserId === comment.author.id;
-  const canDelete = isAuthor || isOwner;
+  const canDelete = isAuthor || canModerate;
   const canReply = currentUserId && comment.depth < MAX_COMMENT_DEPTH;
 
   const handleDelete = async () => {
@@ -118,6 +120,7 @@ function CommentItem({
             <span className="text-sm font-medium text-neutral-700">
               {comment.author.name || "Anonymous"}
             </span>
+            {comment.author.role && <RoleBadge role={comment.author.role} size="sm" />}
             <span className="text-xs text-neutral-400">·</span>
             <span className="text-xs text-neutral-400">{timeAgo}</span>
             {comment.replies.length > 0 && (
@@ -193,7 +196,7 @@ function CommentItem({
               comment={reply}
               postId={postId}
               currentUserId={currentUserId}
-              isOwner={isOwner}
+              canModerate={canModerate}
             />
           ))}
         </div>
@@ -206,14 +209,14 @@ interface CommentThreadProps {
   postId: string;
   comments: Comment[];
   currentUserId?: string;
-  isOwner: boolean;
+  canModerate: boolean;
 }
 
 export function CommentThread({
   postId,
   comments,
   currentUserId,
-  isOwner,
+  canModerate,
 }: CommentThreadProps) {
   if (comments.length === 0) {
     return (
@@ -234,7 +237,7 @@ export function CommentThread({
           comment={comment}
           postId={postId}
           currentUserId={currentUserId}
-          isOwner={isOwner}
+          canModerate={canModerate}
         />
       ))}
     </div>

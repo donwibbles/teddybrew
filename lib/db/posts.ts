@@ -51,7 +51,15 @@ export async function getPosts(
     orderBy,
     include: {
       author: {
-        select: { id: true, name: true, image: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          memberships: {
+            where: { communityId },
+            select: { role: true },
+          },
+        },
       },
       _count: {
         select: { comments: true },
@@ -104,6 +112,12 @@ export async function getPosts(
   return {
     posts: items.map((post) => ({
       ...post,
+      author: {
+        id: post.author.id,
+        name: post.author.name,
+        image: post.author.image,
+        role: post.author.memberships[0]?.role ?? null,
+      },
       userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
       commentCount: post._count.comments,
     })),
@@ -141,8 +155,23 @@ export async function getPostById(postId: string, userId?: string) {
 
   if (!post || post.deletedAt) return null;
 
+  // Get author's role in this community
+  const authorMembership = await prisma.member.findUnique({
+    where: {
+      userId_communityId: {
+        userId: post.authorId,
+        communityId: post.communityId,
+      },
+    },
+    select: { role: true },
+  });
+
   return {
     ...post,
+    author: {
+      ...post.author,
+      role: authorMembership?.role ?? null,
+    },
     userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
     commentCount: post._count.comments,
   };
@@ -156,6 +185,14 @@ export async function getPostComments(
   sort: "best" | "new" = "best",
   userId?: string
 ) {
+  // Get post to find community ID
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { communityId: true },
+  });
+
+  if (!post) return [];
+
   const orderBy =
     sort === "new"
       ? { createdAt: "desc" as const }
@@ -169,7 +206,15 @@ export async function getPostComments(
     orderBy,
     include: {
       author: {
-        select: { id: true, name: true, image: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          memberships: {
+            where: { communityId: post.communityId },
+            select: { role: true },
+          },
+        },
       },
       ...(userId
         ? {
@@ -183,10 +228,29 @@ export async function getPostComments(
   });
 
   // Build nested tree structure
-  const commentsMap = new Map<
-    string | null,
-    (typeof comments[number] & { userVote: number; replies: unknown[] })[]
-  >();
+  type EnrichedComment = {
+    id: string;
+    content: string;
+    postId: string;
+    authorId: string;
+    parentId: string | null;
+    depth: number;
+    voteScore: number;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+    deletedById: string | null;
+    author: {
+      id: string;
+      name: string | null;
+      image: string | null;
+      role: string | null;
+    };
+    userVote: number;
+    replies: EnrichedComment[];
+  };
+
+  const commentsMap = new Map<string | null, EnrichedComment[]>();
 
   // Initialize with empty arrays for all possible parentIds
   commentsMap.set(null, []);
@@ -198,8 +262,24 @@ export async function getPostComments(
 
   // Populate the map
   comments.forEach((comment) => {
-    const enrichedComment = {
-      ...comment,
+    const enrichedComment: EnrichedComment = {
+      id: comment.id,
+      content: comment.content,
+      postId: comment.postId,
+      authorId: comment.authorId,
+      parentId: comment.parentId,
+      depth: comment.depth,
+      voteScore: comment.voteScore,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+      deletedAt: comment.deletedAt,
+      deletedById: comment.deletedById,
+      author: {
+        id: comment.author.id,
+        name: comment.author.name,
+        image: comment.author.image,
+        role: comment.author.memberships[0]?.role ?? null,
+      },
       userVote: userId && "votes" in comment ? comment.votes[0]?.value ?? 0 : 0,
       replies: commentsMap.get(comment.id) || [],
     };

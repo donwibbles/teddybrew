@@ -1,7 +1,8 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { Member, MemberRole } from "@prisma/client";
+import { MemberRole } from "@prisma/client";
+import type { Member } from "@prisma/client";
 
 /**
  * Member/Membership database queries
@@ -54,6 +55,53 @@ export async function isOwner(
 ): Promise<boolean> {
   const role = await getMemberRole(userId, communityId);
   return role === MemberRole.OWNER;
+}
+
+/**
+ * Check if user is a moderator of a community (MODERATOR role only, not OWNER)
+ */
+export async function isModerator(
+  userId: string,
+  communityId: string
+): Promise<boolean> {
+  const role = await getMemberRole(userId, communityId);
+  return role === MemberRole.MODERATOR;
+}
+
+/**
+ * Check if user can moderate content (OWNER or MODERATOR)
+ * Use this for delete/pin actions
+ */
+export async function canModerate(
+  userId: string,
+  communityId: string
+): Promise<boolean> {
+  const role = await getMemberRole(userId, communityId);
+  return role === MemberRole.OWNER || role === MemberRole.MODERATOR;
+}
+
+/**
+ * Get full membership permissions in a single query
+ * Useful to avoid multiple queries when checking multiple permissions
+ */
+export async function getMemberPermissions(
+  userId: string,
+  communityId: string
+): Promise<{
+  role: MemberRole | null;
+  isMember: boolean;
+  isOwner: boolean;
+  isModerator: boolean;
+  canModerate: boolean;
+}> {
+  const role = await getMemberRole(userId, communityId);
+  return {
+    role,
+    isMember: role !== null,
+    isOwner: role === MemberRole.OWNER,
+    isModerator: role === MemberRole.MODERATOR,
+    canModerate: role === MemberRole.OWNER || role === MemberRole.MODERATOR,
+  };
 }
 
 /**
@@ -128,5 +176,55 @@ export async function getUserMemberships(userId: string) {
       },
     },
     orderBy: { joinedAt: "desc" },
+  });
+}
+
+/**
+ * Log a moderation action
+ */
+export async function logModerationAction(params: {
+  communityId: string;
+  moderatorId: string;
+  action: "DELETE_POST" | "DELETE_COMMENT" | "DELETE_MESSAGE" | "PIN_POST" | "UNPIN_POST";
+  targetType: "Post" | "Comment" | "Message";
+  targetId: string;
+  targetTitle?: string;
+}) {
+  return await prisma.moderationLog.create({
+    data: {
+      communityId: params.communityId,
+      moderatorId: params.moderatorId,
+      action: params.action,
+      targetType: params.targetType,
+      targetId: params.targetId,
+      targetTitle: params.targetTitle,
+    },
+  });
+}
+
+/**
+ * Get moderation logs for a community
+ */
+export async function getModerationLogs(
+  communityId: string,
+  options?: { limit?: number; cursor?: string }
+) {
+  const limit = options?.limit ?? 50;
+
+  return await prisma.moderationLog.findMany({
+    where: { communityId },
+    take: limit + 1,
+    cursor: options?.cursor ? { id: options.cursor } : undefined,
+    skip: options?.cursor ? 1 : 0,
+    orderBy: { createdAt: "desc" },
+    include: {
+      moderator: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+    },
   });
 }

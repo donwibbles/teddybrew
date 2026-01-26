@@ -97,6 +97,26 @@ export const removeMemberSchema = z.object({
 export type RemoveMemberInput = z.infer<typeof removeMemberSchema>;
 
 /**
+ * Schema for promoting a member to moderator
+ */
+export const promoteMemberSchema = z.object({
+  communityId: z.string().min(1, "Community ID is required"),
+  memberId: z.string().min(1, "Member ID is required"),
+});
+
+export type PromoteMemberInput = z.infer<typeof promoteMemberSchema>;
+
+/**
+ * Schema for demoting a moderator to member
+ */
+export const demoteMemberSchema = z.object({
+  communityId: z.string().min(1, "Community ID is required"),
+  memberId: z.string().min(1, "Member ID is required"),
+});
+
+export type DemoteMemberInput = z.infer<typeof demoteMemberSchema>;
+
+/**
  * Schema for community search/filter
  */
 export const searchCommunitiesSchema = z.object({

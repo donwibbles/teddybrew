@@ -7,10 +7,13 @@ import {
   joinCommunitySchema,
   leaveCommunitySchema,
   removeMemberSchema,
+  promoteMemberSchema,
+  demoteMemberSchema,
 } from "@/lib/validations/community";
 import { MemberRole, CommunityType, NotificationType } from "@prisma/client";
 import { checkMembershipRateLimit } from "@/lib/rate-limit";
 import { sendNotification } from "./notification";
+import { canModerate as canModerateDb, getModerationLogs as getModerationLogsDb } from "@/lib/db/members";
 
 /**
  * Action result types
@@ -316,6 +319,170 @@ export async function removeMember(
 }
 
 /**
+ * Promote a member to moderator
+ * - Only owner can promote members
+ * - Cannot promote owner or already-moderator
+ * - Cannot promote self
+ */
+export async function promoteMember(
+  input: unknown
+): Promise<ActionResult> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = promoteMemberSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { communityId, memberId } = parsed.data;
+
+    // Get community
+    const community = await prisma.community.findUnique({
+      where: { id: communityId },
+      select: { id: true, slug: true, ownerId: true },
+    });
+
+    if (!community) {
+      return { success: false, error: "Community not found" };
+    }
+
+    // Check if current user is the owner
+    if (community.ownerId !== userId) {
+      return {
+        success: false,
+        error: "Only the community owner can promote members",
+      };
+    }
+
+    // Get the member to be promoted
+    const memberToPromote = await prisma.member.findUnique({
+      where: { id: memberId },
+      select: { id: true, userId: true, role: true, communityId: true },
+    });
+
+    if (!memberToPromote) {
+      return { success: false, error: "User must be a community member" };
+    }
+
+    // Verify member belongs to this community
+    if (memberToPromote.communityId !== communityId) {
+      return { success: false, error: "Member does not belong to this community" };
+    }
+
+    // Cannot promote self
+    if (memberToPromote.userId === userId) {
+      return { success: false, error: "Cannot change your own role" };
+    }
+
+    // Cannot promote owner (check both role and ownerId)
+    if (memberToPromote.role === MemberRole.OWNER || memberToPromote.userId === community.ownerId) {
+      return { success: false, error: "Cannot change the owner's role" };
+    }
+
+    // Cannot promote already-moderator
+    if (memberToPromote.role === MemberRole.MODERATOR) {
+      return { success: false, error: "Member is already a moderator" };
+    }
+
+    // Promote to moderator
+    await prisma.member.update({
+      where: { id: memberId },
+      data: { role: MemberRole.MODERATOR },
+    });
+
+    revalidatePath(`/communities/${community.slug}/members`);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Failed to promote member:", error);
+    return { success: false, error: "Failed to promote member" };
+  }
+}
+
+/**
+ * Demote a moderator to member
+ * - Only owner can demote moderators
+ * - Cannot demote owner or non-moderator
+ * - Cannot demote self
+ */
+export async function demoteMember(
+  input: unknown
+): Promise<ActionResult> {
+  try {
+    const { userId } = await verifySession();
+
+    const parsed = demoteMemberSchema.safeParse(input);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message };
+    }
+
+    const { communityId, memberId } = parsed.data;
+
+    // Get community
+    const community = await prisma.community.findUnique({
+      where: { id: communityId },
+      select: { id: true, slug: true, ownerId: true },
+    });
+
+    if (!community) {
+      return { success: false, error: "Community not found" };
+    }
+
+    // Check if current user is the owner
+    if (community.ownerId !== userId) {
+      return {
+        success: false,
+        error: "Only the community owner can demote moderators",
+      };
+    }
+
+    // Get the member to be demoted
+    const memberToDemote = await prisma.member.findUnique({
+      where: { id: memberId },
+      select: { id: true, userId: true, role: true, communityId: true },
+    });
+
+    if (!memberToDemote) {
+      return { success: false, error: "Member not found" };
+    }
+
+    // Verify member belongs to this community
+    if (memberToDemote.communityId !== communityId) {
+      return { success: false, error: "Member does not belong to this community" };
+    }
+
+    // Cannot demote self
+    if (memberToDemote.userId === userId) {
+      return { success: false, error: "Cannot change your own role" };
+    }
+
+    // Cannot demote owner
+    if (memberToDemote.role === MemberRole.OWNER || memberToDemote.userId === community.ownerId) {
+      return { success: false, error: "Cannot change the owner's role" };
+    }
+
+    // Can only demote moderators
+    if (memberToDemote.role !== MemberRole.MODERATOR) {
+      return { success: false, error: "User is not a moderator" };
+    }
+
+    // Demote to member
+    await prisma.member.update({
+      where: { id: memberId },
+      data: { role: MemberRole.MEMBER },
+    });
+
+    revalidatePath(`/communities/${community.slug}/members`);
+
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error("Failed to demote member:", error);
+    return { success: false, error: "Failed to demote member" };
+  }
+}
+
+/**
  * Get user's membership status for a community
  */
 export async function getMembershipStatus(communityId: string) {
@@ -332,14 +499,27 @@ export async function getMembershipStatus(communityId: string) {
       select: { role: true },
     });
 
+    const role = membership?.role ?? null;
+    const isOwner = role === MemberRole.OWNER;
+    const isModerator = role === MemberRole.MODERATOR;
+
     return {
       userId,
       isMember: !!membership,
-      isOwner: membership?.role === MemberRole.OWNER,
-      role: membership?.role ?? null,
+      isOwner,
+      isModerator,
+      canModerate: isOwner || isModerator,
+      role,
     };
   } catch {
-    return { userId: null, isMember: false, isOwner: false, role: null };
+    return {
+      userId: null,
+      isMember: false,
+      isOwner: false,
+      isModerator: false,
+      canModerate: false,
+      role: null,
+    };
   }
 }
 
@@ -371,17 +551,24 @@ export async function getBatchMembershipStatus(communityIds: string[]) {
         userId: string | null;
         isMember: boolean;
         isOwner: boolean;
+        isModerator: boolean;
+        canModerate: boolean;
         role: MemberRole | null;
       }
     > = {};
 
     for (const communityId of communityIds) {
       const membership = membershipMap.get(communityId);
+      const role = membership?.role ?? null;
+      const isOwner = role === MemberRole.OWNER;
+      const isModerator = role === MemberRole.MODERATOR;
       result[communityId] = {
         userId,
         isMember: !!membership,
-        isOwner: membership?.role === MemberRole.OWNER,
-        role: membership?.role ?? null,
+        isOwner,
+        isModerator,
+        canModerate: isOwner || isModerator,
+        role,
       };
     }
 
@@ -394,6 +581,8 @@ export async function getBatchMembershipStatus(communityIds: string[]) {
         userId: string | null;
         isMember: boolean;
         isOwner: boolean;
+        isModerator: boolean;
+        canModerate: boolean;
         role: MemberRole | null;
       }
     > = {};
@@ -403,10 +592,42 @@ export async function getBatchMembershipStatus(communityIds: string[]) {
         userId: null,
         isMember: false,
         isOwner: false,
+        isModerator: false,
+        canModerate: false,
         role: null,
       };
     }
 
     return result;
+  }
+}
+
+/**
+ * Get moderation logs for a community
+ * Only accessible to owners and moderators
+ */
+export async function getModerationLogs(communityId: string, cursor?: string) {
+  try {
+    const { userId } = await verifySession();
+
+    // Check if user can moderate this community
+    if (!(await canModerateDb(userId, communityId))) {
+      return { logs: [], nextCursor: undefined, hasMore: false };
+    }
+
+    const limit = 20;
+    const logs = await getModerationLogsDb(communityId, { limit, cursor });
+
+    const hasMore = logs.length > limit;
+    const items = hasMore ? logs.slice(0, -1) : logs;
+    const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
+
+    return {
+      logs: items,
+      nextCursor,
+      hasMore,
+    };
+  } catch {
+    return { logs: [], nextCursor: undefined, hasMore: false };
   }
 }
