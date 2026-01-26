@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getUserById } from "@/lib/db/users";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ProfileEditForm } from "@/components/profile/profile-edit-form";
 
 export const metadata = {
   title: "Settings - Hive Community",
@@ -33,29 +33,23 @@ export default async function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Profile</CardTitle>
-          <CardDescription>Your public profile information</CardDescription>
+          <CardDescription>Your profile information and privacy settings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-neutral-700">Display Name</p>
-                <p className="text-neutral-900">{user.name || "Not set"}</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-neutral-700">Username</p>
-                <p className="text-neutral-900">{user.username ? `@${user.username}` : "Not set"}</p>
-              </div>
-            </div>
-            <Link
-              href="/profile"
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-primary-600 border border-primary-300 rounded-lg hover:bg-primary-50 transition-colors"
-            >
-              Edit Profile
-            </Link>
-          </div>
+          <ProfileEditForm
+            initialFirstName={user.firstName}
+            initialLastName={user.lastName}
+            initialName={user.name}
+            initialUsername={user.username}
+            initialBio={user.bio}
+            initialInterests={user.interests}
+            initialCommunityHope={user.communityHope}
+            initialIsPublic={user.isPublic}
+            initialShowUpcomingEvents={user.showUpcomingEvents}
+            initialShowPastEvents={user.showPastEvents}
+            initialShowCommunities={user.showCommunities}
+            initialEmailEventReminders={user.emailEventReminders}
+          />
         </CardContent>
       </Card>
 

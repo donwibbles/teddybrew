@@ -19,6 +19,10 @@ interface ProfileHeaderProps {
     interests?: string | null;
     communityHope?: string | null;
     isPublic?: boolean;
+    showUpcomingEvents?: boolean;
+    showPastEvents?: boolean;
+    showCommunities?: boolean;
+    emailEventReminders?: boolean;
   };
   stats: {
     communitiesOwned: number;
@@ -81,6 +85,10 @@ export function ProfileHeader({ user, stats, isNewUser }: ProfileHeaderProps) {
                 initialInterests={user.interests}
                 initialCommunityHope={user.communityHope}
                 initialIsPublic={user.isPublic ?? true}
+                initialShowUpcomingEvents={user.showUpcomingEvents ?? true}
+                initialShowPastEvents={user.showPastEvents ?? false}
+                initialShowCommunities={user.showCommunities ?? true}
+                initialEmailEventReminders={user.emailEventReminders ?? true}
                 onCancel={!isNewUser ? () => setIsEditing(false) : undefined}
                 isOnboarding={isNewUser}
               />

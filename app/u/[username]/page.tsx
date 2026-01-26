@@ -1,11 +1,14 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getUserPublicProfile } from "@/lib/db/users";
+import { getUserPublicProfile, getUserDashboardStats } from "@/lib/db/users";
+import { getUserOrganizedEvents, getUserAttendingEvents, getUserPastEvents } from "@/lib/db/events";
+import { getCommunitiesByMember, getCommunitiesByOwner } from "@/lib/db/communities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lock, Users, Calendar, Heart, Sparkles } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Lock, Users, Calendar, Heart, Sparkles, Settings } from "lucide-react";
 
 interface PublicProfilePageProps {
   params: Promise<{ username: string }>;
@@ -66,6 +69,30 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
     );
   }
 
+  // Fetch additional data for profile owner
+  let stats = null;
+  let ownedCommunities: Awaited<ReturnType<typeof getCommunitiesByOwner>> = [];
+  let memberCommunities: Awaited<ReturnType<typeof getCommunitiesByMember>> = [];
+  let organizedEvents: Awaited<ReturnType<typeof getUserOrganizedEvents>> = [];
+  let attendingEvents: Awaited<ReturnType<typeof getUserAttendingEvents>> = [];
+  let pastEvents: Awaited<ReturnType<typeof getUserPastEvents>> = [];
+
+  if (isOwnProfile) {
+    [stats, ownedCommunities, memberCommunities, organizedEvents, attendingEvents, pastEvents] = await Promise.all([
+      getUserDashboardStats(profile.id),
+      getCommunitiesByOwner(profile.id),
+      getCommunitiesByMember(profile.id),
+      getUserOrganizedEvents(profile.id),
+      getUserAttendingEvents(profile.id),
+      getUserPastEvents(profile.id),
+    ]);
+  }
+
+  const joinedCommunities = memberCommunities.filter((c) => c.ownerId !== profile.id);
+
+  // Determine what sections to show for visitors
+  const showCommunities = isOwnProfile || profile.showCommunities;
+
   return (
     <div className="space-y-6">
       {/* Profile Header */}
@@ -79,33 +106,65 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 text-center sm:text-left">
-              <h1 className="text-2xl font-bold text-neutral-900">
-                {profile.name || "Anonymous User"}
-              </h1>
-              {profile.username && (
-                <p className="text-neutral-600">@{profile.username}</p>
-              )}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div>
+                  <h1 className="text-2xl font-bold text-neutral-900">
+                    {profile.name || "Anonymous User"}
+                  </h1>
+                  {profile.username && (
+                    <p className="text-neutral-600">@{profile.username}</p>
+                  )}
+                </div>
+                {isOwnProfile && (
+                  <Link
+                    href="/settings"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-700 border border-neutral-300 rounded-lg
+                               hover:bg-neutral-50 transition-colors"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Edit Profile
+                  </Link>
+                )}
+              </div>
+
               {profile.bio && (
                 <p className="mt-3 text-neutral-700">{profile.bio}</p>
               )}
+
               <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-neutral-500">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   Member since {formatDate(profile.createdAt)}
                 </span>
-                <span className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  {profile.communities.length} public {profile.communities.length === 1 ? "community" : "communities"}
-                </span>
+                {showCommunities && (
+                  <span className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    {profile.communities.length} public {profile.communities.length === 1 ? "community" : "communities"}
+                  </span>
+                )}
               </div>
-              {isOwnProfile && (
-                <Link
-                  href="/profile"
-                  className="inline-block mt-4 px-4 py-2 text-sm font-medium text-neutral-700 border border-neutral-300 rounded-lg
-                             hover:bg-neutral-50 transition-colors"
-                >
-                  Edit Profile
-                </Link>
+
+              {/* Stats for owner */}
+              {isOwnProfile && stats && (
+                <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-neutral-500">
+                  <span>
+                    <strong className="text-neutral-900">{stats.communitiesOwned + stats.communitiesJoined}</strong> communities
+                  </span>
+                  <span>
+                    <strong className="text-neutral-900">{stats.eventsOrganized}</strong> events organized
+                  </span>
+                  <span>
+                    <strong className="text-neutral-900">{stats.upcomingRsvps}</strong> upcoming RSVPs
+                  </span>
+                </div>
+              )}
+
+              {/* Privacy indicator for owner */}
+              {isOwnProfile && !profile.isPublic && (
+                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-full text-sm text-neutral-600">
+                  <Lock className="h-3.5 w-3.5" />
+                  Your profile is private
+                </div>
               )}
             </div>
           </div>
@@ -144,8 +203,198 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
         </div>
       )}
 
-      {/* Communities Section */}
-      {profile.communities.length > 0 && (
+      {/* Owner-only detailed sections */}
+      {isOwnProfile && (
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Communities Owned */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Communities I Own</CardTitle>
+              <CardDescription>Communities you created and manage</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {ownedCommunities.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  title="No communities yet"
+                  description="You haven't created any communities yet."
+                  className="py-4"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {ownedCommunities.map((community) => (
+                    <Link
+                      key={community.id}
+                      href={`/communities/${community.slug}`}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-neutral-900">{community.name}</p>
+                        <p className="text-sm text-neutral-500">
+                          {community._count.members} members &middot; {community._count.events} events
+                        </p>
+                      </div>
+                      <Badge variant="secondary">Owner</Badge>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Communities Joined */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Communities I&apos;ve Joined</CardTitle>
+              <CardDescription>Communities you&apos;re a member of</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {joinedCommunities.length === 0 ? (
+                <EmptyState
+                  icon={Users}
+                  title="No communities joined"
+                  description="You haven't joined any other communities yet."
+                  className="py-4"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {joinedCommunities.map((community) => (
+                    <Link
+                      key={community.id}
+                      href={`/communities/${community.slug}`}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-neutral-900">{community.name}</p>
+                        <p className="text-sm text-neutral-500">
+                          {community._count.members} members &middot; {community._count.events} events
+                        </p>
+                      </div>
+                      <Badge variant="outline">Member</Badge>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Owner-only Event sections */}
+      {isOwnProfile && (
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Upcoming Events */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Events</CardTitle>
+              <CardDescription>Events you&apos;re organizing or attending</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {organizedEvents.length === 0 && attendingEvents.length === 0 ? (
+                <EmptyState
+                  icon={Calendar}
+                  title="No upcoming events"
+                  description="No events you're organizing or attending."
+                  className="py-4"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {organizedEvents.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/communities/${event.community.slug}/events/${event.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-neutral-900">{event.title}</p>
+                        <p className="text-sm text-neutral-500">
+                          {event.sessions[0]?.startTime
+                            ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "No sessions"}
+                        </p>
+                      </div>
+                      <Badge>Organizer</Badge>
+                    </Link>
+                  ))}
+                  {attendingEvents
+                    .filter((e) => !organizedEvents.some((o) => o.id === e.id))
+                    .map((event) => (
+                      <Link
+                        key={event.id}
+                        href={`/communities/${event.community.slug}/events/${event.id}`}
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                      >
+                        <div>
+                          <p className="font-medium text-neutral-900">{event.title}</p>
+                          <p className="text-sm text-neutral-500">
+                            {event.sessions[0]?.startTime
+                              ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                                  weekday: "short",
+                                  month: "short",
+                                  day: "numeric",
+                                })
+                              : "No sessions"}
+                          </p>
+                        </div>
+                        <Badge variant="secondary">Attending</Badge>
+                      </Link>
+                    ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Past Events */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Past Events</CardTitle>
+              <CardDescription>Events you&apos;ve attended or organized</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pastEvents.length === 0 ? (
+                <EmptyState
+                  icon={Calendar}
+                  title="No past events"
+                  description="No events you've attended or organized."
+                  className="py-4"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {pastEvents.slice(0, 10).map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/communities/${event.community.slug}/events/${event.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-neutral-900">{event.title}</p>
+                        <p className="text-sm text-neutral-500">
+                          {event.sessions[0]?.startTime
+                            ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "No sessions"}
+                        </p>
+                      </div>
+                      <span className="text-neutral-400">&rarr;</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Public Communities Section (for visitors when allowed) */}
+      {!isOwnProfile && showCommunities && profile.communities.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -172,6 +421,17 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                   </Badge>
                 </Link>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No content message for visitors */}
+      {!isOwnProfile && !showCommunities && !profile.interests && !profile.communityHope && (
+        <Card>
+          <CardContent className="py-8">
+            <div className="text-center text-neutral-500">
+              <p>@{profile.username} hasn&apos;t shared any public information yet.</p>
             </div>
           </CardContent>
         </Card>

@@ -111,3 +111,323 @@ If you didn't request this email, you can safely ignore it. Someone may have ent
 This email was sent from ${host}
 `.trim();
 }
+
+// ============ COMMUNITY INVITE EMAILS ============
+
+interface CommunityInviteEmailProps {
+  communityName: string;
+  communityDescription?: string | null;
+  inviterName: string;
+  acceptUrl: string;
+  expiresInDays: number;
+}
+
+/**
+ * Generate HTML email for community invitation
+ */
+export function getCommunityInviteEmailHtml({
+  communityName,
+  communityDescription,
+  inviterName,
+  acceptUrl,
+  expiresInDays,
+}: CommunityInviteEmailProps): string {
+  const escapedCommunityName = communityName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedInviterName = inviterName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedDescription = communityDescription
+    ? communityDescription.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    : null;
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>You're invited to join ${escapedCommunityName}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f5;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #e4e4e7;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #18181b;">
+                Hive Community
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #18181b;">
+                You're invited to join ${escapedCommunityName}
+              </h2>
+              <p style="margin: 0 0 16px; font-size: 16px; line-height: 1.5; color: #52525b;">
+                <strong>${escapedInviterName}</strong> has invited you to join their community on Hive.
+              </p>
+              ${escapedDescription ? `
+              <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.5; color: #71717a; padding: 12px; background-color: #fafafa; border-radius: 6px;">
+                "${escapedDescription}"
+              </p>
+              ` : ''}
+
+              <!-- Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding: 0 0 24px;">
+                    <a href="${acceptUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 28px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 500; border-radius: 6px;">
+                      Accept Invitation
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Alternative link -->
+              <p style="margin: 0 0 8px; font-size: 14px; color: #71717a;">
+                Or copy and paste this link into your browser:
+              </p>
+              <p style="margin: 0 0 24px; font-size: 14px; word-break: break-all; color: #3b82f6;">
+                <a href="${acceptUrl}" style="color: #3b82f6; text-decoration: underline;">${acceptUrl}</a>
+              </p>
+
+              <!-- Notice -->
+              <p style="margin: 0; padding: 16px; background-color: #fafafa; border-radius: 6px; font-size: 14px; line-height: 1.5; color: #71717a;">
+                This invitation expires in ${expiresInDays} days. You must sign in with this email address to accept.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+                If you don't want to join this community, you can ignore this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`.trim();
+}
+
+/**
+ * Generate plain text email for community invitation
+ */
+export function getCommunityInviteEmailText({
+  communityName,
+  communityDescription,
+  inviterName,
+  acceptUrl,
+  expiresInDays,
+}: CommunityInviteEmailProps): string {
+  return `
+You're invited to join ${communityName}
+
+${inviterName} has invited you to join their community on Hive Community.
+${communityDescription ? `\n"${communityDescription}"\n` : ''}
+Accept the invitation by clicking the link below:
+
+${acceptUrl}
+
+This invitation expires in ${expiresInDays} days.
+You must sign in with this email address to accept.
+
+---
+If you don't want to join this community, you can ignore this email.
+`.trim();
+}
+
+// ============ EVENT REMINDER EMAILS ============
+
+interface EventReminderEmailProps {
+  eventTitle: string;
+  eventDescription?: string | null;
+  startTime: Date;
+  location?: string | null;
+  meetingUrl?: string | null;
+  eventUrl: string;
+  communityName: string;
+  unsubscribeUrl: string;
+}
+
+/**
+ * Generate HTML email for event reminder
+ */
+export function getEventReminderEmailHtml({
+  eventTitle,
+  eventDescription,
+  startTime,
+  location,
+  meetingUrl,
+  eventUrl,
+  communityName,
+  unsubscribeUrl,
+}: EventReminderEmailProps): string {
+  const escapedTitle = eventTitle.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedCommunity = communityName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedDescription = eventDescription
+    ? eventDescription.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    : null;
+  const escapedLocation = location
+    ? location.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    : null;
+
+  const formattedDate = startTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = startTime.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>Reminder: ${escapedTitle}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f5;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #e4e4e7;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #18181b;">
+                Hive Community
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 8px; font-size: 14px; color: #71717a;">
+                Event Reminder
+              </p>
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #18181b;">
+                ${escapedTitle}
+              </h2>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>When:</strong> ${formattedDate} at ${formattedTime}
+                  </td>
+                </tr>
+                ${escapedLocation ? `
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>Where:</strong> ${escapedLocation}
+                  </td>
+                </tr>
+                ` : ''}
+                ${meetingUrl ? `
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>Meeting Link:</strong> <a href="${meetingUrl}" style="color: #3b82f6;">${meetingUrl}</a>
+                  </td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>Community:</strong> ${escapedCommunity}
+                  </td>
+                </tr>
+              </table>
+
+              ${escapedDescription ? `
+              <p style="margin: 0 0 24px; font-size: 14px; line-height: 1.5; color: #52525b;">
+                ${escapedDescription}
+              </p>
+              ` : ''}
+
+              <!-- Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding: 0 0 24px;">
+                    <a href="${eventUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 28px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 500; border-radius: 6px;">
+                      View Event Details
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+                <a href="${unsubscribeUrl}" style="color: #a1a1aa; text-decoration: underline;">Unsubscribe from event reminders</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`.trim();
+}
+
+/**
+ * Generate plain text email for event reminder
+ */
+export function getEventReminderEmailText({
+  eventTitle,
+  eventDescription,
+  startTime,
+  location,
+  meetingUrl,
+  eventUrl,
+  communityName,
+  unsubscribeUrl,
+}: EventReminderEmailProps): string {
+  const formattedDate = startTime.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = startTime.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  return `
+Event Reminder: ${eventTitle}
+
+When: ${formattedDate} at ${formattedTime}
+${location ? `Where: ${location}` : ''}
+${meetingUrl ? `Meeting Link: ${meetingUrl}` : ''}
+Community: ${communityName}
+${eventDescription ? `\n${eventDescription}\n` : ''}
+
+View event details: ${eventUrl}
+
+---
+Unsubscribe from event reminders: ${unsubscribeUrl}
+`.trim();
+}

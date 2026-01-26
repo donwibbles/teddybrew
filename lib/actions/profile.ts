@@ -38,7 +38,20 @@ export async function updateProfile(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { firstName, lastName, name, username, bio, interests, communityHope, isPublic } = parsed.data;
+    const {
+      firstName,
+      lastName,
+      name,
+      username,
+      bio,
+      interests,
+      communityHope,
+      isPublic,
+      showUpcomingEvents,
+      showPastEvents,
+      showCommunities,
+      emailEventReminders,
+    } = parsed.data;
 
     // Check username availability (excluding current user)
     const available = await isUsernameAvailable(username, userId);
@@ -47,8 +60,8 @@ export async function updateProfile(
     }
 
     // Update profile
-    // SECURITY: Only include isPublic if explicitly provided to prevent
-    // accidentally flipping private profiles to public on partial updates
+    // SECURITY: Only include boolean fields if explicitly provided to prevent
+    // accidentally flipping values on partial updates
     const updatedUser = await updateUserProfile(userId, {
       firstName,
       lastName,
@@ -58,6 +71,10 @@ export async function updateProfile(
       interests: interests || null,
       communityHope: communityHope || null,
       ...(isPublic !== undefined && { isPublic }),
+      ...(showUpcomingEvents !== undefined && { showUpcomingEvents }),
+      ...(showPastEvents !== undefined && { showPastEvents }),
+      ...(showCommunities !== undefined && { showCommunities }),
+      ...(emailEventReminders !== undefined && { emailEventReminders }),
     });
 
     revalidatePath("/profile");

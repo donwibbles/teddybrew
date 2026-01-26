@@ -18,6 +18,10 @@ interface ProfileEditFormProps {
   initialInterests?: string | null;
   initialCommunityHope?: string | null;
   initialIsPublic?: boolean;
+  initialShowUpcomingEvents?: boolean;
+  initialShowPastEvents?: boolean;
+  initialShowCommunities?: boolean;
+  initialEmailEventReminders?: boolean;
   onCancel?: () => void;
   isOnboarding?: boolean;
 }
@@ -44,6 +48,10 @@ export function ProfileEditForm({
   initialInterests,
   initialCommunityHope,
   initialIsPublic = true,
+  initialShowUpcomingEvents = true,
+  initialShowPastEvents = false,
+  initialShowCommunities = true,
+  initialEmailEventReminders = true,
   onCancel,
   isOnboarding = false,
 }: ProfileEditFormProps) {
@@ -70,6 +78,10 @@ export function ProfileEditForm({
       interests: initialInterests || "",
       communityHope: initialCommunityHope || "",
       isPublic: initialIsPublic,
+      showUpcomingEvents: initialShowUpcomingEvents,
+      showPastEvents: initialShowPastEvents,
+      showCommunities: initialShowCommunities,
+      emailEventReminders: initialEmailEventReminders,
     },
   });
 
@@ -381,26 +393,127 @@ export function ProfileEditForm({
           <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
         </div>
 
-        {/* Privacy toggle */}
-        <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
-          <input
-            type="checkbox"
-            id="isPublic"
-            {...register("isPublic")}
-            disabled={isSubmitting}
-            className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
-                       focus:ring-primary-500 disabled:opacity-50"
-          />
-          <div>
-            <label
-              htmlFor="isPublic"
-              className="block text-sm font-medium text-neutral-900 cursor-pointer"
-            >
-              Allow others to view your profile
-            </label>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              When enabled, other users can view your profile at /u/{watch("username") || "username"}
-            </p>
+        {/* Privacy Settings */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-neutral-700">Privacy Settings</h4>
+
+          {/* Public profile toggle */}
+          <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+            <input
+              type="checkbox"
+              id="isPublic"
+              {...register("isPublic")}
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+                         focus:ring-primary-500 disabled:opacity-50"
+            />
+            <div>
+              <label
+                htmlFor="isPublic"
+                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+              >
+                Allow others to view your profile
+              </label>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                When enabled, other users can view your profile at /u/{watch("username") || "username"}
+              </p>
+            </div>
+          </div>
+
+          {/* Show communities toggle */}
+          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="showCommunities"
+              {...register("showCommunities")}
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+                         focus:ring-primary-500 disabled:opacity-50"
+            />
+            <div>
+              <label
+                htmlFor="showCommunities"
+                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+              >
+                Show my communities on profile
+              </label>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Display the public communities you&apos;ve joined
+              </p>
+            </div>
+          </div>
+
+          {/* Show upcoming events toggle */}
+          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="showUpcomingEvents"
+              {...register("showUpcomingEvents")}
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+                         focus:ring-primary-500 disabled:opacity-50"
+            />
+            <div>
+              <label
+                htmlFor="showUpcomingEvents"
+                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+              >
+                Show my upcoming events
+              </label>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Display events you&apos;re organizing or attending
+              </p>
+            </div>
+          </div>
+
+          {/* Show past events toggle */}
+          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="showPastEvents"
+              {...register("showPastEvents")}
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+                         focus:ring-primary-500 disabled:opacity-50"
+            />
+            <div>
+              <label
+                htmlFor="showPastEvents"
+                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+              >
+                Show my past events
+              </label>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Display your event history on your profile
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Email Preferences */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium text-neutral-700">Email Preferences</h4>
+
+          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+            <input
+              type="checkbox"
+              id="emailEventReminders"
+              {...register("emailEventReminders")}
+              disabled={isSubmitting}
+              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+                         focus:ring-primary-500 disabled:opacity-50"
+            />
+            <div>
+              <label
+                htmlFor="emailEventReminders"
+                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+              >
+                Event reminder emails
+              </label>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Receive email reminders about upcoming events you&apos;re attending
+              </p>
+            </div>
           </div>
         </div>
       </div>

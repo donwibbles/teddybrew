@@ -240,18 +240,32 @@ export async function deleteCommunity(
 }
 
 /**
- * Get communities for discovery page
- * - Supports search and filtering
- * - Case-insensitive search
- * - By default only shows PUBLIC communities (PRIVATE communities are hidden unless explicitly filtered)
+ * Size filter type for communities
  */
-export async function searchCommunities(query?: string, _typeFilter?: string) {
+export type SizeFilter = "all" | "small" | "medium" | "large";
+
+/**
+ * Sort options for communities
+ */
+export type SortOption = "recent" | "popular";
+
+/**
+ * Get communities for discovery page
+ * - Supports search, size filtering, and sorting
+ * - Case-insensitive search
+ * - By default only shows PUBLIC communities (PRIVATE communities are hidden)
+ */
+export async function searchCommunities(
+  query?: string,
+  sizeFilter: SizeFilter = "all",
+  sortBy: SortOption = "recent"
+) {
   try {
     const trimmedQuery = query?.trim().toLowerCase();
 
     // SECURITY: Only PUBLIC communities appear in search results.
     // Private communities are discoverable only through direct invitations
-    // or user's membership list. The typeFilter param is ignored.
+    // or user's membership list.
     const communities = await prisma.community.findMany({
       where: {
         AND: [
@@ -288,10 +302,30 @@ export async function searchCommunities(query?: string, _typeFilter?: string) {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: sortBy === "popular"
+        ? { members: { _count: "desc" } }
+        : { createdAt: "desc" },
     });
 
-    return communities;
+    // Apply size filter (done in-memory since Prisma doesn't support filtering by count directly)
+    let filtered = communities;
+    if (sizeFilter !== "all") {
+      filtered = communities.filter((c) => {
+        const count = c._count.members;
+        switch (sizeFilter) {
+          case "small":
+            return count >= 1 && count <= 10;
+          case "medium":
+            return count >= 11 && count <= 50;
+          case "large":
+            return count >= 51;
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filtered;
   } catch (error) {
     console.error("Failed to search communities:", error);
     return [];

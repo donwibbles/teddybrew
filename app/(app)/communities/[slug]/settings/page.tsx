@@ -4,6 +4,8 @@ import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { EditCommunityForm } from "@/components/community/edit-community-form";
 import { DeleteCommunityForm } from "@/components/community/delete-community-form";
+import { InvitationsSection } from "@/components/community/invitations-section";
+import { Mail } from "lucide-react";
 
 interface SettingsPageProps {
   params: Promise<{ slug: string }>;
@@ -78,6 +80,23 @@ export default async function CommunitySettingsPage({
           }}
         />
       </div>
+
+      {/* Invitations Section - Only for private communities */}
+      {community.type === "PRIVATE" && (
+        <div className="bg-white rounded-lg border border-neutral-200 p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Mail className="h-5 w-5 text-neutral-500" />
+            <h2 className="text-lg font-semibold text-neutral-900">
+              Invitations
+            </h2>
+          </div>
+          <p className="text-neutral-600 text-sm mb-6">
+            Invite people to join your private community. They&apos;ll receive an email
+            with a link to accept the invitation.
+          </p>
+          <InvitationsSection communityId={community.id} />
+        </div>
+      )}
 
       {/* Danger Zone */}
       <div className="bg-white rounded-lg border border-error-200 p-6">

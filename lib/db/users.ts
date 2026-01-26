@@ -153,6 +153,10 @@ export async function updateUserProfile(
     interests?: string | null;
     communityHope?: string | null;
     isPublic?: boolean;
+    showUpcomingEvents?: boolean;
+    showPastEvents?: boolean;
+    showCommunities?: boolean;
+    emailEventReminders?: boolean;
   }
 ): Promise<User> {
   return await prisma.user.update({
@@ -165,8 +169,12 @@ export async function updateUserProfile(
       bio: data.bio,
       interests: data.interests,
       communityHope: data.communityHope,
-      // SECURITY: Only update isPublic if explicitly provided
+      // SECURITY: Only update boolean fields if explicitly provided
       ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
+      ...(data.showUpcomingEvents !== undefined && { showUpcomingEvents: data.showUpcomingEvents }),
+      ...(data.showPastEvents !== undefined && { showPastEvents: data.showPastEvents }),
+      ...(data.showCommunities !== undefined && { showCommunities: data.showCommunities }),
+      ...(data.emailEventReminders !== undefined && { emailEventReminders: data.emailEventReminders }),
       updatedAt: new Date(),
     },
   });
@@ -184,6 +192,9 @@ export type PublicProfile = {
   interests: string | null;
   communityHope: string | null;
   isPublic: boolean;
+  showUpcomingEvents: boolean;
+  showPastEvents: boolean;
+  showCommunities: boolean;
   createdAt: Date;
   communities: Array<{
     id: string;
@@ -210,6 +221,9 @@ export async function getUserPublicProfile(username: string): Promise<PublicProf
       interests: true,
       communityHope: true,
       isPublic: true,
+      showUpcomingEvents: true,
+      showPastEvents: true,
+      showCommunities: true,
       createdAt: true,
       memberships: {
         where: {
@@ -249,6 +263,9 @@ export async function getUserPublicProfile(username: string): Promise<PublicProf
     interests: user.interests,
     communityHope: user.communityHope,
     isPublic: user.isPublic,
+    showUpcomingEvents: user.showUpcomingEvents,
+    showPastEvents: user.showPastEvents,
+    showCommunities: user.showCommunities,
     createdAt: user.createdAt,
     communities: user.memberships.map((m) => ({
       id: m.community.id,

@@ -90,6 +90,12 @@ export const updateProfileSchema = z.object({
   interests: interestsSchema,
   communityHope: communityHopeSchema,
   isPublic: z.boolean().optional(),
+  // Granular privacy controls
+  showUpcomingEvents: z.boolean().optional(),
+  showPastEvents: z.boolean().optional(),
+  showCommunities: z.boolean().optional(),
+  // Email preferences
+  emailEventReminders: z.boolean().optional(),
 });
 
 export type UpdateProfileInput = z.input<typeof updateProfileSchema>;

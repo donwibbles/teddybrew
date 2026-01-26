@@ -6,22 +6,25 @@ import { useDebouncedCallback } from "use-debounce";
 
 interface CommunitySearchProps {
   initialQuery: string;
-  initialType: string;
+  initialSize?: string;
+  initialSort?: string;
 }
 
 export function CommunitySearch({
   initialQuery,
-  initialType,
+  initialSize = "all",
+  initialSort = "recent",
 }: CommunitySearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState(initialQuery);
-  const [typeFilter, setTypeFilter] = useState(initialType);
+  const [sizeFilter, setSizeFilter] = useState(initialSize);
+  const [sortBy, setSortBy] = useState(initialSort);
 
   const updateSearchParams = useCallback(
-    (newQuery: string, newType: string) => {
+    (newQuery: string, newSize: string, newSort: string) => {
       const params = new URLSearchParams(searchParams.toString());
 
       if (newQuery) {
@@ -30,10 +33,16 @@ export function CommunitySearch({
         params.delete("q");
       }
 
-      if (newType && newType !== "ALL") {
-        params.set("type", newType);
+      if (newSize && newSize !== "all") {
+        params.set("size", newSize);
       } else {
-        params.delete("type");
+        params.delete("size");
+      }
+
+      if (newSort && newSort !== "recent") {
+        params.set("sort", newSort);
+      } else {
+        params.delete("sort");
       }
 
       startTransition(() => {
@@ -44,7 +53,7 @@ export function CommunitySearch({
   );
 
   const debouncedSearch = useDebouncedCallback((value: string) => {
-    updateSearchParams(value, typeFilter);
+    updateSearchParams(value, sizeFilter, sortBy);
   }, 300);
 
   const handleQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,22 +62,29 @@ export function CommunitySearch({
     debouncedSearch(value);
   };
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    setTypeFilter(value);
-    updateSearchParams(query, value);
+    setSizeFilter(value);
+    updateSearchParams(query, value, sortBy);
+  };
+
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setSortBy(value);
+    updateSearchParams(query, sizeFilter, value);
   };
 
   const handleClear = () => {
     setQuery("");
-    setTypeFilter("ALL");
+    setSizeFilter("all");
+    setSortBy("recent");
     startTransition(() => {
       router.push("/communities");
     });
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3">
+    <div className="flex flex-col gap-3">
       {/* Search input */}
       <div className="relative flex-1">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -135,18 +151,32 @@ export function CommunitySearch({
         )}
       </div>
 
-      {/* Type filter */}
-      <select
-        value={typeFilter}
-        onChange={handleTypeChange}
-        className="px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 bg-white
-                   focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                   min-w-[140px]"
-      >
-        <option value="ALL">All Types</option>
-        <option value="PUBLIC">Public</option>
-        <option value="PRIVATE">Private</option>
-      </select>
+      {/* Filters row */}
+      <div className="flex flex-wrap gap-2">
+        {/* Size filter */}
+        <select
+          value={sizeFilter}
+          onChange={handleSizeChange}
+          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="all">All Sizes</option>
+          <option value="small">Small (1-10)</option>
+          <option value="medium">Medium (11-50)</option>
+          <option value="large">Large (51+)</option>
+        </select>
+
+        {/* Sort */}
+        <select
+          value={sortBy}
+          onChange={handleSortChange}
+          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        >
+          <option value="recent">Recently Created</option>
+          <option value="popular">Most Members</option>
+        </select>
+      </div>
     </div>
   );
 }

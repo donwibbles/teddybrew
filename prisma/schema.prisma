@@ -30,6 +30,14 @@ model User {
   communityHope String?   @db.VarChar(500)
   isPublic      Boolean   @default(true)
 
+  // Granular privacy controls for profile sections
+  showUpcomingEvents Boolean @default(true)
+  showPastEvents     Boolean @default(false)  // Default false - opt-in for event history
+  showCommunities    Boolean @default(true)
+
+  // Email preferences
+  emailEventReminders Boolean @default(true)
+
   // Relations
   accounts          Account[]
   sessions          Session[]
@@ -52,6 +60,9 @@ model User {
 
   // Notifications
   notifications     Notification[]
+
+  // Invitations created by this user
+  createdInvites    CommunityInvite[] @relation("InviteCreator")
 
   @@index([email])
   @@index([username])
@@ -110,16 +121,21 @@ model Community {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Activity tracking for sorting/filtering
+  lastActivityAt DateTime @default(now())
+
   // Relations
-  owner        User          @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  owner        User              @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members      Member[]
   events       Event[]
   chatChannels ChatChannel[]
   posts        Post[]
+  invites      CommunityInvite[]
 
   @@index([slug])
   @@index([ownerId])
   @@index([type])
+  @@index([lastActivityAt])
 }
 
 // Community Type Enum
@@ -150,6 +166,24 @@ model Member {
 enum MemberRole {
   OWNER
   MEMBER
+}
+
+// Community Invitation - for private community invites
+model CommunityInvite {
+  id          String   @id @default(cuid())
+  communityId String
+  email       String
+  token       String   @unique @default(cuid())
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  createdById String
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  createdBy User      @relation("InviteCreator", fields: [createdById], references: [id])
+
+  @@unique([communityId, email])
+  @@index([token])
+  @@index([email])
 }
 
 // Event Model
@@ -373,11 +407,12 @@ model CommentVote {
 // ============ NOTIFICATION SYSTEM ============
 
 enum NotificationType {
-  COMMENT_REPLY   // Someone replied to your comment
-  POST_COMMENT    // Someone commented on your post
-  POST_VOTE       // Your post received significant votes
-  EVENT_REMINDER  // Upcoming event reminder
-  NEW_MEMBER      // Someone joined your community (owner only)
+  COMMENT_REPLY    // Someone replied to your comment
+  POST_COMMENT     // Someone commented on your post
+  POST_VOTE        // Your post received significant votes
+  EVENT_REMINDER   // Upcoming event reminder
+  NEW_MEMBER       // Someone joined your community (owner only)
+  COMMUNITY_INVITE // You've been invited to a community
 }
 
 model Notification {
@@ -394,4 +429,17 @@ model Notification {
 
   @@index([userId, isRead, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
+}
+
+// ============ EMAIL TRACKING ============
+
+// Track sent event reminders for idempotency
+model EventReminderSent {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String
+  sentAt    DateTime @default(now())
+
+  @@unique([sessionId, userId])
+  @@index([sessionId])
 }

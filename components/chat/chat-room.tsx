@@ -70,6 +70,13 @@ export function ChatRoom({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldScrollRef = useRef(true);
 
+  // Check if user is near the bottom of the chat (within 100px)
+  const isNearBottom = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return true;
+    return container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+  }, []);
+
   // Ably channel for real-time messages
   const ablyChannelName = channelId
     ? `community:${communityId}:chat:${channelId}`
@@ -80,13 +87,17 @@ export function ChatRoom({
     "message",
     useCallback((ablyMessage: AblyMessage) => {
       const messageData = ablyMessage.data as Message;
+      // Only scroll if user is near bottom when new message arrives
+      const wasNearBottom = isNearBottom();
       setMessages((prev) => {
         // Avoid duplicates
         if (prev.some((m) => m.id === messageData.id)) return prev;
         return [...prev, { ...messageData, reactionCounts: messageData.reactionCounts || {} }];
       });
-      shouldScrollRef.current = true;
-    }, [])
+      if (wasNearBottom) {
+        shouldScrollRef.current = true;
+      }
+    }, [isNearBottom])
   );
 
   // Listen for message deletions
@@ -186,11 +197,17 @@ export function ChatRoom({
 
   // Send message (with optional reply)
   const handleSend = async (content: string, replyToId?: string) => {
+    // Check if near bottom BEFORE sending - only auto-scroll if user was already at bottom
+    const wasNearBottom = isNearBottom();
+
     setIsSending(true);
     const result = await sendChatMessage({ channelId, content, replyToId });
 
     if (!result.success) {
       toast.error(result.error);
+    } else if (wasNearBottom) {
+      // Only scroll to bottom if user was already near bottom when sending
+      shouldScrollRef.current = true;
     }
     setIsSending(false);
   };

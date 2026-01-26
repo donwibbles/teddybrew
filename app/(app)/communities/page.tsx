@@ -16,7 +16,7 @@ export const metadata = {
 };
 
 interface CommunitiesPageProps {
-  searchParams: Promise<{ q?: string; type?: string }>;
+  searchParams: Promise<{ q?: string; size?: string; sort?: string }>;
 }
 
 export default async function CommunitiesPage({
@@ -34,7 +34,8 @@ export default async function CommunitiesPage({
 
   const params = await searchParams;
   const query = params.q || "";
-  const typeFilter = params.type || "ALL";
+  const sizeFilter = params.size || "all";
+  const sortBy = params.sort || "recent";
 
   return (
     <div className="space-y-6">
@@ -71,12 +72,16 @@ export default async function CommunitiesPage({
         </Link>
       </div>
 
-      {/* Search and Filter */}
-      <CommunitySearch initialQuery={query} initialType={typeFilter} />
+      {/* Search and Filters */}
+      <CommunitySearch
+        initialQuery={query}
+        initialSize={sizeFilter}
+        initialSort={sortBy}
+      />
 
       {/* Community List */}
       <Suspense fallback={<CommunityListSkeleton />}>
-        <CommunityList query={query} typeFilter={typeFilter} />
+        <CommunityList query={query} sizeFilter={sizeFilter} sortBy={sortBy} />
       </Suspense>
     </div>
   );
@@ -84,12 +89,18 @@ export default async function CommunitiesPage({
 
 async function CommunityList({
   query,
-  typeFilter,
+  sizeFilter,
+  sortBy,
 }: {
   query: string;
-  typeFilter: string;
+  sizeFilter: string;
+  sortBy: string;
 }) {
-  const communities = await searchCommunities(query, typeFilter);
+  const communities = await searchCommunities(
+    query,
+    sizeFilter as "all" | "small" | "medium" | "large",
+    sortBy as "recent" | "popular"
+  );
 
   if (communities.length === 0) {
     return (
