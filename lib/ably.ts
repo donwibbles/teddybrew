@@ -50,6 +50,11 @@ export async function generateAblyTokenRequest(
     ];
     // Forum notifications - subscribe only
     capability[`community:${communityId}:forum`] = ["subscribe"];
+    // Document channels - subscribe and presence for collaboration
+    capability[`community:${communityId}:document:*`] = [
+      "subscribe",
+      "presence",
+    ];
   }
 
   const tokenRequest = await ably.auth.createTokenRequest({
@@ -94,4 +99,8 @@ export function getForumChannelName(communityId: string): string {
 
 export function getUserNotificationChannel(userId: string): string {
   return `user:${userId}:notifications`;
+}
+
+export function getDocumentChannelName(communityId: string, documentId: string): string {
+  return `community:${communityId}:document:${documentId}`;
 }

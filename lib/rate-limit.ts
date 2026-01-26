@@ -14,6 +14,8 @@ let _communityRateLimiter: Ratelimit | null = null;
 let _membershipRateLimiter: Ratelimit | null = null;
 let _profileRateLimiter: Ratelimit | null = null;
 let _channelRateLimiter: Ratelimit | null = null;
+let _documentRateLimiter: Ratelimit | null = null;
+let _folderRateLimiter: Ratelimit | null = null;
 
 function getRedis(): Redis | null {
   if (_redis) return _redis;
@@ -214,6 +216,40 @@ function getChannelRateLimiter(): Ratelimit | null {
   });
 
   return _channelRateLimiter;
+}
+
+function getDocumentRateLimiter(): Ratelimit | null {
+  if (_documentRateLimiter) return _documentRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 10 documents per hour
+  _documentRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:document",
+  });
+
+  return _documentRateLimiter;
+}
+
+function getFolderRateLimiter(): Ratelimit | null {
+  if (_folderRateLimiter) return _folderRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 10 folders per hour
+  _folderRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(10, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:folder",
+  });
+
+  return _folderRateLimiter;
 }
 
 interface RateLimitResult {
@@ -472,6 +508,54 @@ export async function checkChannelRateLimit(
   userId: string
 ): Promise<RateLimitResult> {
   const rateLimiter = getChannelRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check document rate limit: 10 documents per hour
+ */
+export async function checkDocumentRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getDocumentRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check folder rate limit: 10 folders per hour
+ */
+export async function checkFolderRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getFolderRateLimiter();
 
   if (!rateLimiter) {
     return {

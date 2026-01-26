@@ -73,6 +73,13 @@ model User {
   // Moderation logs (actions performed by this user)
   moderationLogs ModerationLog[]
 
+  // Document relations
+  documents            Document[]        @relation("DocumentAuthor")
+  publishedDocuments   Document[]        @relation("DocumentPublisher")
+  lockedDocuments      Document[]        @relation("DocumentLocker")
+  deletedDocuments     Document[]        @relation("DocumentDeleter")
+  documentVersions     DocumentVersion[] @relation("DocumentVersionAuthor")
+
   @@index([email])
   @@index([username])
 }
@@ -133,14 +140,20 @@ model Community {
   // Activity tracking for sorting/filtering
   lastActivityAt DateTime @default(now())
 
+  // Image fields
+  cardImage   String?
+  bannerImage String?
+
   // Relations
-  owner          User              @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members        Member[]
-  events         Event[]
-  chatChannels   ChatChannel[]
-  posts          Post[]
-  invites        CommunityInvite[]
-  moderationLogs ModerationLog[]
+  owner           User              @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members         Member[]
+  events          Event[]
+  chatChannels    ChatChannel[]
+  posts           Post[]
+  invites         CommunityInvite[]
+  moderationLogs  ModerationLog[]
+  documents       Document[]
+  documentFolders DocumentFolder[]
 
   @@index([slug])
   @@index([ownerId])
@@ -214,6 +227,9 @@ model Event {
   isVirtual     Boolean  @default(false)
   meetingUrl    String?  @db.VarChar(500)
   chatChannelId String?  @unique
+
+  // Image field
+  coverImage String?
 
   // Relations
   community    Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
@@ -479,4 +495,83 @@ model ModerationLog {
   moderator User      @relation(fields: [moderatorId], references: [id])
 
   @@index([communityId, createdAt(sort: Desc)])
+}
+
+// ============ DOCUMENT SYSTEM ============
+
+enum DocumentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model DocumentFolder {
+  id          String     @id @default(cuid())
+  name        String     @db.VarChar(100)
+  slug        String     @db.VarChar(100)
+  description String?    @db.VarChar(500)
+  communityId String
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  community Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  documents Document[]
+
+  @@unique([communityId, slug])
+  @@index([communityId])
+}
+
+model Document {
+  id           String         @id @default(cuid())
+  title        String         @db.VarChar(300)
+  slug         String         @db.VarChar(300)
+  content      Json           // TipTap JSON
+  contentHtml  String         @db.Text
+  communityId  String
+  folderId     String?
+  authorId     String
+  status       DocumentStatus @default(DRAFT)
+  isPinned     Boolean        @default(false)
+  sortOrder    Int            @default(0)
+  version      Int            @default(1)
+  publishedAt  DateTime?
+  publishedById String?
+  lockedAt     DateTime?
+  lockedById   String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+  deletedById  String?
+
+  community   Community        @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  folder      DocumentFolder?  @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  author      User             @relation("DocumentAuthor", fields: [authorId], references: [id])
+  publishedBy User?            @relation("DocumentPublisher", fields: [publishedById], references: [id])
+  lockedBy    User?            @relation("DocumentLocker", fields: [lockedById], references: [id])
+  deletedBy   User?            @relation("DocumentDeleter", fields: [deletedById], references: [id])
+  versions    DocumentVersion[]
+
+  @@unique([communityId, slug])
+  @@index([communityId, status])
+  @@index([communityId, folderId])
+  @@index([authorId])
+}
+
+model DocumentVersion {
+  id          String   @id @default(cuid())
+  documentId  String
+  version     Int
+  title       String   @db.VarChar(300)
+  content     Json
+  contentHtml String   @db.Text
+  authorId    String
+  changeNote  String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  author   User     @relation("DocumentVersionAuthor", fields: [authorId], references: [id])
+
+  @@unique([documentId, version])
+  @@index([documentId])
 }

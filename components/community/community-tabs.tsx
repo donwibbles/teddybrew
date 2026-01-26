@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, MessageSquare, FileText } from "lucide-react";
+import { Calendar, MessageSquare, FileText, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CommunityTabsProps {
@@ -30,6 +30,11 @@ export function CommunityTabs({ communitySlug, isMember }: CommunityTabsProps) {
       name: "Forum",
       href: `/communities/${communitySlug}/forum`,
       icon: FileText,
+    },
+    {
+      name: "Docs",
+      href: `/communities/${communitySlug}/docs`,
+      icon: BookOpen,
     },
   ];
 
