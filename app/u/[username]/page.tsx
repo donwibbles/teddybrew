@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getUserPublicProfile, getUserDashboardStats } from "@/lib/db/users";
-import { getUserOrganizedEvents, getUserAttendingEvents, getUserPastEvents } from "@/lib/db/events";
+import { getUserOrganizedEvents, getUserAttendingEvents, getUserPastEvents, getUserPublicUpcomingEvents, getUserPublicPastEvents } from "@/lib/db/events";
 import { getCommunitiesByMember, getCommunitiesByOwner } from "@/lib/db/communities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -77,6 +77,10 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
   let attendingEvents: Awaited<ReturnType<typeof getUserAttendingEvents>> = [];
   let pastEvents: Awaited<ReturnType<typeof getUserPastEvents>> = [];
 
+  // Visitor event data (for public profile)
+  let visitorUpcomingEvents: Awaited<ReturnType<typeof getUserPublicUpcomingEvents>> = [];
+  let visitorPastEvents: Awaited<ReturnType<typeof getUserPublicPastEvents>> = [];
+
   if (isOwnProfile) {
     [stats, ownedCommunities, memberCommunities, organizedEvents, attendingEvents, pastEvents] = await Promise.all([
       getUserDashboardStats(profile.id),
@@ -86,6 +90,14 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
       getUserAttendingEvents(profile.id),
       getUserPastEvents(profile.id),
     ]);
+  } else if (profile.isPublic) {
+    // Fetch public events for visitors based on privacy settings
+    const [upcoming, past] = await Promise.all([
+      profile.showUpcomingEvents ? getUserPublicUpcomingEvents(profile.id) : Promise.resolve([]),
+      profile.showPastEvents ? getUserPublicPastEvents(profile.id) : Promise.resolve([]),
+    ]);
+    visitorUpcomingEvents = upcoming;
+    visitorPastEvents = past;
   }
 
   const joinedCommunities = memberCommunities.filter((c) => c.ownerId !== profile.id);
@@ -426,8 +438,90 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
         </Card>
       )}
 
+      {/* Visitor Event Sections (for public profile with events enabled) */}
+      {!isOwnProfile && profile.isPublic && (visitorUpcomingEvents.length > 0 || visitorPastEvents.length > 0) && (
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Visitor Upcoming Events */}
+          {profile.showUpcomingEvents && visitorUpcomingEvents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-neutral-500" />
+                  Upcoming Events
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {visitorUpcomingEvents.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/communities/${event.community.slug}/events/${event.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-neutral-900">{event.title}</p>
+                        <p className="text-sm text-neutral-500">
+                          {event.sessions[0]?.startTime
+                            ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                              })
+                            : "No sessions"}
+                          {" "}· {event.community.name}
+                        </p>
+                      </div>
+                      <span className="text-neutral-400">&rarr;</span>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Visitor Past Events */}
+          {profile.showPastEvents && visitorPastEvents.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-neutral-500" />
+                  Past Events
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {visitorPastEvents.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={`/communities/${event.community.slug}/events/${event.id}`}
+                      className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+                    >
+                      <div>
+                        <p className="font-medium text-neutral-900">{event.title}</p>
+                        <p className="text-sm text-neutral-500">
+                          {event.sessions[0]?.startTime
+                            ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
+                                weekday: "short",
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })
+                            : "No sessions"}
+                          {" "}· {event.community.name}
+                        </p>
+                      </div>
+                      <span className="text-neutral-400">&rarr;</span>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* No content message for visitors */}
-      {!isOwnProfile && !showCommunities && !profile.interests && !profile.communityHope && (
+      {!isOwnProfile && !showCommunities && !profile.showUpcomingEvents && !profile.showPastEvents && !profile.interests && !profile.communityHope && (
         <Card>
           <CardContent className="py-8">
             <div className="text-center text-neutral-500">

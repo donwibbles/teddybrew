@@ -91,6 +91,12 @@ export async function joinCommunity(
       },
     });
 
+    // Update community lastActivityAt (fire and forget)
+    prisma.community.update({
+      where: { id: communityId },
+      data: { lastActivityAt: new Date() },
+    }).catch((err) => console.warn("Failed to update lastActivityAt:", err));
+
     // Get joining user's name for notification
     const joiningUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -104,7 +110,7 @@ export async function joinCommunity(
       title: `New member in ${community.name}`,
       message: `${joiningUser?.name || "Someone"} joined your community`,
       link: `/communities/${community.slug}/members`,
-    }).catch(() => {}); // Fire and forget
+    }).catch((err) => console.warn("Failed to send notification:", err));
 
     revalidatePath(`/communities/${community.slug}`);
     revalidatePath("/communities");
@@ -277,15 +283,20 @@ export async function removeMember(
         select: { id: true },
       });
 
-      for (const event of eventsAsCoOrganizer) {
-        await tx.event.update({
-          where: { id: event.id },
-          data: {
-            coOrganizers: {
-              disconnect: { id: memberToRemove.userId },
-            },
-          },
-        });
+      // Execute all disconnects in parallel (still N queries, but parallel)
+      if (eventsAsCoOrganizer.length > 0) {
+        await Promise.all(
+          eventsAsCoOrganizer.map((event) =>
+            tx.event.update({
+              where: { id: event.id },
+              data: {
+                coOrganizers: {
+                  disconnect: { id: memberToRemove.userId },
+                },
+              },
+            })
+          )
+        );
       }
 
       // Delete the membership

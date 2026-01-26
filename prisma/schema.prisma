@@ -64,6 +64,9 @@ model User {
   // Invitations created by this user
   createdInvites    CommunityInvite[] @relation("InviteCreator")
 
+  // Event reminders
+  eventRemindersSent EventReminderSent[]
+
   @@index([email])
   @@index([username])
 }
@@ -227,6 +230,7 @@ model EventSession {
 
   event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
   rsvps RSVP[]
+  remindersSent EventReminderSent[]
 
   @@index([eventId])
   @@index([startTime])
@@ -435,11 +439,16 @@ model Notification {
 
 // Track sent event reminders for idempotency
 model EventReminderSent {
-  id        String   @id @default(cuid())
-  sessionId String
-  userId    String
-  sentAt    DateTime @default(now())
+  id            String   @id @default(cuid())
+  sessionId     String
+  userId        String
+  resendEmailId String?  // Store Resend scheduled email ID for cancellation
+  sentAt        DateTime @default(now())
+
+  session EventSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, userId])
   @@index([sessionId])
+  @@index([resendEmailId])
 }

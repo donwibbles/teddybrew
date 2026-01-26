@@ -443,3 +443,103 @@ export async function getUserPastEvents(userId: string) {
     return bStart.getTime() - aStart.getTime();
   });
 }
+
+/**
+ * Get user's public upcoming events (for public profile visitors)
+ * Only returns events from PUBLIC communities where user has RSVP'd GOING
+ */
+export async function getUserPublicUpcomingEvents(userId: string) {
+  const now = new Date();
+  const events = await prisma.event.findMany({
+    where: {
+      community: { type: "PUBLIC" },
+      sessions: {
+        some: {
+          startTime: { gte: now },
+          rsvps: { some: { userId, status: "GOING" } },
+        },
+      },
+    },
+    include: {
+      community: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+        },
+      },
+      organizer: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      sessions: {
+        orderBy: { startTime: "asc" },
+        select: {
+          id: true,
+          startTime: true,
+          endTime: true,
+          _count: { select: { rsvps: true } },
+        },
+      },
+    },
+    take: 10,
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return aStart.getTime() - bStart.getTime();
+  });
+}
+
+/**
+ * Get user's public past events (for public profile visitors)
+ * Only returns events from PUBLIC communities where user had RSVP'd GOING
+ */
+export async function getUserPublicPastEvents(userId: string) {
+  const now = new Date();
+  const events = await prisma.event.findMany({
+    where: {
+      community: { type: "PUBLIC" },
+      sessions: {
+        every: { startTime: { lt: now } },
+        some: { rsvps: { some: { userId, status: "GOING" } } },
+      },
+    },
+    include: {
+      community: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+        },
+      },
+      organizer: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      sessions: {
+        orderBy: { startTime: "desc" },
+        select: {
+          id: true,
+          startTime: true,
+          endTime: true,
+          _count: { select: { rsvps: true } },
+        },
+      },
+    },
+    take: 10,
+  });
+
+  return events.sort((a, b) => {
+    const aStart = a.sessions[0]?.startTime || new Date(0);
+    const bStart = b.sessions[0]?.startTime || new Date(0);
+    return bStart.getTime() - aStart.getTime();
+  });
+}

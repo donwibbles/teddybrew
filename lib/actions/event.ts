@@ -125,7 +125,7 @@ export async function createEvent(
       }
 
       // Create the event
-      return await tx.event.create({
+      const newEvent = await tx.event.create({
         data: {
           title,
           description: sanitizedDescription,
@@ -147,6 +147,14 @@ export async function createEvent(
           },
         },
       });
+
+      // Update community lastActivityAt
+      await tx.community.update({
+        where: { id: communityId },
+        data: { lastActivityAt: new Date() },
+      });
+
+      return newEvent;
     });
 
     revalidatePath(`/communities/${community.slug}`);

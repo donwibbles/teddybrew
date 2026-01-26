@@ -176,6 +176,12 @@ export async function sendChatMessage(
       },
     });
 
+    // Update community lastActivityAt (fire and forget)
+    prisma.community.update({
+      where: { id: accessCheck.communityId! },
+      data: { lastActivityAt: new Date() },
+    }).catch((err) => console.warn("Failed to update lastActivityAt:", err));
+
     // Publish to Ably channel
     try {
       await publishToChannel(

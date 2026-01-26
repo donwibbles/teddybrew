@@ -247,6 +247,181 @@ If you don't want to join this community, you can ignore this email.
 `.trim();
 }
 
+// ============ RSVP CONFIRMATION EMAILS ============
+
+interface RsvpConfirmationEmailProps {
+  eventTitle: string;
+  sessionDate: Date;
+  location?: string | null;
+  meetingUrl?: string | null;
+  eventUrl: string;
+  communityName: string;
+}
+
+/**
+ * Generate HTML email for RSVP confirmation
+ */
+export function getRsvpConfirmationEmailHtml({
+  eventTitle,
+  sessionDate,
+  location,
+  meetingUrl,
+  eventUrl,
+  communityName,
+}: RsvpConfirmationEmailProps): string {
+  const escapedTitle = eventTitle.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedCommunity = communityName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const escapedLocation = location
+    ? location.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    : null;
+
+  const formattedDate = sessionDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = sessionDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>You're signed up: ${escapedTitle}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f4f4f5;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="max-width: 480px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 32px 32px 24px; text-align: center; border-bottom: 1px solid #e4e4e7;">
+              <h1 style="margin: 0; font-size: 24px; font-weight: 600; color: #18181b;">
+                Hive Community
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Content -->
+          <tr>
+            <td style="padding: 32px;">
+              <p style="margin: 0 0 8px; font-size: 14px; color: #22c55e; font-weight: 500;">
+                You're signed up!
+              </p>
+              <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #18181b;">
+                ${escapedTitle}
+              </h2>
+
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 24px;">
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>When:</strong> ${formattedDate} at ${formattedTime}
+                  </td>
+                </tr>
+                ${escapedLocation ? `
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>Where:</strong> ${escapedLocation}
+                  </td>
+                </tr>
+                ` : ''}
+                ${meetingUrl ? `
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>Meeting Link:</strong> <a href="${meetingUrl}" style="color: #3b82f6;">${meetingUrl}</a>
+                  </td>
+                </tr>
+                ` : ''}
+                <tr>
+                  <td style="padding: 8px 0; font-size: 14px; color: #52525b;">
+                    <strong>Community:</strong> ${escapedCommunity}
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 0 0 24px; padding: 12px; background-color: #f0fdf4; border-radius: 6px; font-size: 14px; line-height: 1.5; color: #166534;">
+                We'll send you a reminder 24 hours before the event.
+              </p>
+
+              <!-- Button -->
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding: 0 0 24px;">
+                    <a href="${eventUrl}" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 14px 28px; background-color: #18181b; color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 500; border-radius: 6px;">
+                      View Event Details
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 32px; border-top: 1px solid #e4e4e7; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #a1a1aa;">
+                You can manage your RSVP from the event page.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+`.trim();
+}
+
+/**
+ * Generate plain text email for RSVP confirmation
+ */
+export function getRsvpConfirmationEmailText({
+  eventTitle,
+  sessionDate,
+  location,
+  meetingUrl,
+  communityName,
+  eventUrl,
+}: RsvpConfirmationEmailProps): string {
+  const formattedDate = sessionDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = sessionDate.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  return `
+You're signed up: ${eventTitle}
+
+When: ${formattedDate} at ${formattedTime}
+${location ? `Where: ${location}` : ''}
+${meetingUrl ? `Meeting Link: ${meetingUrl}` : ''}
+Community: ${communityName}
+
+We'll send you a reminder 24 hours before the event.
+
+View event details: ${eventUrl}
+
+---
+You can manage your RSVP from the event page.
+`.trim();
+}
+
 // ============ EVENT REMINDER EMAILS ============
 
 interface EventReminderEmailProps {

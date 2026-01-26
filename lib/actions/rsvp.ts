@@ -10,6 +10,8 @@ import {
   cancelRsvpSchema,
   rsvpAllSessionsSchema,
 } from "@/lib/validations/event";
+import { scheduleEventReminder, cancelScheduledReminder } from "./reminder";
+import { getRsvpConfirmationEmailHtml, getRsvpConfirmationEmailText } from "@/lib/email/templates";
 
 /**
  * Action result types
@@ -44,12 +46,16 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
         id: true,
         startTime: true,
         capacity: true,
+        location: true,
         event: {
           select: {
             id: true,
+            title: true,
             communityId: true,
             capacity: true,
-            community: { select: { slug: true } },
+            location: true,
+            meetingUrl: true,
+            community: { select: { slug: true, name: true } },
           },
         },
       },
@@ -129,6 +135,60 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
       return result;
     }
 
+    // Send RSVP confirmation and schedule reminder (fire and forget)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, emailEventReminders: true },
+    });
+
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const eventUrl = `${baseUrl}/communities/${session.event.community.slug}/events/${session.event.id}`;
+
+    // Only send emails if user has email reminders enabled
+    if (user?.email && user.emailEventReminders) {
+      // Send RSVP confirmation email (immediate)
+      fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        },
+        body: JSON.stringify({
+          from: process.env.RESEND_FROM_EMAIL,
+          to: user.email,
+          subject: `You're signed up: ${session.event.title}`,
+          html: getRsvpConfirmationEmailHtml({
+            eventTitle: session.event.title,
+            sessionDate: session.startTime,
+            location: session.location || session.event.location,
+            meetingUrl: session.event.meetingUrl,
+            eventUrl,
+            communityName: session.event.community.name,
+          }),
+          text: getRsvpConfirmationEmailText({
+            eventTitle: session.event.title,
+            sessionDate: session.startTime,
+            location: session.location || session.event.location,
+            meetingUrl: session.event.meetingUrl,
+            eventUrl,
+            communityName: session.event.community.name,
+          }),
+        }),
+      }).catch((err) => console.warn("Failed to send RSVP confirmation:", err));
+
+      // Schedule reminder email 24 hours before event
+      const reminderTime = new Date(session.startTime.getTime() - 24 * 60 * 60 * 1000);
+
+      // Only schedule if reminder time is in the future (event is > 24h away)
+      if (reminderTime > new Date()) {
+        scheduleEventReminder({
+          userId,
+          sessionId,
+          scheduledFor: reminderTime,
+        }).catch((err) => console.warn("Failed to schedule reminder:", err));
+      }
+    }
+
     revalidatePath(
       `/communities/${session.event.community.slug}/events/${session.event.id}`
     );
@@ -193,6 +253,9 @@ export async function cancelRsvp(input: unknown): Promise<ActionResult> {
     await prisma.rSVP.delete({
       where: { id: existingRSVP.id },
     });
+
+    // Cancel any scheduled reminder (fire and forget)
+    cancelScheduledReminder(sessionId, userId);
 
     revalidatePath(
       `/communities/${session.event.community.slug}/events/${session.event.id}`

@@ -54,14 +54,24 @@ export async function createPost(
       return { success: false, error: "Community not found" };
     }
 
-    // Create post
-    const post = await prisma.post.create({
-      data: {
-        title: sanitizeText(title),
-        content, // Keep markdown content as-is, sanitize on render
-        communityId,
-        authorId: userId,
-      },
+    // Create post and update community activity
+    const post = await prisma.$transaction(async (tx) => {
+      const newPost = await tx.post.create({
+        data: {
+          title: sanitizeText(title),
+          content, // Keep markdown content as-is, sanitize on render
+          communityId,
+          authorId: userId,
+        },
+      });
+
+      // Update community lastActivityAt
+      await tx.community.update({
+        where: { id: communityId },
+        data: { lastActivityAt: new Date() },
+      });
+
+      return newPost;
     });
 
     // Notify via Ably

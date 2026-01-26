@@ -126,6 +126,12 @@ export async function createComment(
         data: { commentCount: { increment: 1 } },
       });
 
+      // Update community lastActivityAt
+      await tx.community.update({
+        where: { id: post.communityId },
+        data: { lastActivityAt: new Date() },
+      });
+
       return newComment;
     });
 
@@ -153,7 +159,7 @@ export async function createComment(
           title: "New reply to your comment",
           message: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
           link: `/communities/${post.community.slug}/forum/${postId}#comment-${comment.id}`,
-        }).catch(() => {}); // Fire and forget
+        }).catch((err) => console.warn("Failed to send notification:", err));
       }
     } else {
       // Notify post author (new comment notification)
@@ -164,7 +170,7 @@ export async function createComment(
           title: `New comment on "${post.title.slice(0, 30)}${post.title.length > 30 ? "..." : ""}"`,
           message: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
           link: `/communities/${post.community.slug}/forum/${postId}#comment-${comment.id}`,
-        }).catch(() => {}); // Fire and forget
+        }).catch((err) => console.warn("Failed to send notification:", err));
       }
     }
 
