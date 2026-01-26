@@ -249,6 +249,43 @@ If you don't want to join this community, you can ignore this email.
 
 // ============ RSVP CONFIRMATION EMAILS ============
 
+/**
+ * Format event time with explicit timezone
+ * Falls back gracefully if timezone is invalid
+ */
+function formatEventTime(date: Date, timezone: string): { date: string; time: string } {
+  try {
+    const formattedDate = date.toLocaleDateString("en-US", {
+      timeZone: timezone,
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      timeZone: timezone,
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    }) + ` (${timezone})`;
+    return { date: formattedDate, time: formattedTime };
+  } catch {
+    // Fallback if invalid timezone
+    const formattedDate = date.toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    });
+    return { date: formattedDate, time: formattedTime };
+  }
+}
+
 interface RsvpConfirmationEmailProps {
   eventTitle: string;
   sessionDate: Date;
@@ -256,6 +293,7 @@ interface RsvpConfirmationEmailProps {
   meetingUrl?: string | null;
   eventUrl: string;
   communityName: string;
+  timezone?: string;
 }
 
 /**
@@ -268,6 +306,7 @@ export function getRsvpConfirmationEmailHtml({
   meetingUrl,
   eventUrl,
   communityName,
+  timezone = "America/New_York",
 }: RsvpConfirmationEmailProps): string {
   const escapedTitle = eventTitle.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const escapedCommunity = communityName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -275,17 +314,7 @@ export function getRsvpConfirmationEmailHtml({
     ? location.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     : null;
 
-  const formattedDate = sessionDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = sessionDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  const { date: formattedDate, time: formattedTime } = formatEventTime(sessionDate, timezone);
 
   return `
 <!DOCTYPE html>
@@ -392,18 +421,9 @@ export function getRsvpConfirmationEmailText({
   meetingUrl,
   communityName,
   eventUrl,
+  timezone = "America/New_York",
 }: RsvpConfirmationEmailProps): string {
-  const formattedDate = sessionDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = sessionDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  const { date: formattedDate, time: formattedTime } = formatEventTime(sessionDate, timezone);
 
   return `
 You're signed up: ${eventTitle}
@@ -433,6 +453,7 @@ interface EventReminderEmailProps {
   eventUrl: string;
   communityName: string;
   unsubscribeUrl: string;
+  timezone?: string;
 }
 
 /**
@@ -447,6 +468,7 @@ export function getEventReminderEmailHtml({
   eventUrl,
   communityName,
   unsubscribeUrl,
+  timezone = "America/New_York",
 }: EventReminderEmailProps): string {
   const escapedTitle = eventTitle.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const escapedCommunity = communityName.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -457,17 +479,7 @@ export function getEventReminderEmailHtml({
     ? location.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     : null;
 
-  const formattedDate = startTime.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = startTime.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  const { date: formattedDate, time: formattedTime } = formatEventTime(startTime, timezone);
 
   return `
 <!DOCTYPE html>
@@ -578,18 +590,9 @@ export function getEventReminderEmailText({
   eventUrl,
   communityName,
   unsubscribeUrl,
+  timezone = "America/New_York",
 }: EventReminderEmailProps): string {
-  const formattedDate = startTime.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = startTime.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZoneName: "short",
-  });
+  const { date: formattedDate, time: formattedTime } = formatEventTime(startTime, timezone);
 
   return `
 Event Reminder: ${eventTitle}

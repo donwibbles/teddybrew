@@ -24,6 +24,8 @@ interface ProfileEditFormProps {
   initialEmailEventReminders?: boolean;
   onCancel?: () => void;
   isOnboarding?: boolean;
+  isSetup?: boolean;
+  redirectTo?: string;
 }
 
 /**
@@ -54,6 +56,8 @@ export function ProfileEditForm({
   initialEmailEventReminders = true,
   onCancel,
   isOnboarding = false,
+  isSetup = false,
+  redirectTo,
 }: ProfileEditFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -146,9 +150,14 @@ export function ProfileEditForm({
 
     if (result.success) {
       toast.success("Profile updated successfully!");
-      router.refresh();
-      if (onCancel) {
-        onCancel();
+      if (isSetup && redirectTo) {
+        router.push(redirectTo);
+        router.refresh();
+      } else {
+        router.refresh();
+        if (onCancel) {
+          onCancel();
+        }
       }
     } else {
       setServerError(result.error);

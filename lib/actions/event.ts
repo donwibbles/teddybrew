@@ -77,6 +77,7 @@ export async function createEvent(
       sessions,
       isVirtual,
       meetingUrl,
+      timezone,
     } = parsed.data;
 
     // Check if user is a member of the community
@@ -136,6 +137,7 @@ export async function createEvent(
           isVirtual: isVirtual || false,
           meetingUrl: meetingUrl || null,
           chatChannelId: chatChannelId || null,
+          timezone: timezone || "America/New_York",
           sessions: {
             create: sessions.map((session) => ({
               title: session.title || null,
@@ -205,6 +207,7 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       sessions,
       isVirtual,
       meetingUrl,
+      timezone,
     } = parsed.data;
 
     // Check if user is an organizer
@@ -276,6 +279,7 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
           ...(isVirtual !== undefined && { isVirtual }),
           ...(meetingUrl !== undefined && { meetingUrl: meetingUrl || null }),
           ...(chatChannelId !== event.chatChannelId && { chatChannelId }),
+          ...(timezone !== undefined && { timezone }),
         },
       });
 
@@ -626,7 +630,16 @@ export async function getEventForEdit(eventId: string) {
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        location: true,
+        capacity: true,
+        isVirtual: true,
+        meetingUrl: true,
+        timezone: true,
+        organizerId: true,
         community: {
           select: {
             id: true,

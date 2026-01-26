@@ -55,6 +55,7 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
             capacity: true,
             location: true,
             meetingUrl: true,
+            timezone: true,
             community: { select: { slug: true, name: true } },
           },
         },
@@ -164,6 +165,7 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
             meetingUrl: session.event.meetingUrl,
             eventUrl,
             communityName: session.event.community.name,
+            timezone: session.event.timezone,
           }),
           text: getRsvpConfirmationEmailText({
             eventTitle: session.event.title,
@@ -172,6 +174,7 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
             meetingUrl: session.event.meetingUrl,
             eventUrl,
             communityName: session.event.community.name,
+            timezone: session.event.timezone,
           }),
         }),
       }).catch((err) => console.warn("Failed to send RSVP confirmation:", err));

@@ -71,6 +71,7 @@ export function CreateEventForm({
       capacity: capacity || undefined,
       isVirtual,
       meetingUrl: meetingUrl || undefined,
+      timezone: timezone || "America/New_York",
       sessions: sessions.map((s) => ({
         title: s.title || undefined,
         startTime: s.startTime,

@@ -23,6 +23,7 @@ interface EditEventFormProps {
     capacity: number | null;
     isVirtual?: boolean;
     meetingUrl?: string | null;
+    timezone?: string;
     sessions: Array<{
       id: string;
       title: string | null;
@@ -75,11 +76,15 @@ export function EditEventForm({
     }))
   );
 
-  // Get user's timezone on mount
+  // Use event's stored timezone, or fallback to user's timezone
   useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    setTimezone(tz);
-  }, []);
+    if (event.timezone) {
+      setTimezone(event.timezone);
+    } else {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      setTimezone(tz);
+    }
+  }, [event.timezone]);
 
   // Get minimum date (now) for datetime-local input
   const getMinDateTime = () => {
@@ -108,6 +113,7 @@ export function EditEventForm({
       capacity: capacity || undefined,
       isVirtual,
       meetingUrl: meetingUrl || undefined,
+      timezone: timezone || "America/New_York",
       sessions: sessions.map((s) => ({
         id: s.id,
         title: s.title || undefined,

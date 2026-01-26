@@ -10,7 +10,11 @@ export const metadata = {
   description: "Manage your account settings",
 };
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ setup?: string }>;
+}) {
   const session = await auth();
   if (!session?.user?.id) {
     redirect("/sign-in");
@@ -21,6 +25,9 @@ export default async function SettingsPage() {
   if (!user) {
     redirect("/sign-in");
   }
+
+  const { setup } = await searchParams;
+  const isSetup = setup === "username";
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -49,6 +56,8 @@ export default async function SettingsPage() {
             initialShowPastEvents={user.showPastEvents}
             initialShowCommunities={user.showCommunities}
             initialEmailEventReminders={user.emailEventReminders}
+            isSetup={isSetup}
+            redirectTo="/communities"
           />
         </CardContent>
       </Card>

@@ -40,6 +40,7 @@ export async function scheduleEventReminder(input: ScheduleReminderInput): Promi
               description: true,
               location: true,
               meetingUrl: true,
+              timezone: true,
               community: { select: { slug: true, name: true } },
             },
           },
@@ -89,6 +90,7 @@ export async function scheduleEventReminder(input: ScheduleReminderInput): Promi
           eventUrl,
           communityName: session.event.community.name,
           unsubscribeUrl,
+          timezone: session.event.timezone,
         }),
         text: getEventReminderEmailText({
           eventTitle: session.event.title,
@@ -99,6 +101,7 @@ export async function scheduleEventReminder(input: ScheduleReminderInput): Promi
           eventUrl,
           communityName: session.event.community.name,
           unsubscribeUrl,
+          timezone: session.event.timezone,
         }),
         scheduled_at: scheduledFor.toISOString(),
       }),

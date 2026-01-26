@@ -200,6 +200,7 @@ model Event {
   organizerId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  timezone    String    @default("America/New_York")  // IANA timezone
 
   // Virtual event fields
   isVirtual     Boolean  @default(false)
