@@ -27,6 +27,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         userEmail={session.user.email}
         userName={session.user.name}
         userId={session.user.id}
+        userImage={session.user.image}
         unreadNotificationCount={unreadCount}
       />
 
