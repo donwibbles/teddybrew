@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createEvent } from "@/lib/actions/event";
 import { AddSessionForm } from "./add-session-form";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   localDateTimeToUTC,
   getMinDateTimeForTimezone,
@@ -37,6 +38,7 @@ export function CreateEventForm({
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
   const [capacity, setCapacity] = useState<number | undefined>(undefined);
+  const [coverImage, setCoverImage] = useState("");
   const [isVirtual, setIsVirtual] = useState(false);
   const [meetingUrl, setMeetingUrl] = useState("");
   const [sessions, setSessions] = useState<Session[]>([
@@ -73,6 +75,7 @@ export function CreateEventForm({
       description: description || undefined,
       location: location || undefined,
       capacity: capacity || undefined,
+      coverImage: coverImage || undefined,
       isVirtual,
       meetingUrl: meetingUrl || undefined,
       timezone: timezone || "America/New_York",
@@ -161,6 +164,21 @@ export function CreateEventForm({
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+        />
+      </div>
+
+      {/* Cover Image */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Cover Image
+        </label>
+        <ImageUpload
+          type="event-cover"
+          entityId={communityId}
+          aspectRatio={3}
+          onUploadComplete={(url) => setCoverImage(url)}
+          onRemove={() => setCoverImage("")}
+          disabled={isSubmitting}
         />
       </div>
 

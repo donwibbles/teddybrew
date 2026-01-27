@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updateEvent, deleteEvent } from "@/lib/actions/event";
 import { AddSessionForm } from "./add-session-form";
+import { ImageUpload } from "@/components/ui/image-upload";
 import {
   localDateTimeToUTC,
   getMinDateTimeForTimezone,
@@ -26,6 +27,7 @@ interface EditEventFormProps {
     description: string | null;
     location: string | null;
     capacity: number | null;
+    coverImage?: string | null;
     isVirtual?: boolean;
     meetingUrl?: string | null;
     timezone?: string;
@@ -60,6 +62,7 @@ export function EditEventForm({
   const [capacity, setCapacity] = useState<number | undefined>(
     event.capacity ?? undefined
   );
+  const [coverImage, setCoverImage] = useState(event.coverImage || "");
   const [isVirtual, setIsVirtual] = useState(event.isVirtual || false);
   const [meetingUrl, setMeetingUrl] = useState(event.meetingUrl || "");
 
@@ -127,6 +130,7 @@ export function EditEventForm({
       description: description || undefined,
       location: location || undefined,
       capacity: capacity || undefined,
+      coverImage: coverImage || null,
       isVirtual,
       meetingUrl: meetingUrl || undefined,
       timezone: timezone || "America/New_York",
@@ -227,6 +231,22 @@ export function EditEventForm({
           className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+        />
+      </div>
+
+      {/* Cover Image */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Cover Image
+        </label>
+        <ImageUpload
+          type="event-cover"
+          entityId={event.id}
+          currentImage={event.coverImage}
+          aspectRatio={3}
+          onUploadComplete={(url) => setCoverImage(url)}
+          onRemove={() => setCoverImage("")}
+          disabled={isSubmitting || isDeleting}
         />
       </div>
 

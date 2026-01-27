@@ -291,6 +291,7 @@ interface RsvpConfirmationEmailProps {
   sessionDate: Date;
   location?: string | null;
   meetingUrl?: string | null;
+  coverImage?: string | null;
   eventUrl: string;
   communityName: string;
   timezone?: string;
@@ -304,6 +305,7 @@ export function getRsvpConfirmationEmailHtml({
   sessionDate,
   location,
   meetingUrl,
+  coverImage,
   eventUrl,
   communityName,
   timezone = "America/New_York",
@@ -343,6 +345,7 @@ export function getRsvpConfirmationEmailHtml({
           <!-- Content -->
           <tr>
             <td style="padding: 32px;">
+              ${coverImage ? `<img src="${coverImage}" alt="" width="100%" style="border-radius: 8px; max-height: 200px; object-fit: cover; display: block; margin-bottom: 16px;" />` : ''}
               <p style="margin: 0 0 8px; font-size: 14px; color: #22c55e; font-weight: 500;">
                 You're signed up!
               </p>
@@ -450,6 +453,7 @@ interface EventReminderEmailProps {
   startTime: Date;
   location?: string | null;
   meetingUrl?: string | null;
+  coverImage?: string | null;
   eventUrl: string;
   communityName: string;
   unsubscribeUrl: string;
@@ -465,6 +469,7 @@ export function getEventReminderEmailHtml({
   startTime,
   location,
   meetingUrl,
+  coverImage,
   eventUrl,
   communityName,
   unsubscribeUrl,
@@ -508,6 +513,7 @@ export function getEventReminderEmailHtml({
           <!-- Content -->
           <tr>
             <td style="padding: 32px;">
+              ${coverImage ? `<img src="${coverImage}" alt="" width="100%" style="border-radius: 8px; max-height: 200px; object-fit: cover; display: block; margin-bottom: 16px;" />` : ''}
               <p style="margin: 0 0 8px; font-size: 14px; color: #71717a;">
                 Event Reminder
               </p>

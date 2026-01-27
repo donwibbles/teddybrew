@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { MessageSquare, Video, ExternalLink } from "lucide-react";
 import { getEventWithDetails } from "@/lib/db/events";
 import { getMembershipStatus } from "@/lib/actions/membership";
@@ -87,6 +88,20 @@ export default async function EventPage({ params }: EventPageProps) {
         <span>/</span>
         <span>Events</span>
       </div>
+
+      {/* Cover Image Banner */}
+      {event.coverImage && (
+        <div className="relative w-full rounded-lg overflow-hidden mb-6" style={{ aspectRatio: '3 / 1' }}>
+          <Image
+            src={event.coverImage}
+            alt={`Cover image for ${event.title}`}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 896px"
+            className="object-cover"
+            priority
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Content */}

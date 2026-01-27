@@ -95,6 +95,8 @@ export const createEventSchema = z
     // Virtual event fields
     isVirtual: z.boolean().optional().default(false),
     meetingUrl: meetingUrlSchema,
+    // Cover image URL
+    coverImage: z.string().url().max(500).optional().nullable(),
     // Timezone (IANA format, e.g., "America/New_York")
     timezone: z
       .string()
@@ -143,6 +145,8 @@ export const updateEventSchema = z.object({
   description: eventDescriptionSchema,
   location: eventLocationSchema,
   capacity: eventCapacitySchema,
+  // Cover image URL
+  coverImage: z.string().url().max(500).optional().nullable(),
   // Virtual event fields
   isVirtual: z.boolean().optional(),
   meetingUrl: meetingUrlSchema,
