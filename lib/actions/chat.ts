@@ -12,6 +12,7 @@ import { publishToChannel, getChatChannelName } from "@/lib/ably";
 import { checkChatRateLimit } from "@/lib/rate-limit";
 import type { ActionResult } from "./community";
 import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Verify user has access to a channel
@@ -164,7 +165,10 @@ export async function sendChatMessage(
     prisma.community.update({
       where: { id: accessCheck.communityId! },
       data: { lastActivityAt: new Date() },
-    }).catch((err) => console.warn("Failed to update lastActivityAt:", err));
+    }).catch((err) => {
+      console.warn("Failed to update lastActivityAt:", err);
+      captureFireAndForgetError("chat.updateLastActivityAt", err);
+    });
 
     // Publish to Ably channel
     try {
@@ -191,11 +195,13 @@ export async function sendChatMessage(
     } catch (ablyError) {
       // Log but don't fail the request if Ably publish fails
       console.error("Failed to publish to Ably:", ablyError);
+      captureFireAndForgetError("chat.publishMessageToAbly", ablyError);
     }
 
     return { success: true, data: { messageId: message.id } };
   } catch (error) {
     console.error("Failed to send message:", error);
+    captureServerError("chat.sendMessage", error);
     return { success: false, error: "Failed to send message" };
   }
 }
@@ -262,7 +268,10 @@ export async function deleteChatMessage(input: unknown): Promise<ActionResult> {
         targetType: "Message",
         targetId: messageId,
         targetTitle: message.content.slice(0, 100),
-      }).catch((err) => console.error("Failed to log moderation action:", err));
+      }).catch((err) => {
+        console.error("Failed to log moderation action:", err);
+        captureFireAndForgetError("chat.logModeration", err);
+      });
     }
 
     // Notify via Ably
@@ -274,11 +283,13 @@ export async function deleteChatMessage(input: unknown): Promise<ActionResult> {
       );
     } catch (ablyError) {
       console.error("Failed to publish delete to Ably:", ablyError);
+      captureFireAndForgetError("chat.publishDeleteToAbly", ablyError);
     }
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete message:", error);
+    captureServerError("chat.deleteMessage", error);
     return { success: false, error: "Failed to delete message" };
   }
 }

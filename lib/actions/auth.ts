@@ -4,6 +4,7 @@ import { signIn, signOut } from "@/lib/auth";
 import { z } from "zod";
 import { checkAuthRateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
+import { captureServerError } from "@/lib/sentry";
 
 // Email validation schema
 const signInSchema = z.object({
@@ -60,6 +61,7 @@ export async function requestMagicLink(
     return { success: true };
   } catch (error) {
     console.error("Sign-in error:", error);
+    captureServerError("auth.requestMagicLink", error);
     return {
       error: "Unable to send magic link. Please try again.",
     };

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getEventReminderEmailHtml, getEventReminderEmailText } from "@/lib/email/templates";
+import { captureServerError, captureFireAndForgetError, captureExternalServiceError } from "@/lib/sentry";
 
 interface ScheduleReminderInput {
   userId: string;
@@ -110,6 +111,10 @@ export async function scheduleEventReminder(input: ScheduleReminderInput): Promi
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Resend API error (${response.status}):`, errorText);
+      captureExternalServiceError("reminder.scheduleEmail",
+        new Error(`Resend API ${response.status}`),
+        { responseBody: errorText }
+      );
       return { success: false, error: `Resend API error: ${response.status}` };
     }
 
@@ -127,6 +132,7 @@ export async function scheduleEventReminder(input: ScheduleReminderInput): Promi
     return { success: true };
   } catch (error) {
     console.error("Failed to schedule event reminder:", error);
+    captureServerError("reminder.schedule", error);
     return { success: false, error: String(error) };
   }
 }
@@ -149,7 +155,10 @@ export async function cancelScheduledReminder(sessionId: string, userId: string)
       await fetch(`https://api.resend.com/emails/${reminder.resendEmailId}/cancel`, {
         method: "POST",
         headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-      }).catch((err) => console.warn("Failed to cancel Resend email (may already be sent):", err));
+      }).catch((err) => {
+        console.warn("Failed to cancel Resend email (may already be sent):", err);
+        captureFireAndForgetError("reminder.cancelEmail", err);
+      });
     }
 
     // Delete the reminder record regardless of cancellation result
@@ -158,5 +167,6 @@ export async function cancelScheduledReminder(sessionId: string, userId: string)
     });
   } catch (error) {
     console.warn("Failed to cancel scheduled reminder:", error);
+    captureServerError("reminder.cancel", error);
   }
 }

@@ -14,6 +14,7 @@ import {
   removeCoOrganizerSchema,
 } from "@/lib/validations/event";
 import { checkEventRateLimit } from "@/lib/rate-limit";
+import { captureServerError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -170,6 +171,7 @@ export async function createEvent(
     };
   } catch (error) {
     console.error("Failed to create event:", error);
+    captureServerError("event.create", error);
     return { success: false, error: "Failed to create event" };
   }
 }
@@ -336,6 +338,7 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to update event:", error);
+    captureServerError("event.update", error);
     return { success: false, error: "Failed to update event" };
   }
 }
@@ -399,6 +402,7 @@ export async function deleteEvent(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete event:", error);
+    captureServerError("event.delete", error);
     return { success: false, error: "Failed to delete event" };
   }
 }
@@ -475,6 +479,7 @@ export async function addCoOrganizer(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to add co-organizer:", error);
+    captureServerError("event.addCoOrganizer", error);
     return { success: false, error: "Failed to add co-organizer" };
   }
 }
@@ -531,6 +536,7 @@ export async function removeCoOrganizer(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to remove co-organizer:", error);
+    captureServerError("event.removeCoOrganizer", error);
     return { success: false, error: "Failed to remove co-organizer" };
   }
 }
@@ -617,6 +623,7 @@ export async function searchEvents(
     return events;
   } catch (error) {
     console.error("Failed to search events:", error);
+    captureServerError("event.search", error);
     return [];
   }
 }

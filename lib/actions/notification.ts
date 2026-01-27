@@ -12,6 +12,7 @@ import {
 import { publishToChannel, getUserNotificationChannel } from "@/lib/ably";
 import { NotificationType } from "@prisma/client";
 import type { ActionResult } from "./community";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Get notifications for the current user
@@ -48,6 +49,7 @@ export async function markAsRead(notificationId: string): Promise<ActionResult> 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to mark notification as read:", error);
+    captureServerError("notification.markAsRead", error);
     return { success: false, error: "Failed to mark notification as read" };
   }
 }
@@ -63,6 +65,7 @@ export async function markAllAsRead(): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to mark all notifications as read:", error);
+    captureServerError("notification.markAllAsRead", error);
     return { success: false, error: "Failed to mark all notifications as read" };
   }
 }
@@ -105,9 +108,11 @@ export async function sendNotification(data: {
     } catch (err) {
       // Log but don't fail - notification is already saved
       console.error("Failed to publish notification to Ably:", err);
+      captureFireAndForgetError("notification.publishToAbly", err);
     }
   } catch (error) {
     // Log but don't fail - notifications are not critical
     console.error("Failed to send notification:", error);
+    captureFireAndForgetError("notification.send", error);
   }
 }

@@ -14,6 +14,7 @@ import {
   getExtensionFromContentType,
 } from "@/lib/upload";
 import type { ActionResult } from "./community";
+import { captureServerError } from "@/lib/sentry";
 
 // Presigned URL expiry time (5 minutes)
 const PRESIGNED_URL_EXPIRY = 5 * 60;
@@ -86,6 +87,7 @@ export async function getPresignedUploadUrl(input: {
     };
   } catch (error) {
     console.error("Failed to generate presigned URL:", error);
+    captureServerError("upload.getPresignedUrl", error);
     // Surface actual error message to help diagnose B2 configuration issues
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return { success: false, error: `Failed to generate upload URL: ${errorMessage}` };
@@ -242,6 +244,7 @@ export async function confirmUploadComplete(input: {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to confirm upload:", error);
+    captureServerError("upload.confirm", error);
     return { success: false, error: "Failed to confirm upload" };
   }
 }

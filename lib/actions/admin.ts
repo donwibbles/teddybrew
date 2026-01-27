@@ -6,6 +6,7 @@ import { verifySession } from "@/lib/dal";
 import { isAdmin } from "@/lib/admin";
 import { z } from "zod";
 import { MemberRole } from "@prisma/client";
+import { captureServerError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -66,6 +67,7 @@ export async function adminDeleteCommunity(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete community:", error);
+    captureServerError("admin.deleteCommunity", error);
     return { success: false, error: "Failed to delete community" };
   }
 }
@@ -179,6 +181,7 @@ export async function adminTransferOwnership(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to transfer ownership:", error);
+    captureServerError("admin.transferOwnership", error);
     return { success: false, error: "Failed to transfer ownership" };
   }
 }

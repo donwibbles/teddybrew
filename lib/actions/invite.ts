@@ -11,6 +11,7 @@ import {
 } from "@/lib/validations/invite";
 import { getCommunityInviteEmailHtml, getCommunityInviteEmailText } from "@/lib/email/templates";
 import { MemberRole, NotificationType } from "@prisma/client";
+import { captureServerError, captureExternalServiceError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -155,6 +156,10 @@ export async function sendCommunityInvite(
     if (!emailResponse.ok) {
       const error = await emailResponse.text();
       console.error("Failed to send invite email:", error);
+      captureExternalServiceError("invite.sendEmail",
+        new Error(`Resend API ${emailResponse.status}`),
+        { responseBody: error }
+      );
       // Delete the invite if email fails
       await prisma.communityInvite.delete({ where: { id: invite.id } });
       return { success: false, error: "Failed to send invite email" };
@@ -183,6 +188,7 @@ export async function sendCommunityInvite(
     return { success: true, data: { inviteId: invite.id } };
   } catch (error) {
     console.error("Failed to send community invite:", error);
+    captureServerError("invite.send", error);
     return { success: false, error: "Failed to send invite" };
   }
 }
@@ -276,6 +282,7 @@ export async function acceptInvite(
     return { success: true, data: { communitySlug: invite.community.slug } };
   } catch (error) {
     console.error("Failed to accept invite:", error);
+    captureServerError("invite.accept", error);
     return { success: false, error: "Failed to accept invite" };
   }
 }
@@ -325,6 +332,7 @@ export async function cancelInvite(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to cancel invite:", error);
+    captureServerError("invite.cancel", error);
     return { success: false, error: "Failed to cancel invite" };
   }
 }
@@ -420,6 +428,10 @@ export async function resendInvite(
     if (!emailResponse.ok) {
       const error = await emailResponse.text();
       console.error("Failed to resend invite email:", error);
+      captureExternalServiceError("invite.resendEmail",
+        new Error(`Resend API ${emailResponse.status}`),
+        { responseBody: error }
+      );
       return { success: false, error: "Failed to resend invite email" };
     }
 
@@ -428,6 +440,7 @@ export async function resendInvite(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to resend invite:", error);
+    captureServerError("invite.resend", error);
     return { success: false, error: "Failed to resend invite" };
   }
 }
@@ -469,6 +482,7 @@ export async function getCommunityInvites(communityId: string) {
     return invites;
   } catch (error) {
     console.error("Failed to get community invites:", error);
+    captureServerError("invite.list", error);
     return [];
   }
 }
@@ -513,6 +527,7 @@ export async function getInviteByToken(token: string) {
     };
   } catch (error) {
     console.error("Failed to get invite by token:", error);
+    captureServerError("invite.getByToken", error);
     return null;
   }
 }

@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import * as Sentry from "@sentry/nextjs";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Header } from "@/components/layout/header";
@@ -14,6 +15,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (!session?.user) {
     redirect("/sign-in");
   }
+
+  Sentry.setUser({
+    id: session.user.id ?? undefined,
+    email: session.user.email ?? undefined,
+    username: session.user.name ?? undefined,
+  });
 
   // Fetch unread notification count
   const unreadCount = session.user.id

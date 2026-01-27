@@ -17,6 +17,7 @@ import { publishToChannel, getForumChannelName } from "@/lib/ably";
 import { checkPostRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
 import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
 import type { ActionResult } from "./community";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Create a new post
@@ -91,6 +92,7 @@ export async function createPost(
       });
     } catch (err) {
       console.error("Failed to publish forum notification:", err);
+      captureFireAndForgetError("post.publishToAbly", err);
     }
 
     revalidatePath(`/communities/${community.slug}/forum`);
@@ -98,6 +100,7 @@ export async function createPost(
     return { success: true, data: { postId: post.id, postSlug: post.slug } };
   } catch (error) {
     console.error("Failed to create post:", error);
+    captureServerError("post.create", error);
     return { success: false, error: "Failed to create post" };
   }
 }
@@ -157,6 +160,7 @@ export async function updatePost(input: unknown): Promise<ActionResult<{ postSlu
     return { success: true, data: { postSlug: newSlug } };
   } catch (error) {
     console.error("Failed to update post:", error);
+    captureServerError("post.update", error);
     return { success: false, error: "Failed to update post" };
   }
 }
@@ -211,7 +215,10 @@ export async function deletePost(input: unknown): Promise<ActionResult> {
         targetType: "Post",
         targetId: postId,
         targetTitle: post.title,
-      }).catch((err) => console.error("Failed to log moderation action:", err));
+      }).catch((err) => {
+        console.error("Failed to log moderation action:", err);
+        captureFireAndForgetError("post.logDeleteModeration", err);
+      });
     }
 
     revalidatePath(`/communities/${post.community.slug}/forum`);
@@ -219,6 +226,7 @@ export async function deletePost(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete post:", error);
+    captureServerError("post.delete", error);
     return { success: false, error: "Failed to delete post" };
   }
 }
@@ -296,6 +304,7 @@ export async function votePost(
     return { success: true, data: { newScore } };
   } catch (error) {
     console.error("Failed to vote on post:", error);
+    captureServerError("post.vote", error);
     return { success: false, error: "Failed to vote" };
   }
 }
@@ -342,13 +351,17 @@ export async function pinPost(input: unknown): Promise<ActionResult> {
       targetType: "Post",
       targetId: postId,
       targetTitle: post.title,
-    }).catch((err) => console.error("Failed to log moderation action:", err));
+    }).catch((err) => {
+      console.error("Failed to log moderation action:", err);
+      captureFireAndForgetError("post.logPinModeration", err);
+    });
 
     revalidatePath(`/communities/${post.community.slug}/forum`);
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to pin post:", error);
+    captureServerError("post.pin", error);
     return { success: false, error: "Failed to pin post" };
   }
 }

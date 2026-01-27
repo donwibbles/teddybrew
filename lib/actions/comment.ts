@@ -17,6 +17,7 @@ import { sendNotification } from "./notification";
 import { NotificationType } from "@prisma/client";
 import type { ActionResult } from "./community";
 import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Create a comment
@@ -119,6 +120,7 @@ export async function createComment(
       });
     } catch (err) {
       console.error("Failed to publish comment notification:", err);
+      captureFireAndForgetError("comment.publishToAbly", err);
     }
 
     // Send notifications
@@ -135,7 +137,10 @@ export async function createComment(
           title: "New reply to your comment",
           message: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
           link: `/communities/${post.community.slug}/forum/${postId}#comment-${comment.id}`,
-        }).catch((err) => console.warn("Failed to send notification:", err));
+        }).catch((err) => {
+          console.warn("Failed to send notification:", err);
+          captureFireAndForgetError("comment.sendReplyNotification", err);
+        });
       }
     } else {
       // Notify post author (new comment notification)
@@ -146,7 +151,10 @@ export async function createComment(
           title: `New comment on "${post.title.slice(0, 30)}${post.title.length > 30 ? "..." : ""}"`,
           message: content.slice(0, 100) + (content.length > 100 ? "..." : ""),
           link: `/communities/${post.community.slug}/forum/${postId}#comment-${comment.id}`,
-        }).catch((err) => console.warn("Failed to send notification:", err));
+        }).catch((err) => {
+          console.warn("Failed to send notification:", err);
+          captureFireAndForgetError("comment.sendCommentNotification", err);
+        });
       }
     }
 
@@ -155,6 +163,7 @@ export async function createComment(
     return { success: true, data: { commentId: comment.id } };
   } catch (error) {
     console.error("Failed to create comment:", error);
+    captureServerError("comment.create", error);
     return { success: false, error: "Failed to create comment" };
   }
 }
@@ -207,6 +216,7 @@ export async function updateComment(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to update comment:", error);
+    captureServerError("comment.update", error);
     return { success: false, error: "Failed to update comment" };
   }
 }
@@ -272,7 +282,10 @@ export async function deleteComment(input: unknown): Promise<ActionResult> {
         targetType: "Comment",
         targetId: commentId,
         targetTitle: comment.content.slice(0, 100),
-      }).catch((err) => console.error("Failed to log moderation action:", err));
+      }).catch((err) => {
+        console.error("Failed to log moderation action:", err);
+        captureFireAndForgetError("comment.logModeration", err);
+      });
     }
 
     revalidatePath(
@@ -282,6 +295,7 @@ export async function deleteComment(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete comment:", error);
+    captureServerError("comment.delete", error);
     return { success: false, error: "Failed to delete comment" };
   }
 }
@@ -363,6 +377,7 @@ export async function voteComment(
     return { success: true, data: { newScore } };
   } catch (error) {
     console.error("Failed to vote on comment:", error);
+    captureServerError("comment.vote", error);
     return { success: false, error: "Failed to vote" };
   }
 }

@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations/event";
 import { scheduleEventReminder, cancelScheduledReminder } from "./reminder";
 import { getRsvpConfirmationEmailHtml, getRsvpConfirmationEmailText } from "@/lib/email/templates";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -192,7 +193,10 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
             timezone: session.event.timezone,
           }),
         }),
-      }).catch((err) => console.warn("Failed to send RSVP confirmation:", err));
+      }).catch((err) => {
+        console.warn("Failed to send RSVP confirmation:", err);
+        captureFireAndForgetError("rsvp.sendConfirmation", err);
+      });
 
       // Schedule reminder email 24 hours before event
       const reminderTime = new Date(session.startTime.getTime() - 24 * 60 * 60 * 1000);
@@ -203,7 +207,10 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
           userId,
           sessionId,
           scheduledFor: reminderTime,
-        }).catch((err) => console.warn("Failed to schedule reminder:", err));
+        }).catch((err) => {
+          console.warn("Failed to schedule reminder:", err);
+          captureFireAndForgetError("rsvp.scheduleReminder", err);
+        });
       }
     }
 
@@ -222,6 +229,7 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to RSVP to session:", error);
+    captureServerError("rsvp.create", error);
     return { success: false, error: "Failed to RSVP to session" };
   }
 }
@@ -290,6 +298,7 @@ export async function cancelRsvp(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to cancel RSVP:", error);
+    captureServerError("rsvp.cancel", error);
     return { success: false, error: "Failed to cancel RSVP" };
   }
 }
@@ -398,6 +407,7 @@ export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to RSVP to all sessions:", error);
+    captureServerError("rsvp.createAll", error);
     return { success: false, error: "Failed to RSVP to all sessions" };
   }
 }

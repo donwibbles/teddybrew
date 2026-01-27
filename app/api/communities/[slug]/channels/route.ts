@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getCommunityBySlug } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { getChannels } from "@/lib/db/channels";
+import { captureServerError } from "@/lib/sentry";
 
 interface RouteParams {
   params: Promise<{ slug: string }>;
@@ -43,6 +44,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("Failed to fetch channels:", error);
+    captureServerError("api.fetchChannels", error, { layer: "api-route" });
     return NextResponse.json(
       { error: "Failed to fetch channels" },
       { status: 500 }

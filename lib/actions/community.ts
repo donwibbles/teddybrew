@@ -11,6 +11,7 @@ import {
 } from "@/lib/validations/community";
 import { MemberRole } from "@prisma/client";
 import { checkCommunityRateLimit } from "@/lib/rate-limit";
+import { captureServerError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -102,6 +103,7 @@ export async function createCommunity(
     return { success: true, data: { slug: community.slug } };
   } catch (error) {
     console.error("Failed to create community:", error);
+    captureServerError("community.create", error);
     return { success: false, error: "Failed to create community" };
   }
 }
@@ -175,6 +177,7 @@ export async function updateCommunity(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to update community:", error);
+    captureServerError("community.update", error);
     return { success: false, error: "Failed to update community" };
   }
 }
@@ -235,6 +238,7 @@ export async function deleteCommunity(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete community:", error);
+    captureServerError("community.delete", error);
     return { success: false, error: "Failed to delete community" };
   }
 }
@@ -328,6 +332,7 @@ export async function searchCommunities(
     return filtered;
   } catch (error) {
     console.error("Failed to search communities:", error);
+    captureServerError("community.search", error);
     return [];
   }
 }

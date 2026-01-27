@@ -11,6 +11,7 @@ import {
 import type { ActionResult } from "./community";
 import { checkChannelRateLimit } from "@/lib/rate-limit";
 import { isMember, isOwner } from "@/lib/db/members";
+import { captureServerError } from "@/lib/sentry";
 
 /**
  * Create a new channel - Owner only
@@ -81,6 +82,7 @@ export async function createChannel(
     return { success: true, data: { channelId: channel.id } };
   } catch (error) {
     console.error("Failed to create channel:", error);
+    captureServerError("channel.create", error);
     return { success: false, error: "Failed to create channel" };
   }
 }
@@ -157,6 +159,7 @@ export async function updateChannel(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to update channel:", error);
+    captureServerError("channel.update", error);
     return { success: false, error: "Failed to update channel" };
   }
 }
@@ -221,6 +224,7 @@ export async function deleteChannel(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete channel:", error);
+    captureServerError("channel.delete", error);
     return { success: false, error: "Failed to delete channel" };
   }
 }

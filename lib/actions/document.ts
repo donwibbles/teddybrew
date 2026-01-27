@@ -32,6 +32,7 @@ import {
 } from "@/lib/db/documents";
 import type { ActionResult } from "./community";
 import { DocumentStatus, Prisma } from "@prisma/client";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Create a new document
@@ -104,6 +105,7 @@ export async function createDocument(
     return { success: true, data: { documentId: document.id, slug: document.slug } };
   } catch (error) {
     console.error("Failed to create document:", error);
+    captureServerError("document.create", error);
     return { success: false, error: "Failed to create document" };
   }
 }
@@ -191,6 +193,7 @@ export async function updateDocument(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to update document:", error);
+    captureServerError("document.update", error);
     return { success: false, error: "Failed to update document" };
   }
 }
@@ -263,6 +266,7 @@ export async function publishDocument(
       );
     } catch (err) {
       console.error("Failed to publish document notification:", err);
+      captureFireAndForgetError("document.publishToAbly", err);
     }
 
     revalidatePath(`/communities/${document.community.slug}/docs`);
@@ -271,6 +275,7 @@ export async function publishDocument(
     return { success: true, data: { version: newVersion } };
   } catch (error) {
     console.error("Failed to publish document:", error);
+    captureServerError("document.publish", error);
     return { success: false, error: "Failed to publish document" };
   }
 }
@@ -317,13 +322,17 @@ export async function archiveDocument(input: unknown): Promise<ActionResult> {
       targetType: "Document",
       targetId: documentId,
       targetTitle: document.title,
-    }).catch((err) => console.error("Failed to log moderation action:", err));
+    }).catch((err) => {
+      console.error("Failed to log moderation action:", err);
+      captureFireAndForgetError("document.logArchiveModeration", err);
+    });
 
     revalidatePath(`/communities/${document.community.slug}/docs`);
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to archive document:", error);
+    captureServerError("document.archive", error);
     return { success: false, error: "Failed to archive document" };
   }
 }
@@ -366,6 +375,7 @@ export async function restoreDocument(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to restore document:", error);
+    captureServerError("document.restore", error);
     return { success: false, error: "Failed to restore document" };
   }
 }
@@ -414,13 +424,17 @@ export async function deleteDocument(input: unknown): Promise<ActionResult> {
       targetType: "Document",
       targetId: documentId,
       targetTitle: document.title,
-    }).catch((err) => console.error("Failed to log moderation action:", err));
+    }).catch((err) => {
+      console.error("Failed to log moderation action:", err);
+      captureFireAndForgetError("document.logDeleteModeration", err);
+    });
 
     revalidatePath(`/communities/${document.community.slug}/docs`);
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete document:", error);
+    captureServerError("document.delete", error);
     return { success: false, error: "Failed to delete document" };
   }
 }
@@ -463,13 +477,17 @@ export async function pinDocument(input: unknown): Promise<ActionResult> {
       targetType: "Document",
       targetId: documentId,
       targetTitle: document.title,
-    }).catch((err) => console.error("Failed to log moderation action:", err));
+    }).catch((err) => {
+      console.error("Failed to log moderation action:", err);
+      captureFireAndForgetError("document.logPinModeration", err);
+    });
 
     revalidatePath(`/communities/${document.community.slug}/docs`);
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to pin document:", error);
+    captureServerError("document.pin", error);
     return { success: false, error: "Failed to pin document" };
   }
 }
@@ -524,11 +542,13 @@ export async function lockDocument(input: unknown): Promise<ActionResult> {
       );
     } catch (err) {
       console.error("Failed to publish lock notification:", err);
+      captureFireAndForgetError("document.publishLockToAbly", err);
     }
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to lock document:", error);
+    captureServerError("document.lock", error);
     return { success: false, error: "Failed to lock document" };
   }
 }
@@ -576,11 +596,13 @@ export async function unlockDocument(input: unknown): Promise<ActionResult> {
       );
     } catch (err) {
       console.error("Failed to publish unlock notification:", err);
+      captureFireAndForgetError("document.publishUnlockToAbly", err);
     }
 
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to unlock document:", error);
+    captureServerError("document.unlock", error);
     return { success: false, error: "Failed to unlock document" };
   }
 }
@@ -614,6 +636,7 @@ export async function refreshDocumentLock(documentId: string): Promise<ActionRes
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to refresh document lock:", error);
+    captureServerError("document.refreshLock", error);
     return { success: false, error: "Failed to refresh lock" };
   }
 }
@@ -673,6 +696,7 @@ export async function restoreVersion(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to restore version:", error);
+    captureServerError("document.restoreVersion", error);
     return { success: false, error: "Failed to restore version" };
   }
 }
@@ -723,6 +747,7 @@ export async function getVersions(input: {
     };
   } catch (error) {
     console.error("Failed to get document versions:", error);
+    captureServerError("document.getVersions", error);
     return { success: false, error: "Failed to load version history" };
   }
 }
@@ -793,6 +818,7 @@ export async function createFolder(
     return { success: true, data: { folderId: folder.id, slug: folder.slug } };
   } catch (error) {
     console.error("Failed to create folder:", error);
+    captureServerError("document.createFolder", error);
     return { success: false, error: "Failed to create folder" };
   }
 }
@@ -844,6 +870,7 @@ export async function updateFolder(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to update folder:", error);
+    captureServerError("document.updateFolder", error);
     return { success: false, error: "Failed to update folder" };
   }
 }
@@ -889,6 +916,7 @@ export async function deleteFolder(input: unknown): Promise<ActionResult> {
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to delete folder:", error);
+    captureServerError("document.deleteFolder", error);
     return { success: false, error: "Failed to delete folder" };
   }
 }
@@ -930,6 +958,7 @@ export async function reorderFolders(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to reorder folders:", error);
+    captureServerError("document.reorderFolders", error);
     return { success: false, error: "Failed to reorder folders" };
   }
 }

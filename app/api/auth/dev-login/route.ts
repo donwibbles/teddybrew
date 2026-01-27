@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import { captureServerError } from "@/lib/sentry";
 
 /**
  * Dev-only login endpoint that bypasses email verification
@@ -85,6 +86,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Dev login error:", error);
+    captureServerError("api.devLogin", error, { layer: "api-route" });
     return NextResponse.json(
       { error: "Failed to create session" },
       { status: 500 }

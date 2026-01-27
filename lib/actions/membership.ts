@@ -14,6 +14,7 @@ import { MemberRole, CommunityType, NotificationType } from "@prisma/client";
 import { checkMembershipRateLimit } from "@/lib/rate-limit";
 import { sendNotification } from "./notification";
 import { canModerate as canModerateDb, getModerationLogs as getModerationLogsDb } from "@/lib/db/members";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -98,7 +99,10 @@ export async function joinCommunity(
     prisma.community.update({
       where: { id: communityId },
       data: { lastActivityAt: new Date() },
-    }).catch((err) => console.warn("Failed to update lastActivityAt:", err));
+    }).catch((err) => {
+      console.warn("Failed to update lastActivityAt:", err);
+      captureFireAndForgetError("membership.updateLastActivityAt", err);
+    });
 
     // Get joining user's name for notification
     const joiningUser = await prisma.user.findUnique({
@@ -113,7 +117,10 @@ export async function joinCommunity(
       title: `New member in ${community.name}`,
       message: `${joiningUser?.name || "Someone"} joined your community`,
       link: `/communities/${community.slug}/members`,
-    }).catch((err) => console.warn("Failed to send notification:", err));
+    }).catch((err) => {
+      console.warn("Failed to send notification:", err);
+      captureFireAndForgetError("membership.sendNotification", err);
+    });
 
     revalidatePath(`/communities/${community.slug}`);
     revalidatePath("/communities");
@@ -121,6 +128,7 @@ export async function joinCommunity(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to join community:", error);
+    captureServerError("membership.join", error);
     return { success: false, error: "Failed to join community" };
   }
 }
@@ -199,6 +207,7 @@ export async function leaveCommunity(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to leave community:", error);
+    captureServerError("membership.leave", error);
     return { success: false, error: "Failed to leave community" };
   }
 }
@@ -314,6 +323,7 @@ export async function removeMember(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to remove member:", error);
+    captureServerError("membership.remove", error);
     return { success: false, error: "Failed to remove member" };
   }
 }
@@ -396,6 +406,7 @@ export async function promoteMember(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to promote member:", error);
+    captureServerError("membership.promote", error);
     return { success: false, error: "Failed to promote member" };
   }
 }
@@ -478,6 +489,7 @@ export async function demoteMember(
     return { success: true, data: undefined };
   } catch (error) {
     console.error("Failed to demote member:", error);
+    captureServerError("membership.demote", error);
     return { success: false, error: "Failed to demote member" };
   }
 }

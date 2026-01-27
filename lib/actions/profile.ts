@@ -5,6 +5,7 @@ import { verifySession } from "@/lib/dal";
 import { updateProfileSchema, usernameSchema } from "@/lib/validations/profile";
 import { isUsernameAvailable, updateUserProfile } from "@/lib/db/users";
 import { checkProfileRateLimit } from "@/lib/rate-limit";
+import { captureServerError } from "@/lib/sentry";
 
 /**
  * Action result types
@@ -93,6 +94,7 @@ export async function updateProfile(
     };
   } catch (error) {
     console.error("Failed to update profile:", error);
+    captureServerError("profile.update", error);
     return { success: false, error: "Failed to update profile. Please try again." };
   }
 }
@@ -121,6 +123,7 @@ export async function checkUsernameAvailability(
     return { success: true, data: { available } };
   } catch (error) {
     console.error("Failed to check username availability:", error);
+    captureServerError("profile.checkUsername", error);
     return { success: false, error: "Failed to check username availability" };
   }
 }

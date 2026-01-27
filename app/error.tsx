@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -15,8 +16,8 @@ export default function GlobalError({
   const router = useRouter();
 
   useEffect(() => {
-    // Log error to console (Sentry integration in Phase 7)
     console.error("Application error:", error);
+    Sentry.captureException(error);
   }, [error]);
 
   const handleReset = () => {

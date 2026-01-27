@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateAblyTokenRequest } from "@/lib/ably";
+import { captureServerError } from "@/lib/sentry";
 
 export async function GET() {
   try {
@@ -85,6 +86,7 @@ export async function GET() {
     return NextResponse.json(tokenRequest);
   } catch (error) {
     console.error("Failed to generate Ably token:", error);
+    captureServerError("api.ablyToken", error, { layer: "api-route" });
     return NextResponse.json(
       { error: "Failed to generate token" },
       { status: 500 }

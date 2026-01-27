@@ -7,6 +7,7 @@ import { publishToChannel, getChatChannelName } from "@/lib/ably";
 import { checkReactionRateLimit } from "@/lib/rate-limit";
 import { verifyChannelAccess } from "./chat";
 import type { ActionResult } from "./community";
+import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
 
 /**
  * Toggle a reaction on a message (add or remove)
@@ -104,11 +105,13 @@ export async function toggleReaction(
       });
     } catch (ablyError) {
       console.error("Failed to publish reaction update to Ably:", ablyError);
+      captureFireAndForgetError("reaction.publishToAbly", ablyError);
     }
 
     return { success: true, data: { counts } };
   } catch (error) {
     console.error("Failed to toggle reaction:", error);
+    captureServerError("reaction.toggle", error);
     return { success: false, error: "Failed to update reaction" };
   }
 }
