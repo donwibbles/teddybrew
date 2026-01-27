@@ -5,7 +5,7 @@ import { Header } from "@/components/layout/header";
 import { PublicHeader } from "@/components/layout/public-header";
 import { getUnreadNotificationCount } from "@/lib/db/notifications";
 
-export default async function PublicProfileLayout({ children }: { children: ReactNode }) {
+export default async function PublicLayout({ children }: { children: ReactNode }) {
   const session = await auth();
 
   // Fetch unread count for authenticated users
@@ -27,7 +27,7 @@ export default async function PublicProfileLayout({ children }: { children: Reac
       )}
 
       {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
         {children}
       </main>
 
