@@ -47,7 +47,7 @@ export function CommunityTabs({ communitySlug, isMember }: CommunityTabsProps) {
 
   return (
     <div className="bg-white border-b border-neutral-200">
-      <nav className="flex gap-1 px-1" aria-label="Community navigation">
+      <nav className="flex gap-1 px-1 overflow-x-auto scrollbar-hide" aria-label="Community navigation">
         {tabs.map((tab) => {
           // Hide chat tab for non-members
           if (tab.requiresMember && !isMember) {
@@ -62,13 +62,13 @@ export function CommunityTabs({ communitySlug, isMember }: CommunityTabsProps) {
               key={tab.name}
               href={tab.href}
               className={cn(
-                "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors",
+                "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap flex-shrink-0",
                 active
                   ? "border-primary-500 text-primary-600"
                   : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
               )}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 flex-shrink-0" />
               {tab.name}
             </Link>
           );

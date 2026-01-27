@@ -336,7 +336,7 @@ export default async function EventPage({ params }: EventPageProps) {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Attendance Summary Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-6">
+          <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-24">
             {(() => {
               // Calculate total unique attendees
               const uniqueAttendees = new Set<string>();

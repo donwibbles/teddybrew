@@ -203,7 +203,7 @@ export function DocumentList({
       <div className="flex gap-6">
         {/* Sidebar */}
         <aside className="hidden w-64 flex-shrink-0 lg:block">
-          <div className="sticky top-4">
+          <div className="sticky top-20">
             <FolderSidebar
               communitySlug={communitySlug}
               folders={folders}

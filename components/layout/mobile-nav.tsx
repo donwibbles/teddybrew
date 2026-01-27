@@ -2,9 +2,15 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { Hash, ChevronDown, ChevronRight } from "lucide-react";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { cn } from "@/lib/utils";
+
+interface Channel {
+  id: string;
+  name: string;
+}
 
 interface MobileNavProps {
   userEmail?: string | null;
@@ -22,10 +28,48 @@ const navLinks = [
 
 export function MobileNav({ userEmail, userName }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [channelsExpanded, setChannelsExpanded] = useState(true);
+  const [isLoadingChannels, setIsLoadingChannels] = useState(false);
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Check if we're on a chat page
+  const chatMatch = pathname.match(/^\/communities\/([^/]+)\/chat$/);
+  const isOnChatPage = !!chatMatch;
+  const communitySlug = chatMatch?.[1];
+  const currentChannelId = searchParams.get("channel");
 
   // Close menu function for link clicks
   const closeMenu = () => setIsOpen(false);
+
+  // Fetch channels when on chat page and menu opens
+  useEffect(() => {
+    if (isOpen && isOnChatPage && communitySlug && channels.length === 0) {
+      setIsLoadingChannels(true);
+      fetch(`/api/communities/${communitySlug}/channels`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.channels) {
+            setChannels(data.channels);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load channels:", err);
+        })
+        .finally(() => {
+          setIsLoadingChannels(false);
+        });
+    }
+  }, [isOpen, isOnChatPage, communitySlug, channels.length]);
+
+  // Reset channels when leaving chat page
+  useEffect(() => {
+    if (!isOnChatPage) {
+      setChannels([]);
+    }
+  }, [isOnChatPage]);
 
   // Prevent scroll when menu is open
   useEffect(() => {
@@ -38,6 +82,11 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  const handleChannelSelect = (channelId: string) => {
+    router.push(`/communities/${communitySlug}/chat?channel=${channelId}`);
+    closeMenu();
+  };
 
   return (
     <div className="md:hidden">
@@ -125,6 +174,55 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
 
           {/* Navigation links */}
           <nav className="flex-1 overflow-y-auto p-4">
+            {/* Chat Channels Section - Only show on chat page */}
+            {isOnChatPage && (
+              <div className="mb-4">
+                <button
+                  onClick={() => setChannelsExpanded(!channelsExpanded)}
+                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-semibold text-neutral-500 uppercase tracking-wider"
+                >
+                  <span>Channels</span>
+                  {channelsExpanded ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </button>
+                {channelsExpanded && (
+                  <ul className="space-y-1">
+                    {isLoadingChannels ? (
+                      <li className="px-4 py-2 text-sm text-neutral-400">
+                        Loading channels...
+                      </li>
+                    ) : channels.length === 0 ? (
+                      <li className="px-4 py-2 text-sm text-neutral-400">
+                        No channels available
+                      </li>
+                    ) : (
+                      channels.map((channel) => (
+                        <li key={channel.id}>
+                          <button
+                            onClick={() => handleChannelSelect(channel.id)}
+                            className={cn(
+                              "flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                              currentChannelId === channel.id
+                                ? "bg-primary-50 text-primary-600"
+                                : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
+                            )}
+                          >
+                            <Hash className="h-4 w-4 flex-shrink-0" />
+                            <span className="truncate">{channel.name}</span>
+                          </button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                )}
+                <div className="my-3 border-t border-neutral-200" />
+              </div>
+            )}
+
+            {/* Main Navigation */}
             <ul className="space-y-1">
               {navLinks.map((link) => {
                 const isActive = pathname === link.href || pathname.startsWith(link.href + "/");

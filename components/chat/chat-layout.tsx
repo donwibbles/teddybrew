@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Users } from "lucide-react";
 import { ChannelList } from "./channel-list";
 import { ChatRoom } from "./chat-room";
 import { OnlineMembers } from "./online-members";
@@ -74,11 +74,11 @@ export function ChatLayout({
   };
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] bg-white rounded-lg border border-neutral-200 overflow-hidden">
-      {/* Mobile Menu Button */}
+    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-lg border border-neutral-200 overflow-hidden">
+      {/* Channel Menu Button - Hidden on mobile (<768px), shown on tablet (768px-1023px), hidden on desktop (1024px+) */}
       <button
         onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-        className="lg:hidden absolute top-4 left-4 z-20 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
+        className="hidden md:block lg:hidden absolute top-4 left-4 z-50 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
       >
         {showMobileSidebar ? (
           <X className="h-5 w-5" />
@@ -91,9 +91,13 @@ export function ChatLayout({
       <div
         className={cn(
           "w-56 border-r border-neutral-200 bg-neutral-50 shrink-0",
-          "fixed lg:relative inset-y-0 left-0 z-10 lg:z-auto",
+          "fixed lg:relative inset-y-0 left-0 z-40 lg:z-auto",
           "transform lg:transform-none transition-transform duration-200",
-          showMobileSidebar ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          // On mobile, always hidden (channels via main nav)
+          // On tablet, toggle via button
+          // On desktop, always visible
+          "hidden md:block",
+          showMobileSidebar ? "md:translate-x-0" : "md:-translate-x-full lg:translate-x-0"
         )}
       >
         <ChannelList
@@ -105,10 +109,10 @@ export function ChatLayout({
         />
       </div>
 
-      {/* Mobile Overlay */}
+      {/* Tablet Overlay for Channel Sidebar */}
       {showMobileSidebar && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/20 z-5"
+          className="hidden md:block lg:hidden fixed inset-0 bg-black/20 z-30"
           onClick={() => setShowMobileSidebar(false)}
         />
       )}
@@ -136,22 +140,23 @@ export function ChatLayout({
         <OnlineMembers currentUserId={currentUser.id} />
       </div>
 
-      {/* Mobile Members Toggle - Show on tablet */}
+      {/* Members Toggle - Show on tablet (768px-1279px), hidden on mobile and xl+ */}
       <button
         onClick={() => setShowMobileMembers(!showMobileMembers)}
-        className="xl:hidden hidden md:block absolute top-4 right-4 z-20 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
+        className="xl:hidden hidden md:block absolute top-4 right-4 z-50 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
+        title="Show members"
       >
-        <Menu className="h-5 w-5" />
+        <Users className="h-5 w-5" />
       </button>
 
-      {/* Mobile Members Panel */}
+      {/* Tablet Members Panel */}
       {showMobileMembers && (
         <>
           <div
-            className="xl:hidden fixed inset-0 bg-black/20 z-10"
+            className="xl:hidden fixed inset-0 bg-black/20 z-30"
             onClick={() => setShowMobileMembers(false)}
           />
-          <div className="xl:hidden fixed right-0 top-0 bottom-0 w-52 bg-neutral-50 border-l border-neutral-200 z-20">
+          <div className="xl:hidden fixed right-0 top-0 bottom-0 w-52 bg-neutral-50 border-l border-neutral-200 z-40">
             <OnlineMembers currentUserId={currentUser.id} />
           </div>
         </>

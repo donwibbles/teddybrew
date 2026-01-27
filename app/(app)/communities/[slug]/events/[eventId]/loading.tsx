@@ -87,7 +87,7 @@ export default function EventDetailLoading() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* RSVP Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-6">
+          <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-24">
             <Skeleton className="h-4 w-24 mb-2" />
             <Skeleton className="h-10 w-full mb-4" />
             <Skeleton className="h-4 w-32 mx-auto" />
