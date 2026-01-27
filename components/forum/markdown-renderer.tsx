@@ -15,6 +15,128 @@ marked.setOptions({
   breaks: true, // Convert \n to <br>
 });
 
+// Prose styles matching the document TipTap viewer
+const proseStyles = `
+  .forum-prose h1 {
+    font-size: 2em;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: rgb(23 23 23);
+  }
+  .forum-prose h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: 1.25em;
+    margin-bottom: 0.5em;
+    color: rgb(23 23 23);
+  }
+  .forum-prose h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: rgb(23 23 23);
+  }
+  .forum-prose h4 {
+    font-size: 1.1em;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+    color: rgb(23 23 23);
+  }
+  .forum-prose p {
+    color: rgb(64 64 64);
+    line-height: 1.75;
+    margin-top: 0.75em;
+    margin-bottom: 0.75em;
+  }
+  .forum-prose a {
+    color: rgb(194 116 41);
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .forum-prose a:hover {
+    color: rgb(163 88 13);
+  }
+  .forum-prose code {
+    background-color: rgb(245 245 245);
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.875em;
+  }
+  .forum-prose pre {
+    background-color: rgb(245 245 245);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.875em;
+    margin: 1em 0;
+  }
+  .forum-prose pre code {
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+  }
+  .forum-prose blockquote {
+    border-left: 4px solid rgb(212 212 212);
+    padding-left: 1rem;
+    font-style: italic;
+    color: rgb(82 82 82);
+    margin: 1em 0;
+  }
+  .forum-prose ul,
+  .forum-prose ol {
+    padding-left: 1.5em;
+    margin: 0.75em 0;
+  }
+  .forum-prose ul {
+    list-style-type: disc;
+  }
+  .forum-prose ol {
+    list-style-type: decimal;
+  }
+  .forum-prose li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    color: rgb(64 64 64);
+  }
+  .forum-prose img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1em auto;
+    border-radius: 0.5rem;
+  }
+  .forum-prose table {
+    border-collapse: collapse;
+    margin: 1em 0;
+    overflow: hidden;
+    width: 100%;
+  }
+  .forum-prose table td,
+  .forum-prose table th {
+    border: 1px solid rgb(229 231 235);
+    padding: 0.5rem;
+    vertical-align: top;
+  }
+  .forum-prose table th {
+    background-color: rgb(249 250 251);
+    font-weight: 600;
+  }
+  .forum-prose hr {
+    border: none;
+    border-top: 2px solid rgb(229 231 235);
+    margin: 2em 0;
+  }
+`;
+
 export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   const html = useMemo(() => {
     // Parse markdown to HTML
@@ -64,19 +186,13 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
   }, [content]);
 
   return (
-    <div
-      className={`prose prose-neutral max-w-none
-        prose-headings:font-semibold prose-headings:text-neutral-900
-        prose-p:text-neutral-700 prose-p:leading-relaxed
-        prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline
-        prose-code:bg-neutral-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-        prose-code:before:content-none prose-code:after:content-none
-        prose-pre:bg-neutral-900 prose-pre:text-neutral-100
-        prose-blockquote:border-l-primary-500 prose-blockquote:text-neutral-600
-        prose-img:rounded-lg
-        ${className || ""}`}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <>
+      <style jsx global>{proseStyles}</style>
+      <div
+        className={`forum-prose max-w-none ${className || ""}`}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </>
   );
 }
 
