@@ -18,6 +18,7 @@ import { NotificationType } from "@prisma/client";
 import type { ActionResult } from "./community";
 import { isMember, canModerate, logModerationAction } from "@/lib/db/members";
 import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 /**
  * Create a comment
@@ -89,7 +90,7 @@ export async function createComment(
     const comment = await prisma.$transaction(async (tx) => {
       const newComment = await tx.comment.create({
         data: {
-          content,
+          content: sanitizeText(content),
           postId,
           authorId: userId,
           parentId,
@@ -204,7 +205,7 @@ export async function updateComment(input: unknown): Promise<ActionResult> {
     await prisma.comment.update({
       where: { id: commentId },
       data: {
-        content,
+        content: sanitizeText(content),
         updatedAt: new Date(),
       },
     });

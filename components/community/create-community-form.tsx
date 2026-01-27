@@ -56,7 +56,6 @@ export function CreateCommunityForm() {
       router.push(`/communities/${result.data.slug}`);
     } else {
       setServerError(result.error);
-      toast.error(result.error);
       setIsSubmitting(false);
     }
   };

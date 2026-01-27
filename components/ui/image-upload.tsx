@@ -199,6 +199,7 @@ export function ImageUpload({
                 size="icon"
                 className="h-8 w-8 rounded-full shadow-md"
                 onClick={handleClick}
+                aria-label="Upload new image"
               >
                 <Upload className="h-4 w-4" />
               </Button>
@@ -209,6 +210,7 @@ export function ImageUpload({
                   size="icon"
                   className="h-8 w-8 rounded-full shadow-md"
                   onClick={handleRemove}
+                  aria-label="Remove image"
                 >
                   <X className="h-4 w-4" />
                 </Button>

@@ -15,6 +15,7 @@ import {
 } from "@/lib/upload";
 import type { ActionResult } from "./community";
 import { captureServerError } from "@/lib/sentry";
+import { checkUploadRateLimit } from "@/lib/rate-limit";
 
 // Presigned URL expiry time (5 minutes)
 const PRESIGNED_URL_EXPIRY = 5 * 60;
@@ -41,6 +42,13 @@ export async function getPresignedUploadUrl(input: {
     }
 
     const { userId } = await verifySession();
+
+    // Rate limiting
+    const rateLimit = await checkUploadRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're uploading too quickly. Please wait before trying again." };
+    }
+
     const { type, entityId, contentType, sizeBytes } = input;
 
     // Validate upload

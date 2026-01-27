@@ -16,6 +16,9 @@ let _profileRateLimiter: Ratelimit | null = null;
 let _channelRateLimiter: Ratelimit | null = null;
 let _documentRateLimiter: Ratelimit | null = null;
 let _folderRateLimiter: Ratelimit | null = null;
+let _rsvpRateLimiter: Ratelimit | null = null;
+let _inviteRateLimiter: Ratelimit | null = null;
+let _uploadRateLimiter: Ratelimit | null = null;
 
 function getRedis(): Redis | null {
   if (_redis) return _redis;
@@ -250,6 +253,57 @@ function getFolderRateLimiter(): Ratelimit | null {
   });
 
   return _folderRateLimiter;
+}
+
+function getRsvpRateLimiter(): Ratelimit | null {
+  if (_rsvpRateLimiter) return _rsvpRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 20 RSVPs per hour
+  _rsvpRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:rsvp",
+  });
+
+  return _rsvpRateLimiter;
+}
+
+function getInviteRateLimiter(): Ratelimit | null {
+  if (_inviteRateLimiter) return _inviteRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 20 invites per hour
+  _inviteRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:invite",
+  });
+
+  return _inviteRateLimiter;
+}
+
+function getUploadRateLimiter(): Ratelimit | null {
+  if (_uploadRateLimiter) return _uploadRateLimiter;
+
+  const redis = getRedis();
+  if (!redis) return null;
+
+  // 30 uploads per hour
+  _uploadRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, "1 h"),
+    analytics: true,
+    prefix: "ratelimit:upload",
+  });
+
+  return _uploadRateLimiter;
 }
 
 interface RateLimitResult {
@@ -556,6 +610,78 @@ export async function checkFolderRateLimit(
   userId: string
 ): Promise<RateLimitResult> {
   const rateLimiter = getFolderRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check RSVP rate limit: 20 RSVPs per hour
+ */
+export async function checkRsvpRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getRsvpRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check invite rate limit: 20 invites per hour
+ */
+export async function checkInviteRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getInviteRateLimiter();
+
+  if (!rateLimiter) {
+    return {
+      success: true,
+      remaining: 999,
+      reset: Date.now() + 3600000,
+    };
+  }
+
+  const result = await rateLimiter.limit(userId);
+  return {
+    success: result.success,
+    remaining: result.remaining,
+    reset: result.reset,
+  };
+}
+
+/**
+ * Check upload rate limit: 30 uploads per hour
+ */
+export async function checkUploadRateLimit(
+  userId: string
+): Promise<RateLimitResult> {
+  const rateLimiter = getUploadRateLimiter();
 
   if (!rateLimiter) {
     return {

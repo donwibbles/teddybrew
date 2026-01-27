@@ -87,6 +87,7 @@ export function CommentForm({
             type="button"
             onClick={onCancel}
             className="absolute top-2 right-2 p-1 text-neutral-400 hover:text-neutral-600 rounded"
+            aria-label="Cancel reply"
           >
             <X className="h-4 w-4" />
           </button>

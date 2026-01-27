@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
@@ -31,6 +32,31 @@ function formatDate(date: Date): string {
     month: "long",
     year: "numeric",
   });
+}
+
+export async function generateMetadata({ params }: PublicProfilePageProps): Promise<Metadata> {
+  const { username } = await params;
+  const profile = await getUserPublicProfile(username);
+
+  if (!profile) {
+    return { title: "User Not Found - Hive Community" };
+  }
+
+  const displayName = profile.name || `@${profile.username}`;
+  const title = `${displayName} (@${profile.username}) - Hive Community`;
+  const description = profile.bio
+    ? profile.bio.slice(0, 160)
+    : `${displayName}'s profile on Hive Community`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      ...(profile.image && { images: [{ url: profile.image }] }),
+    },
+  };
 }
 
 export default async function PublicProfilePage({ params }: PublicProfilePageProps) {

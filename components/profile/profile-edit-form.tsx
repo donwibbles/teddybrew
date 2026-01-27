@@ -161,7 +161,6 @@ export function ProfileEditForm({
       }
     } else {
       setServerError(result.error);
-      toast.error(result.error);
     }
 
     setIsSubmitting(false);

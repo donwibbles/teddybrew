@@ -70,7 +70,6 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
       router.refresh();
     } else {
       setServerError(result.error);
-      toast.error(result.error);
     }
 
     setIsSubmitting(false);

@@ -12,6 +12,7 @@ import type { ActionResult } from "./community";
 import { checkChannelRateLimit } from "@/lib/rate-limit";
 import { isMember, isOwner } from "@/lib/db/members";
 import { captureServerError } from "@/lib/sentry";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 /**
  * Create a new channel - Owner only
@@ -36,7 +37,9 @@ export async function createChannel(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, name, description } = parsed.data;
+    const { communityId, name: rawName, description: rawDescription } = parsed.data;
+    const name = sanitizeText(rawName);
+    const description = rawDescription ? sanitizeText(rawDescription) : rawDescription;
 
     // Check if user is owner
     if (!(await isOwner(userId, communityId))) {
@@ -108,7 +111,9 @@ export async function updateChannel(input: unknown): Promise<ActionResult> {
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { channelId, name, description } = parsed.data;
+    const { channelId, name: rawName, description: rawDescription } = parsed.data;
+    const name = rawName ? sanitizeText(rawName) : rawName;
+    const description = rawDescription !== undefined ? (rawDescription ? sanitizeText(rawDescription) : rawDescription) : undefined;
 
     // Get channel with community info
     const channel = await prisma.chatChannel.findUnique({

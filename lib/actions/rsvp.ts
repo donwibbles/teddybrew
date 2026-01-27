@@ -13,6 +13,7 @@ import {
 import { scheduleEventReminder, cancelScheduledReminder } from "./reminder";
 import { getRsvpConfirmationEmailHtml, getRsvpConfirmationEmailText } from "@/lib/email/templates";
 import { captureServerError, captureFireAndForgetError } from "@/lib/sentry";
+import { checkRsvpRateLimit } from "@/lib/rate-limit";
 
 /**
  * Action result types
@@ -31,6 +32,12 @@ export type ActionResult<T = void> =
 export async function rsvpToSession(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
+
+    // Rate limiting
+    const rateLimit = await checkRsvpRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're RSVPing too quickly. Please wait before trying again." };
+    }
 
     // Validate input
     const parsed = rsvpSessionSchema.safeParse(input);
@@ -242,6 +249,12 @@ export async function cancelRsvp(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
 
+    // Rate limiting
+    const rateLimit = await checkRsvpRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're making changes too quickly. Please wait before trying again." };
+    }
+
     // Validate input
     const parsed = cancelRsvpSchema.safeParse(input);
     if (!parsed.success) {
@@ -309,6 +322,12 @@ export async function cancelRsvp(input: unknown): Promise<ActionResult> {
 export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
   try {
     const { userId } = await verifySession();
+
+    // Rate limiting
+    const rateLimit = await checkRsvpRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're RSVPing too quickly. Please wait before trying again." };
+    }
 
     const parsed = rsvpAllSessionsSchema.safeParse(input);
     if (!parsed.success) {

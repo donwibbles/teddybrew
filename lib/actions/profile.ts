@@ -6,6 +6,7 @@ import { updateProfileSchema, usernameSchema } from "@/lib/validations/profile";
 import { isUsernameAvailable, updateUserProfile } from "@/lib/db/users";
 import { checkProfileRateLimit } from "@/lib/rate-limit";
 import { captureServerError } from "@/lib/sentry";
+import { sanitizeText } from "@/lib/utils/sanitize";
 
 /**
  * Action result types
@@ -68,9 +69,9 @@ export async function updateProfile(
       lastName,
       name,
       username,
-      bio: bio || null,
-      interests: interests || null,
-      communityHope: communityHope || null,
+      bio: bio ? sanitizeText(bio) : null,
+      interests: interests ? sanitizeText(interests) : null,
+      communityHope: communityHope ? sanitizeText(communityHope) : null,
       ...(isPublic !== undefined && { isPublic }),
       ...(showUpcomingEvents !== undefined && { showUpcomingEvents }),
       ...(showPastEvents !== undefined && { showPastEvents }),

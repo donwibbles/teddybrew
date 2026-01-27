@@ -12,6 +12,7 @@ import {
 import { getCommunityInviteEmailHtml, getCommunityInviteEmailText } from "@/lib/email/templates";
 import { MemberRole, NotificationType } from "@prisma/client";
 import { captureServerError, captureExternalServiceError } from "@/lib/sentry";
+import { checkInviteRateLimit } from "@/lib/rate-limit";
 
 /**
  * Action result types
@@ -33,6 +34,12 @@ export async function sendCommunityInvite(
   try {
     // Verify user is authenticated
     const { userId } = await verifySession();
+
+    // Rate limiting
+    const rateLimit = await checkInviteRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're sending invites too quickly. Please wait before trying again." };
+    }
 
     // Validate input
     const parsed = sendInviteSchema.safeParse(input);
@@ -348,6 +355,12 @@ export async function resendInvite(
   try {
     // Verify user is authenticated
     const { userId } = await verifySession();
+
+    // Rate limiting
+    const rateLimit = await checkInviteRateLimit(userId);
+    if (!rateLimit.success) {
+      return { success: false, error: "You're sending invites too quickly. Please wait before trying again." };
+    }
 
     // Validate input
     const parsed = resendInviteSchema.safeParse(input);
