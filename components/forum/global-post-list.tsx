@@ -21,6 +21,7 @@ interface Community {
 
 interface Post {
   id: string;
+  slug: string;
   title: string;
   content: string;
   author: Author;
@@ -108,6 +109,7 @@ export function GlobalPostList({
         <PostCard
           key={post.id}
           id={post.id}
+          slug={post.slug}
           title={post.title}
           content={post.content}
           author={post.author}

@@ -23,7 +23,7 @@ import type { ActionResult } from "./community";
  */
 export async function createPost(
   input: unknown
-): Promise<ActionResult<{ postId: string }>> {
+): Promise<ActionResult<{ postId: string; postSlug: string }>> {
   try {
     const { userId } = await verifySession();
 
@@ -55,11 +55,18 @@ export async function createPost(
       return { success: false, error: "Community not found" };
     }
 
+    // Generate slug for the post
+    const { generateSlug } = await import("@/lib/validations/document");
+    const { generateUniquePostSlug } = await import("@/lib/db/posts");
+    const baseSlug = generateSlug(sanitizeText(title));
+    const slug = await generateUniquePostSlug(communityId, baseSlug);
+
     // Create post and update community activity
     const post = await prisma.$transaction(async (tx) => {
       const newPost = await tx.post.create({
         data: {
           title: sanitizeText(title),
+          slug,
           content,
           contentJson: contentJson ?? undefined,
           communityId,
@@ -88,7 +95,7 @@ export async function createPost(
 
     revalidatePath(`/communities/${community.slug}/forum`);
 
-    return { success: true, data: { postId: post.id } };
+    return { success: true, data: { postId: post.id, postSlug: post.slug } };
   } catch (error) {
     console.error("Failed to create post:", error);
     return { success: false, error: "Failed to create post" };
@@ -98,7 +105,7 @@ export async function createPost(
 /**
  * Update a post (author only)
  */
-export async function updatePost(input: unknown): Promise<ActionResult> {
+export async function updatePost(input: unknown): Promise<ActionResult<{ postSlug: string }>> {
   try {
     const { userId } = await verifySession();
 
@@ -112,7 +119,7 @@ export async function updatePost(input: unknown): Promise<ActionResult> {
     // Get post
     const post = await prisma.post.findUnique({
       where: { id: postId },
-      include: { community: { select: { slug: true } } },
+      include: { community: { select: { slug: true, id: true } } },
     });
 
     if (!post || post.deletedAt) {
@@ -124,10 +131,20 @@ export async function updatePost(input: unknown): Promise<ActionResult> {
       return { success: false, error: "You can only edit your own posts" };
     }
 
+    // Regenerate slug if title changes
+    let newSlug = post.slug;
+    if (title && sanitizeText(title) !== post.title) {
+      const { generateSlug } = await import("@/lib/validations/document");
+      const { generateUniquePostSlug } = await import("@/lib/db/posts");
+      const baseSlug = generateSlug(sanitizeText(title));
+      newSlug = await generateUniquePostSlug(post.community.id, baseSlug, postId);
+    }
+
     await prisma.post.update({
       where: { id: postId },
       data: {
         ...(title && { title: sanitizeText(title) }),
+        ...(title && sanitizeText(title) !== post.title && { slug: newSlug }),
         ...(content && { content }),
         ...(contentJson !== undefined && { contentJson }),
         updatedAt: new Date(),
@@ -135,9 +152,9 @@ export async function updatePost(input: unknown): Promise<ActionResult> {
     });
 
     revalidatePath(`/communities/${post.community.slug}/forum`);
-    revalidatePath(`/communities/${post.community.slug}/forum/${postId}`);
+    revalidatePath(`/communities/${post.community.slug}/forum/${newSlug}`);
 
-    return { success: true, data: undefined };
+    return { success: true, data: { postSlug: newSlug } };
   } catch (error) {
     console.error("Failed to update post:", error);
     return { success: false, error: "Failed to update post" };

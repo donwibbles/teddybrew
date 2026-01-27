@@ -39,23 +39,13 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
     <div className="space-y-6">
       {/* Sign in prompt banner */}
       <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <p className="font-medium text-primary-900">
-              Join Hive Community to create and manage your own communities
-            </p>
-            <p className="text-sm text-primary-700 mt-1">
-              Sign in to create communities, join events, and connect with others.
-            </p>
-          </div>
-          <Link
-            href="/sign-in"
-            className="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
-                       hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
-                       transition-colors whitespace-nowrap"
-          >
-            Sign in to Create
-          </Link>
+        <div>
+          <p className="font-medium text-primary-900">
+            Join Hive Community to create and manage your own communities
+          </p>
+          <p className="text-sm text-primary-700 mt-1">
+            Sign in to create communities, join events, and connect with others.
+          </p>
         </div>
       </div>
 
@@ -67,20 +57,6 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         <p className="text-neutral-600 mt-1">
           Discover public communities and connect with others
         </p>
-        <div className="flex items-center gap-3 mt-3">
-          <Link
-            href="/explore/forum"
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-700 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
-          >
-            Forum
-          </Link>
-          <Link
-            href="/explore/events"
-            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-700 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
-          >
-            Events
-          </Link>
-        </div>
       </div>
 
       {/* Search and Filters */}

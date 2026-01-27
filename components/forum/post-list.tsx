@@ -15,6 +15,7 @@ interface Author {
 
 interface Post {
   id: string;
+  slug: string;
   title: string;
   content: string;
   author: Author;

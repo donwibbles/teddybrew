@@ -26,6 +26,7 @@ type FormData = z.infer<typeof editPostFormSchema>;
 
 interface EditPostFormProps {
   postId: string;
+  postSlug: string;
   communitySlug: string;
   initialTitle: string;
   initialContent: string;
@@ -34,6 +35,7 @@ interface EditPostFormProps {
 
 export function EditPostForm({
   postId,
+  postSlug,
   communitySlug,
   initialTitle,
   initialContent,
@@ -99,7 +101,8 @@ export function EditPostForm({
 
     if (result.success) {
       toast.success("Post updated");
-      router.push(`/communities/${communitySlug}/forum/${postId}`);
+      const newSlug = result.data?.postSlug ?? postSlug;
+      router.push(`/communities/${communitySlug}/forum/${newSlug}`);
     } else {
       toast.error(result.error);
       setIsSubmitting(false);

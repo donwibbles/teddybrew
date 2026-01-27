@@ -3,6 +3,55 @@ import { prisma } from "@/lib/prisma";
 export type PostSortType = "hot" | "new" | "top";
 
 /**
+ * Check if a post slug already exists in a community
+ */
+export async function postSlugExists(
+  communityId: string,
+  slug: string,
+  excludePostId?: string
+): Promise<boolean> {
+  const existing = await prisma.post.findFirst({
+    where: {
+      communityId,
+      slug,
+      ...(excludePostId ? { id: { not: excludePostId } } : {}),
+    },
+    select: { id: true },
+  });
+  return !!existing;
+}
+
+/**
+ * Generate a unique post slug within a community
+ */
+export async function generateUniquePostSlug(
+  communityId: string,
+  baseSlug: string,
+  excludePostId?: string
+): Promise<string> {
+  // Ensure base slug is not empty
+  let slug = baseSlug || "post";
+
+  // Truncate to leave room for counter suffix
+  slug = slug.slice(0, 300);
+
+  if (!(await postSlugExists(communityId, slug, excludePostId))) {
+    return slug;
+  }
+
+  // Try with counter
+  for (let i = 2; i <= 100; i++) {
+    const candidate = `${slug}-${i}`;
+    if (!(await postSlugExists(communityId, candidate, excludePostId))) {
+      return candidate;
+    }
+  }
+
+  // Fallback to timestamp
+  return `${slug}-${Date.now()}`;
+}
+
+/**
  * Calculate "hot" score based on votes and age
  * Reddit-style algorithm
  */
@@ -178,6 +227,65 @@ export async function getPostById(postId: string, userId?: string) {
 }
 
 /**
+ * Get a single post by community slug + post slug
+ */
+export async function getPostBySlug(
+  communitySlug: string,
+  postSlug: string,
+  userId?: string
+) {
+  const post = await prisma.post.findFirst({
+    where: {
+      slug: postSlug,
+      community: { slug: communitySlug },
+      deletedAt: null,
+    },
+    include: {
+      author: {
+        select: { id: true, name: true, image: true },
+      },
+      community: {
+        select: { id: true, slug: true, name: true, ownerId: true },
+      },
+      _count: {
+        select: { comments: true },
+      },
+      ...(userId
+        ? {
+            votes: {
+              where: { userId },
+              select: { value: true },
+            },
+          }
+        : {}),
+    },
+  });
+
+  if (!post) return null;
+
+  // Get author's role in this community
+  const authorMembership = await prisma.member.findUnique({
+    where: {
+      userId_communityId: {
+        userId: post.authorId,
+        communityId: post.communityId,
+      },
+    },
+    select: { role: true },
+  });
+
+  return {
+    ...post,
+    author: {
+      ...post.author,
+      role: authorMembership?.role ?? null,
+    },
+    userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
+    commentCount: post.commentCount,
+  };
+}
+
+/**
  * Get posts from all PUBLIC communities for global forum
  */
 export async function getPublicPosts(
@@ -271,6 +379,7 @@ export async function getPublicPosts(
     posts: items.map((post) => ({
       id: post.id,
       title: post.title,
+      slug: post.slug,
       content: post.content,
       contentJson: post.contentJson,
       voteScore: post.voteScore,

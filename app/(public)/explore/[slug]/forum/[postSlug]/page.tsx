@@ -1,18 +1,18 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
-import { getPostById, getPostComments } from "@/lib/db/posts";
+import { getPostBySlug, getPostComments } from "@/lib/db/posts";
 import { PostDetail } from "@/components/forum/post-detail";
 import { CommentsSection } from "@/components/forum/comments-section";
 
 interface PublicPostPageProps {
-  params: Promise<{ slug: string; postId: string }>;
+  params: Promise<{ slug: string; postSlug: string }>;
   searchParams: Promise<{ commentSort?: string }>;
 }
 
 export async function generateMetadata({ params }: PublicPostPageProps) {
-  const { postId } = await params;
-  const post = await getPostById(postId);
+  const { slug, postSlug } = await params;
+  const post = await getPostBySlug(slug, postSlug);
 
   if (!post) {
     return { title: "Post Not Found" };
@@ -25,24 +25,19 @@ export async function generateMetadata({ params }: PublicPostPageProps) {
 }
 
 export default async function PublicPostPage({ params, searchParams }: PublicPostPageProps) {
-  const { slug, postId } = await params;
+  const { slug, postSlug } = await params;
   const { commentSort } = await searchParams;
   const session = await auth();
 
   // Redirect authenticated users to the full experience
   if (session?.user) {
-    redirect(`/communities/${slug}/forum/${postId}`);
+    redirect(`/communities/${slug}/forum/${postSlug}`);
   }
 
-  const post = await getPostById(postId); // no userId for public view
+  const post = await getPostBySlug(slug, postSlug); // no userId for public view
 
   if (!post) {
     notFound();
-  }
-
-  // Verify slug matches community
-  if (post.community.slug !== slug) {
-    redirect(`/explore/${post.community.slug}/forum/${postId}`);
   }
 
   // Check if community is private
@@ -93,7 +88,7 @@ export default async function PublicPostPage({ params, searchParams }: PublicPos
 
   const sort = commentSort === "new" ? "new" : "best";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const comments = await getPostComments(postId, sort) as any[];
+  const comments = await getPostComments(post.id, sort) as any[];
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -122,6 +117,7 @@ export default async function PublicPostPage({ params, searchParams }: PublicPos
       {/* Post Detail */}
       <PostDetail
         id={post.id}
+        slug={post.slug}
         title={post.title}
         content={post.content}
         contentJson={post.contentJson as import("@tiptap/react").JSONContent | null}
@@ -147,7 +143,7 @@ export default async function PublicPostPage({ params, searchParams }: PublicPos
         canModerate={false}
         isMember={false}
         currentSort={sort}
-        basePath={`/explore/${slug}/forum/${postId}`}
+        basePath={`/explore/${slug}/forum/${postSlug}`}
         isPublicView
       />
     </div>

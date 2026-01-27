@@ -1,18 +1,18 @@
 import { notFound, redirect } from "next/navigation";
-import { getPostById, getPostComments } from "@/lib/db/posts";
+import { getPostBySlug, getPostComments } from "@/lib/db/posts";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { getCurrentUserId } from "@/lib/dal";
 import { PostDetail } from "@/components/forum/post-detail";
 import { CommentsSection } from "@/components/forum/comments-section";
 
 interface PostPageProps {
-  params: Promise<{ slug: string; postId: string }>;
+  params: Promise<{ slug: string; postSlug: string }>;
   searchParams: Promise<{ commentSort?: string }>;
 }
 
 export async function generateMetadata({ params }: PostPageProps) {
-  const { postId } = await params;
-  const post = await getPostById(postId);
+  const { slug, postSlug } = await params;
+  const post = await getPostBySlug(slug, postSlug);
 
   if (!post) {
     return { title: "Post Not Found" };
@@ -25,19 +25,14 @@ export async function generateMetadata({ params }: PostPageProps) {
 }
 
 export default async function PostPage({ params, searchParams }: PostPageProps) {
-  const { slug, postId } = await params;
+  const { slug, postSlug } = await params;
   const { commentSort } = await searchParams;
 
   const userId = await getCurrentUserId();
-  const post = await getPostById(postId, userId || undefined);
+  const post = await getPostBySlug(slug, postSlug, userId || undefined);
 
   if (!post) {
     notFound();
-  }
-
-  // Verify slug matches community
-  if (post.community.slug !== slug) {
-    redirect(`/communities/${post.community.slug}/forum/${postId}`);
   }
 
   const membership = await getMembershipStatus(post.community.id);
@@ -61,7 +56,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
 
   const sort = commentSort === "new" ? "new" : "best";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const comments = await getPostComments(postId, sort, userId || undefined) as any[];
+  const comments = await getPostComments(post.id, sort, userId || undefined) as any[];
 
   const isAuthor = userId === post.author.id;
 
@@ -70,6 +65,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
       {/* Post Detail */}
       <PostDetail
         id={post.id}
+        slug={post.slug}
         title={post.title}
         content={post.content}
         contentJson={post.contentJson as import("@tiptap/react").JSONContent | null}
@@ -93,7 +89,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         canModerate={membership.canModerate}
         isMember={membership.isMember}
         currentSort={sort}
-        basePath={`/communities/${slug}/forum/${postId}`}
+        basePath={`/communities/${slug}/forum/${postSlug}`}
       />
     </div>
   );

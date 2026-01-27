@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getEventWithDetails } from "@/lib/db/events";
-import { ExploreCommunityTabs } from "@/components/community/explore-community-tabs";
 
 interface PublicEventPageProps {
   params: Promise<{ slug: string; eventId: string }>;
@@ -131,9 +130,6 @@ export default async function PublicEventPage({ params }: PublicEventPageProps) 
           </Link>
         </div>
       </div>
-
-      {/* Navigation Tabs */}
-      <ExploreCommunityTabs communitySlug={slug} />
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-neutral-500">

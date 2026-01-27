@@ -82,7 +82,7 @@ export function CreatePostForm({
 
     if (result.success) {
       toast.success("Post created");
-      router.push(`/communities/${communitySlug}/forum/${result.data.postId}`);
+      router.push(`/communities/${communitySlug}/forum/${result.data.postSlug}`);
     } else {
       toast.error(result.error);
       setIsSubmitting(false);

@@ -24,6 +24,7 @@ interface Author {
 
 interface PostDetailProps {
   id: string;
+  slug: string;
   title: string;
   content: string;
   contentJson?: JSONContent | null;
@@ -42,6 +43,7 @@ interface PostDetailProps {
 
 export function PostDetail({
   id,
+  slug,
   title,
   content,
   contentJson,
@@ -178,7 +180,7 @@ export function PostDetail({
             {!isPublicView && (isAuthor || canModerate) && (
               <div className="flex items-center gap-2 pt-4 border-t border-neutral-100">
                 {isAuthor && (
-                  <Link href={`/communities/${communitySlug}/forum/${id}/edit`}>
+                  <Link href={`/communities/${communitySlug}/forum/${slug}/edit`}>
                     <Button variant="ghost" size="sm">
                       <Edit className="h-4 w-4 mr-1.5" />
                       Edit

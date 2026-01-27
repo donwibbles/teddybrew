@@ -1,17 +1,17 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getPostById } from "@/lib/db/posts";
+import { getPostBySlug } from "@/lib/db/posts";
 import { getSession } from "@/lib/dal";
 import { EditPostForm } from "@/components/forum/edit-post-form";
 
 interface EditPostPageProps {
-  params: Promise<{ slug: string; postId: string }>;
+  params: Promise<{ slug: string; postSlug: string }>;
 }
 
 export async function generateMetadata({ params }: EditPostPageProps) {
-  const { postId } = await params;
-  const post = await getPostById(postId);
+  const { slug, postSlug } = await params;
+  const post = await getPostBySlug(slug, postSlug);
 
   if (!post) {
     return { title: "Post Not Found" };
@@ -23,34 +23,29 @@ export async function generateMetadata({ params }: EditPostPageProps) {
 }
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
-  const { slug, postId } = await params;
+  const { slug, postSlug } = await params;
 
   const session = await getSession();
   if (!session?.user) {
-    redirect(`/sign-in?callbackUrl=/communities/${slug}/forum/${postId}/edit`);
+    redirect(`/sign-in?callbackUrl=/communities/${slug}/forum/${postSlug}/edit`);
   }
 
-  const post = await getPostById(postId, session.user.id!);
+  const post = await getPostBySlug(slug, postSlug, session.user.id!);
 
   if (!post) {
     notFound();
   }
 
-  // Verify slug matches community
-  if (post.community.slug !== slug) {
-    redirect(`/communities/${post.community.slug}/forum/${postId}/edit`);
-  }
-
   // Only author can edit
   if (post.author.id !== session.user.id) {
-    redirect(`/communities/${slug}/forum/${postId}`);
+    redirect(`/communities/${slug}/forum/${postSlug}`);
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Back link */}
       <Link
-        href={`/communities/${slug}/forum/${postId}`}
+        href={`/communities/${slug}/forum/${postSlug}`}
         className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
@@ -64,6 +59,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         </h1>
         <EditPostForm
           postId={post.id}
+          postSlug={post.slug}
           communitySlug={post.community.slug}
           initialTitle={post.title}
           initialContent={post.content}

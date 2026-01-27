@@ -356,6 +356,7 @@ model MessageReaction {
 model Post {
   id           String    @id @default(cuid())
   title        String    @db.VarChar(300)
+  slug         String    @db.VarChar(350)
   content      String    @db.Text
   contentJson  Json?
   communityId  String
@@ -374,6 +375,7 @@ model Post {
   comments    Comment[]
   votes       PostVote[]
 
+  @@unique([communityId, slug])
   @@index([communityId, createdAt(sort: Desc)])
   @@index([communityId, voteScore(sort: Desc)])
   @@index([communityId, isPinned, createdAt(sort: Desc)])

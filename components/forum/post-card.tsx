@@ -22,6 +22,7 @@ interface Community {
 
 interface PostCardProps {
   id: string;
+  slug: string;
   title: string;
   content: string;
   author: Author;
@@ -43,6 +44,7 @@ interface PostCardProps {
 
 export function PostCard({
   id,
+  slug,
   title,
   content,
   author,
@@ -91,7 +93,7 @@ export function PostCard({
               <Pin className="h-4 w-4 text-primary-500 shrink-0 mt-1" />
             )}
             <Link
-              href={`${basePath}/${communitySlug}/forum/${id}`}
+              href={`${basePath}/${communitySlug}/forum/${slug}`}
               className="font-medium text-neutral-900 hover:text-primary-600 transition-colors line-clamp-2"
             >
               {title}
