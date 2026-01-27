@@ -170,6 +170,7 @@ export default async function DashboardPage() {
                               day: "numeric",
                               hour: "numeric",
                               minute: "2-digit",
+                              timeZone: event.timezone || undefined,
                             })
                           : "No sessions"}
                       </p>

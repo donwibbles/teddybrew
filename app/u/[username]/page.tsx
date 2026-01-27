@@ -325,6 +325,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                                 weekday: "short",
                                 month: "short",
                                 day: "numeric",
+                                timeZone: event.timezone || undefined,
                               })
                             : "No sessions"}
                         </p>
@@ -348,6 +349,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                                   weekday: "short",
                                   month: "short",
                                   day: "numeric",
+                                  timeZone: event.timezone || undefined,
                                 })
                               : "No sessions"}
                           </p>
@@ -391,6 +393,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
+                                timeZone: event.timezone || undefined,
                               })
                             : "No sessions"}
                         </p>
@@ -466,6 +469,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                                 weekday: "short",
                                 month: "short",
                                 day: "numeric",
+                                timeZone: event.timezone || undefined,
                               })
                             : "No sessions"}
                           {" "}· {event.community.name}
@@ -505,6 +509,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                                 month: "short",
                                 day: "numeric",
                                 year: "numeric",
+                                timeZone: event.timezone || undefined,
                               })
                             : "No sessions"}
                           {" "}· {event.community.name}

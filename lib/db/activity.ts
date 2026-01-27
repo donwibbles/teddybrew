@@ -9,6 +9,7 @@ export interface EventActivityData {
   coverImage: string | null;
   nextSessionDate: Date | null;
   rsvpCount: number;
+  timezone: string | null;
 }
 
 export interface PostActivityData {
@@ -119,6 +120,7 @@ export async function getUserCommunityActivity(
       coverImage: event.coverImage,
       nextSessionDate: event.sessions[0]?.startTime ?? null,
       rsvpCount: event.sessions[0]?._count?.rsvps ?? 0,
+      timezone: event.timezone,
     } as EventActivityData,
   }));
 

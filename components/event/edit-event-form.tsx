@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { updateEvent, deleteEvent } from "@/lib/actions/event";
 import { AddSessionForm } from "./add-session-form";
+import {
+  localDateTimeToUTC,
+  getMinDateTimeForTimezone,
+  COMMON_TIMEZONES,
+} from "@/lib/utils/timezone";
 
 interface Session {
   id?: string;
@@ -35,18 +40,6 @@ interface EditEventFormProps {
   };
   communitySlug: string;
   isCreator: boolean;
-}
-
-function localDateTimeToUTC(localDateTime: string, timezone: string): string {
-  const [datePart, timePart] = localDateTime.split("T");
-  const [year, month, day] = datePart.split("-").map(Number);
-  const [hour, minute] = timePart.split(":").map(Number);
-  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
-  const inTz = new Date(
-    utcGuess.toLocaleString("en-US", { timeZone: timezone })
-  );
-  const offsetMs = utcGuess.getTime() - inTz.getTime();
-  return new Date(utcGuess.getTime() + offsetMs).toISOString();
 }
 
 export function EditEventForm({
@@ -110,11 +103,10 @@ export function EditEventForm({
     }
   }, [event.timezone]);
 
-  // Get minimum date (now) for datetime-local input
+  // Get minimum date (now) for datetime-local input in the selected timezone
   const getMinDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
+    if (!timezone) return "";
+    return getMinDateTimeForTimezone(timezone);
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -238,12 +230,30 @@ export function EditEventForm({
         />
       </div>
 
-      {/* Timezone notice */}
+      {/* Timezone selector */}
       {timezone && (
-        <div className="p-3 bg-primary-50 border border-primary-100 rounded-lg">
+        <div className="p-3 bg-primary-50 border border-primary-100 rounded-lg space-y-2">
           <p className="text-sm text-primary-700">
-            Enter times in your local timezone ({timezone})
+            Enter times in the selected timezone
           </p>
+          <select
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            disabled={isSubmitting || isDeleting}
+            className="w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-neutral-900 bg-white
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                       disabled:bg-neutral-50 disabled:text-neutral-500"
+          >
+            {/* Show current timezone first if not in common list */}
+            {!COMMON_TIMEZONES.some((tz) => tz.value === timezone) && (
+              <option value={timezone}>{timezone}</option>
+            )}
+            {COMMON_TIMEZONES.map((tz) => (
+              <option key={tz.value} value={tz.value}>
+                {tz.label}
+              </option>
+            ))}
+          </select>
         </div>
       )}
 

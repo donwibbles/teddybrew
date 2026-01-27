@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidTimezone } from "@/lib/utils/timezone";
 
 /**
  * Validation schemas for event operations
@@ -95,7 +96,10 @@ export const createEventSchema = z
     isVirtual: z.boolean().optional().default(false),
     meetingUrl: meetingUrlSchema,
     // Timezone (IANA format, e.g., "America/New_York")
-    timezone: z.string().default("America/New_York"),
+    timezone: z
+      .string()
+      .refine(isValidTimezone, "Invalid timezone")
+      .default("America/New_York"),
     // Sessions - at least one required
     sessions: z
       .array(sessionSchema)
@@ -143,7 +147,10 @@ export const updateEventSchema = z.object({
   isVirtual: z.boolean().optional(),
   meetingUrl: meetingUrlSchema,
   // Timezone (IANA format, e.g., "America/New_York")
-  timezone: z.string().optional(),
+  timezone: z
+    .string()
+    .refine(isValidTimezone, "Invalid timezone")
+    .optional(),
   // Sessions to update/add - all sessions not in this list will be deleted
   sessions: z
     .array(sessionUpdateSchema)

@@ -15,6 +15,7 @@ interface EventCardProps {
     description: string | null;
     location: string | null;
     capacity: number | null;
+    timezone?: string | null;
     community: {
       slug: string;
       name: string;
@@ -57,11 +58,14 @@ export function EventCard({
   // Check if event is full (simplified: if first session is full)
   const isFull = event.capacity && firstSession && firstSession._count.rsvps >= event.capacity;
 
+  const tzOption = event.timezone ? { timeZone: event.timezone } : {};
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
+      ...tzOption,
     }).format(new Date(date));
   };
 
@@ -69,7 +73,22 @@ export function EventCard({
     return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      ...tzOption,
     }).format(new Date(date));
+  };
+
+  const getTimezoneAbbr = () => {
+    if (!event.timezone || !firstSession) return "";
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: event.timezone,
+        timeZoneName: "short",
+      }).formatToParts(new Date(firstSession.startTime));
+      const tzPart = parts.find((p) => p.type === "timeZoneName");
+      return tzPart ? ` ${tzPart.value}` : "";
+    } catch {
+      return "";
+    }
   };
 
   // Format date range for multi-session events
@@ -77,7 +96,7 @@ export function EventCard({
     if (!firstSession) return "No sessions";
 
     if (sessions.length === 1) {
-      return `${formatDate(firstSession.startTime)} at ${formatTime(firstSession.startTime)}`;
+      return `${formatDate(firstSession.startTime)} at ${formatTime(firstSession.startTime)}${getTimezoneAbbr()}`;
     }
 
     // Multi-session: show date range

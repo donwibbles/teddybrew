@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
+import { formatEventTime } from "@/lib/utils/timezone";
 import { Calendar, MessageSquare, Users, ArrowUp } from "lucide-react";
 import type { ActivityItem, EventActivityData, PostActivityData } from "@/lib/db/activity";
 
@@ -59,7 +60,16 @@ function EventActivityItem({
             {data.nextSessionDate && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                {format(data.nextSessionDate, "MMM d, h:mm a")}
+                {formatEventTime(
+                  new Date(data.nextSessionDate),
+                  data.timezone || "America/New_York",
+                  {
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  }
+                )}
               </span>
             )}
             <span className="flex items-center gap-1">
