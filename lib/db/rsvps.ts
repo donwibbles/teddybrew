@@ -52,6 +52,7 @@ export async function isUserGoingToSession(
 export async function getSessionRSVPs(sessionId: string) {
   return await prisma.rSVP.findMany({
     where: { sessionId },
+    take: 200,
     include: {
       user: {
         select: {
@@ -75,6 +76,7 @@ export async function getGoingSessionRSVPs(sessionId: string) {
       sessionId,
       status: RSVPStatus.GOING,
     },
+    take: 200,
     include: {
       user: {
         select: {

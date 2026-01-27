@@ -35,6 +35,7 @@ interface CommentsSectionProps {
   currentSort: "best" | "new";
   basePath: string;
   isPublicView?: boolean;
+  hasMoreComments?: boolean;
 }
 
 const sortOptions = [
@@ -52,6 +53,7 @@ export function CommentsSection({
   currentSort,
   basePath,
   isPublicView = false,
+  hasMoreComments = false,
 }: CommentsSectionProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -134,6 +136,15 @@ export function CommentsSection({
           disableVoting={isPublicView}
         />
       </div>
+
+      {/* More comments indicator */}
+      {hasMoreComments && (
+        <div className="px-6 py-3 border-t border-neutral-200 text-center">
+          <p className="text-sm text-neutral-500">
+            Showing top {comments.length} comments of {commentCount} total
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -136,9 +136,9 @@ export async function getPosts(
     let startIndex = 0;
     if (cursor) {
       const cursorIndex = sortedPosts.findIndex((p) => p.id === cursor);
-      // If cursor not found in current window, return empty (prevents loops/duplicates)
+      // If cursor not found in hot sort window, fall back to "new" sort
       if (cursorIndex === -1) {
-        return { posts: [], nextCursor: undefined, hasMore: false };
+        return getPosts(communityId, "new", limit, cursor, userId);
       }
       startIndex = cursorIndex + 1;
     }
@@ -363,8 +363,9 @@ export async function getPublicPosts(
     let startIndex = 0;
     if (cursor) {
       const cursorIndex = sortedPosts.findIndex((p) => p.id === cursor);
+      // If cursor not found in hot sort window, fall back to "new" sort
       if (cursorIndex === -1) {
-        return { posts: [], nextCursor: undefined, hasMore: false };
+        return getPublicPosts("new", limit, cursor, userId);
       }
       startIndex = cursorIndex + 1;
     }
@@ -404,12 +405,15 @@ export async function getPublicPosts(
 }
 
 /**
- * Get comments for a post with nested structure
+ * Get comments for a post with nested structure (paginated)
+ * Top-level comments are paginated, replies are fetched level-by-level with bounded limits.
  */
 export async function getPostComments(
   postId: string,
   sort: "best" | "new" = "best",
-  userId?: string
+  userId?: string,
+  limit: number = 50,
+  cursor?: string
 ) {
   // Get post to find community ID
   const post = await prisma.post.findUnique({
@@ -417,43 +421,79 @@ export async function getPostComments(
     select: { communityId: true },
   });
 
-  if (!post) return [];
+  if (!post) return { comments: [], nextCursor: undefined, hasMore: false };
 
   const orderBy =
     sort === "new"
       ? { createdAt: "desc" as const }
       : { voteScore: "desc" as const };
 
-  const comments = await prisma.comment.findMany({
-    where: {
-      postId,
-      deletedAt: null,
-    },
-    orderBy,
-    include: {
-      author: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-          memberships: {
-            where: { communityId: post.communityId },
-            select: { role: true },
-          },
+  const commentInclude = {
+    author: {
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        memberships: {
+          where: { communityId: post.communityId },
+          select: { role: true },
         },
       },
-      ...(userId
-        ? {
-            votes: {
-              where: { userId },
-              select: { value: true },
-            },
-          }
-        : {}),
     },
+    ...(userId
+      ? {
+          votes: {
+            where: { userId },
+            select: { value: true },
+          },
+        }
+      : {}),
+    _count: { select: { replies: true } },
+  };
+
+  // Step 1: Fetch paginated top-level comments
+  const topLevelRaw = await prisma.comment.findMany({
+    where: { postId, parentId: null, deletedAt: null },
+    orderBy,
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0,
+    include: commentInclude,
   });
 
-  // Build nested tree structure
+  const hasMore = topLevelRaw.length > limit;
+  const paginatedTopLevel = hasMore ? topLevelRaw.slice(0, -1) : topLevelRaw;
+  const nextCursor = hasMore
+    ? paginatedTopLevel[paginatedTopLevel.length - 1]?.id
+    : undefined;
+
+  if (paginatedTopLevel.length === 0) {
+    return { comments: [], nextCursor: undefined, hasMore: false };
+  }
+
+  // Step 2: Fetch replies level-by-level, bounded per level
+  const topLevelIds = paginatedTopLevel.map((c) => c.id);
+  let currentParentIds = topLevelIds;
+  const allReplies: typeof topLevelRaw = [];
+
+  for (let depth = 0; depth < 5 && currentParentIds.length > 0; depth++) {
+    const levelReplies = await prisma.comment.findMany({
+      where: {
+        postId,
+        parentId: { in: currentParentIds },
+        deletedAt: null,
+      },
+      orderBy,
+      take: Math.min(currentParentIds.length * 20, 1000),
+      include: commentInclude,
+    });
+    allReplies.push(...levelReplies);
+    currentParentIds = levelReplies.map((r) => r.id);
+  }
+
+  // Step 3: Build nested tree structure
+  const allComments = [...paginatedTopLevel, ...allReplies];
+
   type EnrichedComment = {
     id: string;
     content: string;
@@ -474,20 +514,21 @@ export async function getPostComments(
     };
     userVote: number;
     replies: EnrichedComment[];
+    replyCount: number;
   };
 
   const commentsMap = new Map<string | null, EnrichedComment[]>();
 
   // Initialize with empty arrays for all possible parentIds
   commentsMap.set(null, []);
-  comments.forEach((c) => {
+  allComments.forEach((c) => {
     if (!commentsMap.has(c.id)) {
       commentsMap.set(c.id, []);
     }
   });
 
   // Populate the map
-  comments.forEach((comment) => {
+  allComments.forEach((comment) => {
     const enrichedComment: EnrichedComment = {
       id: comment.id,
       content: comment.content,
@@ -508,6 +549,7 @@ export async function getPostComments(
       },
       userVote: userId && "votes" in comment ? comment.votes[0]?.value ?? 0 : 0,
       replies: commentsMap.get(comment.id) || [],
+      replyCount: comment._count.replies,
     };
 
     const parentList = commentsMap.get(comment.parentId) || [];
@@ -515,5 +557,97 @@ export async function getPostComments(
     commentsMap.set(comment.parentId, parentList);
   });
 
-  return commentsMap.get(null) || [];
+  return {
+    comments: commentsMap.get(null) || [],
+    nextCursor,
+    hasMore,
+  };
+}
+
+/**
+ * Get replies for a specific comment (paginated, for on-demand loading)
+ */
+export async function getCommentReplies(
+  postId: string,
+  parentId: string,
+  sort: "best" | "new" = "best",
+  userId?: string,
+  limit: number = 20,
+  cursor?: string
+) {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: { communityId: true },
+  });
+
+  if (!post) return { replies: [], nextCursor: undefined, hasMore: false };
+
+  const orderBy =
+    sort === "new"
+      ? { createdAt: "desc" as const }
+      : { voteScore: "desc" as const };
+
+  const repliesRaw = await prisma.comment.findMany({
+    where: { postId, parentId, deletedAt: null },
+    orderBy,
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0,
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          memberships: {
+            where: { communityId: post.communityId },
+            select: { role: true },
+          },
+        },
+      },
+      ...(userId
+        ? {
+            votes: {
+              where: { userId },
+              select: { value: true },
+            },
+          }
+        : {}),
+      _count: { select: { replies: true } },
+    },
+  });
+
+  const hasMore = repliesRaw.length > limit;
+  const paginated = hasMore ? repliesRaw.slice(0, -1) : repliesRaw;
+  const nextCursor = hasMore
+    ? paginated[paginated.length - 1]?.id
+    : undefined;
+
+  return {
+    replies: paginated.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      postId: comment.postId,
+      authorId: comment.authorId,
+      parentId: comment.parentId,
+      depth: comment.depth,
+      voteScore: comment.voteScore,
+      createdAt: comment.createdAt,
+      updatedAt: comment.updatedAt,
+      deletedAt: comment.deletedAt,
+      deletedById: comment.deletedById,
+      author: {
+        id: comment.author.id,
+        name: comment.author.name,
+        image: comment.author.image,
+        role: comment.author.memberships[0]?.role ?? null,
+      },
+      userVote:
+        userId && "votes" in comment ? comment.votes[0]?.value ?? 0 : 0,
+      replies: [],
+      replyCount: comment._count.replies,
+    })),
+    nextCursor,
+    hasMore,
+  };
 }

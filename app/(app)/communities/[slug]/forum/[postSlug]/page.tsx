@@ -55,8 +55,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
   }
 
   const sort = commentSort === "new" ? "new" : "best";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const comments = await getPostComments(post.id, sort, userId || undefined) as any[];
+  const { comments, hasMore: hasMoreComments } = await getPostComments(post.id, sort, userId || undefined);
 
   const isAuthor = userId === post.author.id;
 
@@ -90,6 +89,7 @@ export default async function PostPage({ params, searchParams }: PostPageProps) 
         isMember={membership.isMember}
         currentSort={sort}
         basePath={`/communities/${slug}/forum/${postSlug}`}
+        hasMoreComments={hasMoreComments}
       />
     </div>
   );

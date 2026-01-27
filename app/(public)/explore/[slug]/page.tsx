@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getCommunityWithDetails } from "@/lib/db/communities";
+import { getCommunityMembers } from "@/lib/db/members";
 import { ExploreCommunityTabs } from "@/components/community/explore-community-tabs";
 
 interface PublicCommunityPageProps {
@@ -75,6 +76,8 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
       </div>
     );
   }
+
+  const members = await getCommunityMembers(community.id, 5);
 
   // Public community preview
   return (
@@ -225,7 +228,7 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
           <h2 className="text-lg font-semibold text-neutral-900">Members</h2>
           <div className="bg-white rounded-lg border border-neutral-200 p-6 text-center">
             <div className="flex justify-center -space-x-2 mb-4">
-              {community.members.slice(0, 5).map((member, index) => (
+              {members.map((member, index) => (
                 <div
                   key={member.user.id}
                   className="w-10 h-10 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-neutral-500 text-sm font-medium"

@@ -157,6 +157,7 @@ export async function getUserCommunityActivity(
 export async function getUserCommunities(userId: string) {
   const memberships = await prisma.member.findMany({
     where: { userId },
+    take: 100,
     include: {
       community: {
         select: {

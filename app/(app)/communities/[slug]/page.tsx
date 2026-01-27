@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
+import { getCommunityMembers } from "@/lib/db/members";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { JoinLeaveButton } from "@/components/community/join-leave-button";
 import { MemberList } from "@/components/community/member-list";
@@ -34,6 +35,7 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
   }
 
   const membership = await getMembershipStatus(community.id);
+  const members = await getCommunityMembers(community.id, 10);
 
   return (
     <div className="space-y-6">
@@ -248,7 +250,7 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
             </div>
 
             <MemberList
-              members={community.members.slice(0, 10)}
+              members={members}
               totalCount={community._count.members}
               communitySlug={community.slug}
               showManageLink={membership.isOwner}

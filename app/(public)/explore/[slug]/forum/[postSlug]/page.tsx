@@ -87,8 +87,7 @@ export default async function PublicPostPage({ params, searchParams }: PublicPos
   }
 
   const sort = commentSort === "new" ? "new" : "best";
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const comments = await getPostComments(post.id, sort) as any[];
+  const { comments, hasMore: hasMoreComments } = await getPostComments(post.id, sort);
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -145,6 +144,7 @@ export default async function PublicPostPage({ params, searchParams }: PublicPos
         currentSort={sort}
         basePath={`/explore/${slug}/forum/${postSlug}`}
         isPublicView
+        hasMoreComments={hasMoreComments}
       />
     </div>
   );

@@ -124,9 +124,13 @@ export async function getMember(
 /**
  * Get all members of a community
  */
-export async function getCommunityMembers(communityId: string) {
+export async function getCommunityMembers(
+  communityId: string,
+  limit: number = 100
+) {
   return await prisma.member.findMany({
     where: { communityId },
+    take: limit,
     include: {
       user: {
         select: {
@@ -156,6 +160,7 @@ export async function getMemberCount(communityId: string): Promise<number> {
 export async function getUserMemberships(userId: string) {
   return await prisma.member.findMany({
     where: { userId },
+    take: 100,
     include: {
       community: {
         include: {

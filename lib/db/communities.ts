@@ -40,18 +40,6 @@ export async function getCommunityWithDetails(slug: string) {
           image: true,
         },
       },
-      members: {
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-        },
-        orderBy: { joinedAt: "desc" },
-      },
       events: {
         where: {
           sessions: { some: { startTime: { gte: new Date() } } },
@@ -102,6 +90,7 @@ export async function getCommunityWithDetails(slug: string) {
 export async function getPublicCommunities() {
   return await prisma.community.findMany({
     where: { type: CommunityType.PUBLIC },
+    take: 100,
     include: {
       owner: {
         select: {
@@ -127,6 +116,7 @@ export async function getPublicCommunities() {
 export async function getCommunitiesByOwner(ownerId: string) {
   return await prisma.community.findMany({
     where: { ownerId },
+    take: 100,
     include: {
       _count: {
         select: {
@@ -151,6 +141,7 @@ export async function getCommunitiesByMember(userId: string) {
         },
       },
     },
+    take: 100,
     include: {
       owner: {
         select: {

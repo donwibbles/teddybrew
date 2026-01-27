@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
+import { getCommunityMembers } from "@/lib/db/members";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { MemberManagementList } from "@/components/community/member-management-list";
 import { ModerationLog } from "@/components/community/moderation-log";
@@ -39,6 +40,8 @@ export default async function MembersPage({ params }: MembersPageProps) {
     redirect(`/communities/${slug}`);
   }
 
+  const members = await getCommunityMembers(community.id);
+
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Header */}
@@ -69,7 +72,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
           Member List
         </h2>
         <MemberManagementList
-          members={community.members}
+          members={members}
           communityId={community.id}
           isOwner={membership.isOwner}
         />

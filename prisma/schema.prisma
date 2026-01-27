@@ -259,6 +259,7 @@ model EventSession {
 
   @@index([eventId])
   @@index([startTime])
+  @@index([eventId, startTime])
 }
 
 // RSVP Model - Links to Session (not Event directly)
@@ -278,6 +279,7 @@ model RSVP {
   @@index([userId])
   @@index([sessionId])
   @@index([status])
+  @@index([sessionId, status])
 }
 
 // RSVP Status Enum

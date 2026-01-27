@@ -41,10 +41,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
         <div>
           <p className="font-medium text-primary-900">
-            Join Hive Community to create and manage your own communities
+            Join Hive to stay connected!
           </p>
           <p className="text-sm text-primary-700 mt-1">
-            Sign in to create communities, join events, and connect with others.
+            Sign in to meet others, build community, and take collective action.
           </p>
         </div>
       </div>

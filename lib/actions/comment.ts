@@ -397,19 +397,21 @@ export async function getComments(input: unknown) {
       },
     });
 
-    if (!post) return [];
+    const emptyResult = { comments: [], nextCursor: undefined, hasMore: false };
+
+    if (!post) return emptyResult;
 
     // For private communities, require membership
     if (post.community.type === "PRIVATE") {
-      if (!userId) return []; // Not logged in
+      if (!userId) return emptyResult; // Not logged in
       const memberCheck = await isMember(userId, post.communityId);
-      if (!memberCheck) return [];
+      if (!memberCheck) return emptyResult;
     }
 
     // Import here to avoid circular dependencies
     const { getPostComments } = await import("@/lib/db/posts");
     return await getPostComments(postId, sort, userId);
   } catch {
-    return [];
+    return { comments: [], nextCursor: undefined, hasMore: false };
   }
 }

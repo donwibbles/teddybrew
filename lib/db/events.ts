@@ -76,6 +76,7 @@ export async function getEventWithDetails(id: string) {
 export async function getCommunityEvents(communityId: string) {
   const events = await prisma.event.findMany({
     where: { communityId },
+    take: 100,
     include: {
       organizer: {
         select: {
@@ -116,6 +117,7 @@ export async function getUpcomingCommunityEvents(communityId: string) {
         some: { startTime: { gte: now } },
       },
     },
+    take: 50,
     include: {
       organizer: {
         select: {
@@ -217,7 +219,7 @@ export async function getEventsByOrganizer(organizerId: string) {
 /**
  * Get upcoming events across all communities (events with at least one future session)
  */
-export async function getUpcomingEvents(limit?: number) {
+export async function getUpcomingEvents(limit: number = 20) {
   const now = new Date();
   const events = await prisma.event.findMany({
     where: {
@@ -251,7 +253,7 @@ export async function getUpcomingEvents(limit?: number) {
         },
       },
     },
-    take: limit ? limit * 2 : undefined, // Get more to account for sorting
+    take: limit * 2, // Get more to account for sorting
   });
 
   // Sort by first session start time
@@ -261,7 +263,7 @@ export async function getUpcomingEvents(limit?: number) {
     return aStart.getTime() - bStart.getTime();
   });
 
-  return limit ? sorted.slice(0, limit) : sorted;
+  return sorted.slice(0, limit);
 }
 
 /**
