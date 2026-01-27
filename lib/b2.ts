@@ -14,7 +14,7 @@ export function getB2Client(): S3Client {
     return globalForB2.b2Client;
   }
 
-  const endpoint = process.env.B2_ENDPOINT;
+  let endpoint = process.env.B2_ENDPOINT;
   const accessKeyId = process.env.B2_ACCOUNT_ID;
   const secretAccessKey = process.env.B2_APPLICATION_KEY;
 
@@ -22,6 +22,11 @@ export function getB2Client(): S3Client {
     throw new Error(
       "B2 credentials not configured. Set B2_ENDPOINT, B2_ACCOUNT_ID, and B2_APPLICATION_KEY environment variables."
     );
+  }
+
+  // Ensure endpoint has protocol prefix (AWS S3Client requires a full URL)
+  if (!endpoint.startsWith("http://") && !endpoint.startsWith("https://")) {
+    endpoint = `https://${endpoint}`;
   }
 
   globalForB2.b2Client = new S3Client({

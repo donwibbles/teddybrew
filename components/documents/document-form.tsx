@@ -178,10 +178,12 @@ export function DocumentForm({
     try {
       if (isNew || !documentIdRef.current) {
         // Create new document
+        // Deep-clone content to remove TipTap prototype methods/Symbol properties
+        // that can't be serialized for server actions
         const result = await createDocument({
           communityId,
           title,
-          content,
+          content: JSON.parse(JSON.stringify(content)),
           contentHtml,
           folderId,
         });
@@ -198,10 +200,11 @@ export function DocumentForm({
         }
       } else {
         // Update existing document
+        // Deep-clone content to remove TipTap prototype methods/Symbol properties
         const result = await updateDocument({
           documentId: documentIdRef.current,
           title,
-          content,
+          content: JSON.parse(JSON.stringify(content)),
           contentHtml,
           folderId,
         });
