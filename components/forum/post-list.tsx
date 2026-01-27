@@ -32,6 +32,8 @@ interface PostListProps {
   initialPosts: Post[];
   initialCursor?: string;
   initialHasMore: boolean;
+  basePath?: string;
+  disabled?: boolean;
 }
 
 export function PostList({
@@ -41,6 +43,8 @@ export function PostList({
   initialPosts,
   initialCursor,
   initialHasMore,
+  basePath = "/communities",
+  disabled = false,
 }: PostListProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [cursor, setCursor] = useState<string | undefined>(initialCursor);
@@ -103,6 +107,8 @@ export function PostList({
           key={post.id}
           {...post}
           communitySlug={communitySlug}
+          basePath={basePath}
+          disabled={disabled}
         />
       ))}
 

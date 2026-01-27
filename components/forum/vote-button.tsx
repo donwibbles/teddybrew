@@ -14,6 +14,7 @@ interface VoteButtonProps {
   userVote: number;
   vertical?: boolean;
   size?: "sm" | "md";
+  disabled?: boolean;
 }
 
 export function VoteButton({
@@ -23,12 +24,18 @@ export function VoteButton({
   userVote,
   vertical = true,
   size = "md",
+  disabled = false,
 }: VoteButtonProps) {
   const [optimisticScore, setOptimisticScore] = useState(score);
   const [optimisticVote, setOptimisticVote] = useState(userVote);
   const [isPending, startTransition] = useTransition();
 
   const handleVote = (value: 1 | -1) => {
+    if (disabled) {
+      toast.info("Sign in to vote");
+      return;
+    }
+
     // Calculate new vote value (toggle if same, otherwise set)
     const newValue = optimisticVote === value ? 0 : value;
     const scoreDelta = newValue - optimisticVote;
@@ -68,9 +75,11 @@ export function VoteButton({
         className={cn(
           buttonPadding,
           "rounded transition-colors",
-          optimisticVote === 1
-            ? "text-primary-600 bg-primary-50"
-            : "text-neutral-400 hover:text-primary-600 hover:bg-primary-50",
+          disabled
+            ? "text-neutral-300 cursor-default"
+            : optimisticVote === 1
+              ? "text-primary-600 bg-primary-50"
+              : "text-neutral-400 hover:text-primary-600 hover:bg-primary-50",
           isPending && "opacity-50 cursor-not-allowed"
         )}
         aria-label="Upvote"
@@ -96,9 +105,11 @@ export function VoteButton({
         className={cn(
           buttonPadding,
           "rounded transition-colors",
-          optimisticVote === -1
-            ? "text-error-500 bg-error-50"
-            : "text-neutral-400 hover:text-error-500 hover:bg-error-50",
+          disabled
+            ? "text-neutral-300 cursor-default"
+            : optimisticVote === -1
+              ? "text-error-500 bg-error-50"
+              : "text-neutral-400 hover:text-error-500 hover:bg-error-50",
           isPending && "opacity-50 cursor-not-allowed"
         )}
         aria-label="Downvote"

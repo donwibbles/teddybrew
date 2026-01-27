@@ -39,6 +39,7 @@ interface CommentItemProps {
   postId: string;
   currentUserId?: string;
   canModerate: boolean;
+  disableVoting?: boolean;
 }
 
 function CommentItem({
@@ -46,6 +47,7 @@ function CommentItem({
   postId,
   currentUserId,
   canModerate,
+  disableVoting = false,
 }: CommentItemProps) {
   const router = useRouter();
   const [isReplying, setIsReplying] = useState(false);
@@ -101,6 +103,7 @@ function CommentItem({
             score={comment.voteScore}
             userVote={comment.userVote}
             size="sm"
+            disabled={disableVoting}
           />
         </div>
 
@@ -197,6 +200,7 @@ function CommentItem({
               postId={postId}
               currentUserId={currentUserId}
               canModerate={canModerate}
+              disableVoting={disableVoting}
             />
           ))}
         </div>
@@ -210,6 +214,7 @@ interface CommentThreadProps {
   comments: Comment[];
   currentUserId?: string;
   canModerate: boolean;
+  disableVoting?: boolean;
 }
 
 export function CommentThread({
@@ -217,6 +222,7 @@ export function CommentThread({
   comments,
   currentUserId,
   canModerate,
+  disableVoting = false,
 }: CommentThreadProps) {
   if (comments.length === 0) {
     return (
@@ -238,6 +244,7 @@ export function CommentThread({
           postId={postId}
           currentUserId={currentUserId}
           canModerate={canModerate}
+          disableVoting={disableVoting}
         />
       ))}
     </div>

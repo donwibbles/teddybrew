@@ -33,6 +33,8 @@ interface PostDetailProps {
   communitySlug: string;
   isAuthor: boolean;
   canModerate: boolean;
+  isPublicView?: boolean;
+  basePath?: string;
 }
 
 export function PostDetail({
@@ -48,6 +50,8 @@ export function PostDetail({
   communitySlug,
   isAuthor,
   canModerate,
+  isPublicView = false,
+  basePath = "/communities",
 }: PostDetailProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -99,7 +103,7 @@ export function PostDetail({
       {/* Back link */}
       <div className="px-4 py-3 border-b border-neutral-200">
         <Link
-          href={`/communities/${communitySlug}/forum`}
+          href={`${basePath}/${communitySlug}/forum`}
           className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -116,6 +120,7 @@ export function PostDetail({
               id={id}
               score={voteScore}
               userVote={userVote}
+              disabled={isPublicView}
             />
           </div>
 
@@ -162,7 +167,7 @@ export function PostDetail({
             </div>
 
             {/* Actions */}
-            {(isAuthor || canModerate) && (
+            {!isPublicView && (isAuthor || canModerate) && (
               <div className="flex items-center gap-2 pt-4 border-t border-neutral-100">
                 {isAuthor && (
                   <Link href={`/communities/${communitySlug}/forum/${id}/edit`}>

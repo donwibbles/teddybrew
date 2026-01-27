@@ -35,6 +35,10 @@ interface PostCardProps {
   showCommunity?: boolean;
   /** Community info (required when showCommunity is true) */
   community?: Community;
+  /** Base path for links (default: "/communities") */
+  basePath?: string;
+  /** Disable interactive elements (for public view) */
+  disabled?: boolean;
 }
 
 export function PostCard({
@@ -50,6 +54,8 @@ export function PostCard({
   communitySlug,
   showCommunity,
   community,
+  basePath = "/communities",
+  disabled = false,
 }: PostCardProps) {
   const timestamp =
     createdAt instanceof Date ? createdAt : new Date(createdAt);
@@ -73,6 +79,7 @@ export function PostCard({
             id={id}
             score={voteScore}
             userVote={userVote}
+            disabled={disabled}
           />
         </div>
 
@@ -84,7 +91,7 @@ export function PostCard({
               <Pin className="h-4 w-4 text-primary-500 shrink-0 mt-1" />
             )}
             <Link
-              href={`/communities/${communitySlug}/forum/${id}`}
+              href={`${basePath}/${communitySlug}/forum/${id}`}
               className="font-medium text-neutral-900 hover:text-primary-600 transition-colors line-clamp-2"
             >
               {title}
@@ -101,7 +108,7 @@ export function PostCard({
             {showCommunity && community && (
               <>
                 <Link
-                  href={`/communities/${community.slug}`}
+                  href={`${basePath}/${community.slug}`}
                   className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors"
                 >
                   {community.name}
@@ -126,7 +133,7 @@ export function PostCard({
             <span>{timeAgo}</span>
             <span>·</span>
             <Link
-              href={`/communities/${communitySlug}/forum/${id}#comments`}
+              href={`${basePath}/${communitySlug}/forum/${id}#comments`}
               className="flex items-center gap-1 hover:text-primary-600 transition-colors"
             >
               <MessageSquare className="h-4 w-4" />

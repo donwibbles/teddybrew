@@ -17,6 +17,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Redirect unauthenticated /communities/... requests to /explore/... equivalents
+  // This allows shared links (e.g. from Twitter) to show public preview instead of sign-in page
+  if (pathname.startsWith("/communities/")) {
+    const sessionToken =
+      request.cookies.get("next-auth.session-token") ||
+      request.cookies.get("__Secure-next-auth.session-token");
+    if (!sessionToken) {
+      const explorePath = pathname.replace("/communities/", "/explore/");
+      const url = new URL(explorePath, request.url);
+      url.search = request.nextUrl.search;
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Generate a nonce for CSP using Web Crypto API (Edge-compatible)
   const nonceBytes = new Uint8Array(16);
   crypto.getRandomValues(nonceBytes);

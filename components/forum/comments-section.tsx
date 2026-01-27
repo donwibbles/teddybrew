@@ -34,6 +34,7 @@ interface CommentsSectionProps {
   isMember: boolean;
   currentSort: "best" | "new";
   basePath: string;
+  isPublicView?: boolean;
 }
 
 const sortOptions = [
@@ -50,6 +51,7 @@ export function CommentsSection({
   isMember,
   currentSort,
   basePath,
+  isPublicView = false,
 }: CommentsSectionProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -129,6 +131,7 @@ export function CommentsSection({
           comments={comments}
           currentUserId={currentUserId}
           canModerate={canModerate}
+          disableVoting={isPublicView}
         />
       </div>
     </div>

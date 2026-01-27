@@ -24,7 +24,7 @@ export default async function HomePage() {
             href="/explore"
             className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
           >
-            Browse Communities
+            Explore
           </Link>
           <Link
             href="/sign-in"
