@@ -14,7 +14,7 @@ export default async function HomePage() {
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
       <div className="max-w-2xl mx-auto px-4 py-16 md:py-24 text-center">
         <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 leading-tight">
-          Build Community. Organize.
+          Build. Organize. Win.
         </h1>
         <p className="text-lg md:text-xl text-neutral-600 mt-6 max-w-xl mx-auto">
           A community platform by organizers, for organizers.
