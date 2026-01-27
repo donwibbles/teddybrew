@@ -76,6 +76,8 @@ function buildCSP(_nonce: string): string {
       // Sentry error reporting
       "https://*.sentry.io",
       "https://*.ingest.sentry.io",
+      // Backblaze B2 storage (for direct uploads)
+      "https://*.backblazeb2.com",
       // Development: allow localhost
       ...(isProduction ? [] : ["ws://localhost:*", "http://localhost:*"]),
     ],

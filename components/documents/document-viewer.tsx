@@ -63,6 +63,23 @@ export function DocumentViewer({
 
   return (
     <article className="mx-auto max-w-4xl">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+        <Link
+          href={`/communities/${document.community.slug}`}
+          className="hover:text-primary-600"
+        >
+          {document.community.name}
+        </Link>
+        <span>/</span>
+        <Link
+          href={`/communities/${document.community.slug}/docs`}
+          className="hover:text-primary-600"
+        >
+          Docs
+        </Link>
+      </div>
+
       {/* Header */}
       <header className="mb-8">
         {/* Status and Actions Bar */}
