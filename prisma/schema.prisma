@@ -357,6 +357,7 @@ model Post {
   id           String    @id @default(cuid())
   title        String    @db.VarChar(300)
   content      String    @db.Text
+  contentJson  Json?
   communityId  String
   authorId     String
   isPinned     Boolean   @default(false)

@@ -204,8 +204,10 @@ interface MarkdownPreviewProps {
 export function MarkdownPreview({ content, maxLength = 200 }: MarkdownPreviewProps) {
   // Strip markdown and truncate for preview
   const preview = useMemo(() => {
-    // Remove common markdown syntax
+    // Strip HTML tags (for new TipTap posts that store HTML in content)
     let text = content
+      .replace(/<[^>]*>/g, " ")
+      // Remove common markdown syntax (for old markdown posts)
       .replace(/#{1,6}\s/g, "") // Headers
       .replace(/\*\*(.+?)\*\*/g, "$1") // Bold
       .replace(/\*(.+?)\*/g, "$1") // Italic
@@ -217,6 +219,7 @@ export function MarkdownPreview({ content, maxLength = 200 }: MarkdownPreviewPro
       .replace(/[-*+]\s/g, "") // List items
       .replace(/\d+\.\s/g, "") // Numbered lists
       .replace(/\n+/g, " ") // Newlines
+      .replace(/\s+/g, " ") // Collapse whitespace
       .trim();
 
     if (text.length > maxLength) {

@@ -11,9 +11,10 @@ interface Community {
 
 interface EventFiltersProps {
   communities: Community[];
+  basePath?: string;
 }
 
-export function EventFilters({ communities }: EventFiltersProps) {
+export function EventFilters({ communities, basePath = "/events" }: EventFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -49,7 +50,7 @@ export function EventFilters({ communities }: EventFiltersProps) {
         }
       }
 
-      router.push(`/events?${params.toString()}`);
+      router.push(`${basePath}?${params.toString()}`);
     },
     [router, searchParams]
   );

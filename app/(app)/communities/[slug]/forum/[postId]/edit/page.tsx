@@ -67,6 +67,7 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           communitySlug={post.community.slug}
           initialTitle={post.title}
           initialContent={post.content}
+          initialContentJson={post.contentJson as import("@tiptap/react").JSONContent | null}
         />
       </div>
     </div>

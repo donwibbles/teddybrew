@@ -9,7 +9,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { VoteButton } from "./vote-button";
 import { MarkdownRenderer } from "./markdown-renderer";
+import { TipTapViewer } from "@/components/documents/tiptap/editor";
 import { deletePost, pinPost } from "@/lib/actions/post";
+import type { JSONContent } from "@tiptap/react";
 import { toast } from "sonner";
 import { RoleBadge } from "@/components/ui/role-badge";
 
@@ -24,6 +26,7 @@ interface PostDetailProps {
   id: string;
   title: string;
   content: string;
+  contentJson?: JSONContent | null;
   author: Author;
   createdAt: Date | string;
   updatedAt: Date | string;
@@ -41,6 +44,7 @@ export function PostDetail({
   id,
   title,
   content,
+  contentJson,
   author,
   createdAt,
   updatedAt,
@@ -163,7 +167,11 @@ export function PostDetail({
 
             {/* Content */}
             <div className="mb-6">
-              <MarkdownRenderer content={content} />
+              {contentJson ? (
+                <TipTapViewer content={contentJson} />
+              ) : (
+                <MarkdownRenderer content={content} />
+              )}
             </div>
 
             {/* Actions */}

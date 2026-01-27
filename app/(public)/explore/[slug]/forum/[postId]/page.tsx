@@ -124,6 +124,7 @@ export default async function PublicPostPage({ params, searchParams }: PublicPos
         id={post.id}
         title={post.title}
         content={post.content}
+        contentJson={post.contentJson as import("@tiptap/react").JSONContent | null}
         author={post.author}
         createdAt={post.createdAt}
         updatedAt={post.updatedAt}

@@ -37,6 +37,8 @@ interface GlobalPostListProps {
   initialPosts: Post[];
   initialCursor?: string;
   initialHasMore: boolean;
+  basePath?: string;
+  disabled?: boolean;
 }
 
 export function GlobalPostList({
@@ -44,6 +46,8 @@ export function GlobalPostList({
   initialPosts,
   initialCursor,
   initialHasMore,
+  basePath = "/communities",
+  disabled = false,
 }: GlobalPostListProps) {
   const [posts, setPosts] = useState<Post[]>(initialPosts);
   const [cursor, setCursor] = useState<string | undefined>(initialCursor);
@@ -115,6 +119,8 @@ export function GlobalPostList({
           communitySlug={post.community.slug}
           showCommunity={true}
           community={post.community}
+          basePath={basePath}
+          disabled={disabled}
         />
       ))}
 

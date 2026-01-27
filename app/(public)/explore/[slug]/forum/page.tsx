@@ -5,6 +5,7 @@ import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getPosts } from "@/lib/db/posts";
 import { PostList } from "@/components/forum/post-list";
 import { ForumSortTabs } from "@/components/forum/forum-sort-tabs";
+import { ExploreCommunityTabs } from "@/components/community/explore-community-tabs";
 
 interface PublicForumPageProps {
   params: Promise<{ slug: string }>;
@@ -113,6 +114,9 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
           </Link>
         </div>
       </div>
+
+      {/* Navigation Tabs */}
+      <ExploreCommunityTabs communitySlug={slug} />
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-neutral-500">

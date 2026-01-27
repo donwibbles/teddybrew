@@ -67,6 +67,20 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         <p className="text-neutral-600 mt-1">
           Discover public communities and connect with others
         </p>
+        <div className="flex items-center gap-3 mt-3">
+          <Link
+            href="/explore/forum"
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-700 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
+          >
+            Forum
+          </Link>
+          <Link
+            href="/explore/events"
+            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-700 bg-primary-50 rounded-full hover:bg-primary-100 transition-colors"
+          >
+            Events
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filters */}

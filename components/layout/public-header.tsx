@@ -18,6 +18,18 @@ export function PublicHeader() {
             >
               Explore Communities
             </Link>
+            <Link
+              href="/explore/forum"
+              className="text-sm text-neutral-600 hover:text-primary-600 transition-colors"
+            >
+              Forum
+            </Link>
+            <Link
+              href="/explore/events"
+              className="text-sm text-neutral-600 hover:text-primary-600 transition-colors"
+            >
+              Events
+            </Link>
           </nav>
 
           {/* Auth Actions */}

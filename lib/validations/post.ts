@@ -32,6 +32,7 @@ export const createPostSchema = z.object({
   communityId: z.string().min(1, "Community ID is required"),
   title: postTitleSchema,
   content: postContentSchema,
+  contentJson: z.any().optional(),
 });
 
 export type CreatePostInput = z.infer<typeof createPostSchema>;
@@ -43,6 +44,7 @@ export const updatePostSchema = z.object({
   postId: z.string().min(1, "Post ID is required"),
   title: postTitleSchema.optional(),
   content: postContentSchema.optional(),
+  contentJson: z.any().optional(),
 });
 
 export type UpdatePostInput = z.infer<typeof updatePostSchema>;

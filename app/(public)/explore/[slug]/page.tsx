@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getCommunityWithDetails } from "@/lib/db/communities";
+import { ExploreCommunityTabs } from "@/components/community/explore-community-tabs";
 
 interface PublicCommunityPageProps {
   params: Promise<{ slug: string }>;
@@ -156,6 +157,9 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <ExploreCommunityTabs communitySlug={slug} />
+
       {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Events Section */}
@@ -189,9 +193,10 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
           ) : (
             <div className="space-y-3">
               {community.events.map((event) => (
-                <div
+                <Link
                   key={event.id}
-                  className="bg-white rounded-lg border border-neutral-200 p-4"
+                  href={`/explore/${slug}/events/${event.id}`}
+                  className="block bg-white rounded-lg border border-neutral-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all"
                 >
                   <h3 className="font-medium text-neutral-900">{event.title}</h3>
                   <p className="text-sm text-neutral-500 mt-1">
@@ -209,7 +214,7 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
                   <p className="text-xs text-primary-600 mt-2">
                     Sign in to RSVP
                   </p>
-                </div>
+                </Link>
               ))}
             </div>
           )}

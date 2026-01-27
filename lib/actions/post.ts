@@ -32,7 +32,7 @@ export async function createPost(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, title, content } = parsed.data;
+    const { communityId, title, content, contentJson } = parsed.data;
 
     // Rate limiting: 1 post per minute
     const rateLimit = await checkPostRateLimit(userId);
@@ -60,7 +60,8 @@ export async function createPost(
       const newPost = await tx.post.create({
         data: {
           title: sanitizeText(title),
-          content, // Keep markdown content as-is, sanitize on render
+          content,
+          contentJson: contentJson ?? undefined,
           communityId,
           authorId: userId,
         },
@@ -106,7 +107,7 @@ export async function updatePost(input: unknown): Promise<ActionResult> {
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { postId, title, content } = parsed.data;
+    const { postId, title, content, contentJson } = parsed.data;
 
     // Get post
     const post = await prisma.post.findUnique({
@@ -128,6 +129,7 @@ export async function updatePost(input: unknown): Promise<ActionResult> {
       data: {
         ...(title && { title: sanitizeText(title) }),
         ...(content && { content }),
+        ...(contentJson !== undefined && { contentJson }),
         updatedAt: new Date(),
       },
     });

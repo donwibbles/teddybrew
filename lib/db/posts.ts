@@ -272,6 +272,7 @@ export async function getPublicPosts(
       id: post.id,
       title: post.title,
       content: post.content,
+      contentJson: post.contentJson,
       voteScore: post.voteScore,
       isPinned: post.isPinned,
       createdAt: post.createdAt,

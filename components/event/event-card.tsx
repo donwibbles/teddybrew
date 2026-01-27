@@ -27,12 +27,14 @@ interface EventCardProps {
   };
   currentUserId?: string;
   showCommunity?: boolean;
+  basePath?: string;
 }
 
 export function EventCard({
   event,
   currentUserId,
   showCommunity = true,
+  basePath = "/communities",
 }: EventCardProps) {
   const now = new Date();
   const sessions = event.sessions || [];
@@ -91,7 +93,7 @@ export function EventCard({
 
   return (
     <Link
-      href={`/communities/${event.community.slug}/events/${event.id}`}
+      href={`${basePath}/${event.community.slug}/events/${event.id}`}
       className="block bg-white rounded-lg border border-neutral-200 hover:border-primary-300 hover:shadow-sm transition-all"
     >
       <div className="p-4">

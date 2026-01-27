@@ -29,9 +29,13 @@ export function getB2Client(): S3Client {
     endpoint = `https://${endpoint}`;
   }
 
+  // Extract region from endpoint URL (e.g. s3.us-east-005.backblazeb2.com → us-east-005)
+  const regionMatch = endpoint.match(/s3\.([^.]+)\.backblazeb2\.com/);
+  const region = regionMatch?.[1] || "us-east-005";
+
   globalForB2.b2Client = new S3Client({
     endpoint,
-    region: "us-west-004", // B2 region doesn't matter but SDK requires it
+    region,
     credentials: {
       accessKeyId,
       secretAccessKey,
