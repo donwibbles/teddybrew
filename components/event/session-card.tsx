@@ -26,6 +26,7 @@ interface SessionCardProps {
   isLoggedIn?: boolean;
   sessionIndex: number;
   totalSessions: number;
+  timezone?: string;
 }
 
 export function SessionCard({
@@ -39,6 +40,7 @@ export function SessionCard({
   isLoggedIn = false,
   sessionIndex,
   totalSessions,
+  timezone,
 }: SessionCardProps) {
   const [isPending, startTransition] = useTransition();
   const [optimisticIsGoing, setOptimisticIsGoing] = useState(isGoing);
@@ -55,6 +57,7 @@ export function SessionCard({
       weekday: "short",
       month: "short",
       day: "numeric",
+      ...(timezone ? { timeZone: timezone } : {}),
     }).format(new Date(date));
   };
 
@@ -62,6 +65,7 @@ export function SessionCard({
     return new Intl.DateTimeFormat("en-US", {
       hour: "numeric",
       minute: "2-digit",
+      ...(timezone ? { timeZone: timezone } : {}),
     }).format(new Date(date));
   };
 

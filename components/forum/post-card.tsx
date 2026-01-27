@@ -135,7 +135,7 @@ export function PostCard({
             <span>{timeAgo}</span>
             <span>·</span>
             <Link
-              href={`${basePath}/${communitySlug}/forum/${id}#comments`}
+              href={`${basePath}/${communitySlug}/forum/${slug}#comments`}
               className="flex items-center gap-1 hover:text-primary-600 transition-colors"
             >
               <MessageSquare className="h-4 w-4" />

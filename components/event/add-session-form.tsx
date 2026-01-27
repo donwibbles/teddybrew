@@ -66,7 +66,7 @@ export function AddSessionForm({
         {sessions.map((session, index) => (
           <div
             key={index}
-            className="p-4 border border-neutral-200 rounded-lg bg-neutral-50 space-y-4"
+            className="p-4 border border-neutral-200 rounded-lg bg-neutral-50 space-y-4 overflow-hidden"
           >
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-neutral-700">
@@ -108,7 +108,7 @@ export function AddSessionForm({
 
             {/* Date/Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs text-neutral-600 mb-1">
                   Start <span className="text-error-500">*</span>
                 </label>
@@ -126,7 +126,7 @@ export function AddSessionForm({
                            disabled:bg-neutral-100 disabled:text-neutral-500"
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs text-neutral-600 mb-1">
                   End (optional)
                 </label>

@@ -21,6 +21,8 @@ interface SessionListProps {
   isMember: boolean;
   /** Whether the community is public (allows auto-join on RSVP) */
   isPublicCommunity?: boolean;
+  /** IANA timezone for display */
+  timezone?: string;
 }
 
 export function SessionList({
@@ -30,6 +32,7 @@ export function SessionList({
   currentUserId,
   isMember,
   isPublicCommunity = false,
+  timezone,
 }: SessionListProps) {
   const now = new Date();
 
@@ -86,6 +89,7 @@ export function SessionList({
               isLoggedIn={!!currentUserId}
               sessionIndex={index}
               totalSessions={sessions.length}
+              timezone={timezone}
             />
           );
         })}

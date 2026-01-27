@@ -37,6 +37,18 @@ interface EditEventFormProps {
   isCreator: boolean;
 }
 
+function localDateTimeToUTC(localDateTime: string, timezone: string): string {
+  const [datePart, timePart] = localDateTime.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  const inTz = new Date(
+    utcGuess.toLocaleString("en-US", { timeZone: timezone })
+  );
+  const offsetMs = utcGuess.getTime() - inTz.getTime();
+  return new Date(utcGuess.getTime() + offsetMs).toISOString();
+}
+
 export function EditEventForm({
   event,
   communitySlug,
@@ -58,19 +70,31 @@ export function EditEventForm({
   const [isVirtual, setIsVirtual] = useState(event.isVirtual || false);
   const [meetingUrl, setMeetingUrl] = useState(event.meetingUrl || "");
 
-  // Format date for datetime-local input
-  const formatDateForInput = (date: Date) => {
+  // Format UTC date to local datetime-local value in the event's timezone
+  const formatDateForInput = (date: Date, tz: string) => {
     const d = new Date(date);
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16);
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(d);
+    const get = (type: string) =>
+      parts.find((p) => p.type === type)?.value || "00";
+    return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
   };
+
+  const eventTz = event.timezone || "America/New_York";
 
   const [sessions, setSessions] = useState<Session[]>(
     event.sessions.map((s) => ({
       id: s.id,
       title: s.title || "",
-      startTime: formatDateForInput(s.startTime),
-      endTime: s.endTime ? formatDateForInput(s.endTime) : "",
+      startTime: formatDateForInput(s.startTime, eventTz),
+      endTime: s.endTime ? formatDateForInput(s.endTime, eventTz) : "",
       location: s.location || "",
       capacity: s.capacity ?? undefined,
     }))
@@ -117,8 +141,10 @@ export function EditEventForm({
       sessions: sessions.map((s) => ({
         id: s.id,
         title: s.title || undefined,
-        startTime: s.startTime,
-        endTime: s.endTime || undefined,
+        startTime: localDateTimeToUTC(s.startTime, timezone || "America/New_York"),
+        endTime: s.endTime
+          ? localDateTimeToUTC(s.endTime, timezone || "America/New_York")
+          : undefined,
         location: s.location || undefined,
         capacity: s.capacity || undefined,
       })),

@@ -35,7 +35,7 @@ export function ExploreCommunityTabs({ communitySlug }: ExploreCommunityTabsProp
 
   return (
     <div className="bg-white border-b border-neutral-200">
-      <nav className="flex gap-1 px-1 overflow-x-auto scrollbar-hide" aria-label="Community navigation">
+      <nav className="flex gap-1 px-1 overflow-x-auto overflow-y-hidden scrollbar-hide" style={{ touchAction: "pan-x" }} aria-label="Community navigation">
         {tabs.map((tab) => {
           const active = isActive(tab.href, tab.exact);
           const Icon = tab.icon;

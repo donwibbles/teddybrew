@@ -92,7 +92,7 @@ export function ChatMessage({
     <div
       id={`message-${id}`}
       className={cn(
-        "group flex gap-3 px-4 py-2 hover:bg-neutral-50 transition-colors",
+        "group relative flex gap-3 px-4 py-2 hover:bg-neutral-50 transition-colors",
         isDeleting && "opacity-50"
       )}
       onMouseEnter={() => setShowActions(true)}
@@ -139,9 +139,9 @@ export function ChatMessage({
         />
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons — floating toolbar */}
       {showActions && (
-        <div className="flex items-start gap-1">
+        <div className="absolute -top-3 right-2 bg-white border border-neutral-200 rounded-lg shadow-sm px-1 flex items-center gap-0.5 z-10">
           {/* Emoji picker */}
           <EmojiPicker onSelect={handleReaction} disabled={isDeleting} />
 

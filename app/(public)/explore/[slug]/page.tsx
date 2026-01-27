@@ -210,6 +210,7 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
                           day: "numeric",
                           hour: "numeric",
                           minute: "2-digit",
+                          ...(event.timezone ? { timeZone: event.timezone } : {}),
                         })
                       : "No sessions"}
                     {event.location && ` • ${event.location}`}

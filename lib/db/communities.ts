@@ -44,9 +44,13 @@ export async function getCommunityWithDetails(slug: string) {
         where: {
           sessions: { some: { startTime: { gte: new Date() } } },
         },
-        include: {
+        select: {
+          id: true,
+          title: true,
+          location: true,
+          timezone: true,
           sessions: {
-            orderBy: { startTime: "asc" },
+            orderBy: { startTime: "asc" as const },
             select: {
               id: true,
               startTime: true,

@@ -172,6 +172,7 @@ export default async function PublicEventPage({ params }: PublicEventPageProps) 
               currentUserId={null}
               isMember={false}
               isPublicCommunity={event.community.type === "PUBLIC"}
+              timezone={event.timezone || undefined}
             />
           </div>
 

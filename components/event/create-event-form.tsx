@@ -18,6 +18,18 @@ interface CreateEventFormProps {
   communityName: string;
 }
 
+function localDateTimeToUTC(localDateTime: string, timezone: string): string {
+  const [datePart, timePart] = localDateTime.split("T");
+  const [year, month, day] = datePart.split("-").map(Number);
+  const [hour, minute] = timePart.split(":").map(Number);
+  const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
+  const inTz = new Date(
+    utcGuess.toLocaleString("en-US", { timeZone: timezone })
+  );
+  const offsetMs = utcGuess.getTime() - inTz.getTime();
+  return new Date(utcGuess.getTime() + offsetMs).toISOString();
+}
+
 export function CreateEventForm({
   communityId,
   communityName,
@@ -74,8 +86,10 @@ export function CreateEventForm({
       timezone: timezone || "America/New_York",
       sessions: sessions.map((s) => ({
         title: s.title || undefined,
-        startTime: s.startTime,
-        endTime: s.endTime || undefined,
+        startTime: localDateTimeToUTC(s.startTime, timezone || "America/New_York"),
+        endTime: s.endTime
+          ? localDateTimeToUTC(s.endTime, timezone || "America/New_York")
+          : undefined,
         location: s.location || undefined,
         capacity: s.capacity || undefined,
       })),

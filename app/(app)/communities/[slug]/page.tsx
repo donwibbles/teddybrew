@@ -225,6 +225,7 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
                             day: "numeric",
                             hour: "numeric",
                             minute: "2-digit",
+                            ...(event.timezone ? { timeZone: event.timezone } : {}),
                           })
                         : "No sessions"}
                       {event.location && ` • ${event.location}`}
