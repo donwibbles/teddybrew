@@ -32,15 +32,33 @@ export function localDateTimeToUTC(
   const [year, month, day] = datePart.split("-").map(Number);
   const [hour, minute] = timePart.split(":").map(Number);
 
-  // Pretend the local values are UTC so we have a stable epoch reference
+  // Treat the wall-clock values as UTC to get a stable epoch reference
   const utcGuess = new Date(Date.UTC(year, month - 1, day, hour, minute));
 
-  // Render that instant in the target timezone to discover the offset
-  const inTz = new Date(
-    utcGuess.toLocaleString("en-US", { timeZone: timezone })
-  );
-  const offsetMs = utcGuess.getTime() - inTz.getTime();
+  // Ask Intl what wall-clock time this UTC instant shows in the target timezone
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).formatToParts(utcGuess);
 
+  const get = (type: string) =>
+    Number(parts.find((p) => p.type === type)?.value || 0);
+  const tzHour = get("hour") === 24 ? 0 : get("hour");
+
+  // Build a pure-UTC date from those extracted parts (no browser TZ involved)
+  const renderedAsUTC = new Date(
+    Date.UTC(get("year"), get("month") - 1, get("day"), tzHour, get("minute"))
+  );
+
+  // offset = how far the timezone rendering shifted from our UTC guess
+  const offsetMs = utcGuess.getTime() - renderedAsUTC.getTime();
+
+  // Apply offset to the original UTC guess to get the true UTC
   return new Date(utcGuess.getTime() + offsetMs).toISOString();
 }
 
