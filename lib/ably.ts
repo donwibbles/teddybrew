@@ -21,11 +21,17 @@ export function getAblyServer(): Ably.Rest {
 
 /**
  * Generate a token request for client-side Ably authentication
- * Scoped to the user's community memberships
+ * Scoped to the user's community memberships and RSVP'd event channels
+ *
+ * SECURITY: Chat channel access is granular:
+ * - General community channels: all members have access
+ * - Event channels: only users who RSVP'd GOING have access
  */
 export async function generateAblyTokenRequest(
   userId: string,
-  communityIds: string[]
+  communityIds: string[],
+  generalChannelsByCommunity: Map<string, Set<string>>,
+  eventChannelsByCommunity: Map<string, Set<string>>
 ): Promise<Ably.TokenRequest> {
   const ably = getAblyServer();
 
@@ -36,13 +42,6 @@ export async function generateAblyTokenRequest(
   capability[`user:${userId}:notifications`] = ["subscribe"];
 
   for (const communityId of communityIds) {
-    // Chat channels - subscribe and presence only
-    // SECURITY: publish removed - all publishing is server-side to enforce
-    // rate limits and RSVP checks
-    capability[`community:${communityId}:chat:*`] = [
-      "subscribe",
-      "presence",
-    ];
     // Presence channel - can subscribe and enter
     capability[`community:${communityId}:presence`] = [
       "subscribe",
@@ -55,6 +54,28 @@ export async function generateAblyTokenRequest(
       "subscribe",
       "presence",
     ];
+
+    // Grant access to general (non-event) chat channels
+    const generalChannels = generalChannelsByCommunity.get(communityId);
+    if (generalChannels) {
+      for (const channelId of generalChannels) {
+        capability[`community:${communityId}:chat:${channelId}`] = [
+          "subscribe",
+          "presence",
+        ];
+      }
+    }
+
+    // Grant access to event chat channels only where user has RSVP'd
+    const eventChannels = eventChannelsByCommunity.get(communityId);
+    if (eventChannels) {
+      for (const channelId of eventChannels) {
+        capability[`community:${communityId}:chat:${channelId}`] = [
+          "subscribe",
+          "presence",
+        ];
+      }
+    }
   }
 
   const tokenRequest = await ably.auth.createTokenRequest({

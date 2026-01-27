@@ -15,7 +15,6 @@ interface Member {
   user: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
 }
@@ -124,13 +123,13 @@ export function MemberManagementList({
                 {member.user.image ? (
                   <img
                     src={member.user.image}
-                    alt={member.user.name || member.user.email}
+                    alt={member.user.name || "Anonymous"}
                     className="w-10 h-10 rounded-full"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
                     <span className="text-primary-700 font-medium text-sm">
-                      {(member.user.name || member.user.email)
+                      {(member.user.name || "Anonymous")
                         .charAt(0)
                         .toUpperCase()}
                     </span>
@@ -142,13 +141,11 @@ export function MemberManagementList({
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-medium text-neutral-900 truncate">
-                    {member.user.name || member.user.email}
+                    {member.user.name || "Anonymous"}
                   </p>
                   <RoleBadge role={member.role} />
                 </div>
                 <p className="text-xs text-neutral-500">
-                  {member.user.email}
-                  {" • "}
                   Joined{" "}
                   {new Date(member.joinedAt).toLocaleDateString("en-US", {
                     month: "short",
@@ -167,7 +164,7 @@ export function MemberManagementList({
                   <button
                     type="button"
                     onClick={() =>
-                      handlePromote(member.id, member.user.name || member.user.email)
+                      handlePromote(member.id, member.user.name || "Anonymous")
                     }
                     disabled={actionInProgress === member.id}
                     className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50
@@ -181,7 +178,7 @@ export function MemberManagementList({
                   <button
                     type="button"
                     onClick={() =>
-                      handleDemote(member.id, member.user.name || member.user.email)
+                      handleDemote(member.id, member.user.name || "Anonymous")
                     }
                     disabled={actionInProgress === member.id}
                     className="flex items-center gap-1 px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-700 hover:bg-neutral-50
@@ -197,7 +194,7 @@ export function MemberManagementList({
                 <button
                   type="button"
                   onClick={() =>
-                    handleRemove(member.id, member.user.name || member.user.email)
+                    handleRemove(member.id, member.user.name || "Anonymous")
                   }
                   disabled={actionInProgress === member.id}
                   className="px-3 py-1.5 text-sm text-error-600 hover:text-error-700 hover:bg-error-50

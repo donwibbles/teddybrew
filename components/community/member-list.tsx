@@ -7,7 +7,6 @@ interface Member {
   user: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
 }
@@ -38,13 +37,13 @@ export function MemberList({
               {member.user.image ? (
                 <img
                   src={member.user.image}
-                  alt={member.user.name || member.user.email}
+                  alt={member.user.name || "Anonymous"}
                   className="w-10 h-10 rounded-full"
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
                   <span className="text-primary-700 font-medium text-sm">
-                    {(member.user.name || member.user.email).charAt(0).toUpperCase()}
+                    {(member.user.name || "Anonymous").charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
@@ -53,7 +52,7 @@ export function MemberList({
             {/* Name and role */}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-neutral-900 truncate">
-                {member.user.name || member.user.email}
+                {member.user.name || "Anonymous"}
               </p>
               {member.role === MemberRole.OWNER && (
                 <span className="text-xs text-primary-600">Owner</span>

@@ -105,7 +105,7 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
                 {community._count.events === 1 ? "event" : "events"}
               </span>
               <span>
-                Created by {community.owner.name || community.owner.email}
+                Created by {community.owner.name || "Community Creator"}
               </span>
             </div>
           </div>

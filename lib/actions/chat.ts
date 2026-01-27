@@ -297,10 +297,13 @@ export async function getChatMessages(input: unknown) {
 
     const { channelId, cursor, limit } = parsed.data;
 
-    // Get channel to check membership
+    // Get channel to check membership and event access
     const channel = await prisma.chatChannel.findUnique({
       where: { id: channelId },
-      select: { communityId: true },
+      select: {
+        communityId: true,
+        event: { select: { id: true } },
+      },
     });
 
     if (!channel) {
@@ -310,6 +313,14 @@ export async function getChatMessages(input: unknown) {
     // Check membership
     if (!(await isMember(userId, channel.communityId))) {
       return { messages: [], nextCursor: undefined, hasMore: false };
+    }
+
+    // Check event channel access (RSVP required)
+    if (channel.event) {
+      const accessCheck = await verifyChannelAccess(channelId, userId);
+      if (!accessCheck.hasAccess) {
+        return { messages: [], nextCursor: undefined, hasMore: false };
+      }
     }
 
     // Get messages with replyTo, reaction counts, and author role

@@ -388,6 +388,24 @@ export async function getComments(input: unknown) {
       // Not logged in, that's fine
     }
 
+    // Get post to check community access
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: {
+        communityId: true,
+        community: { select: { type: true } },
+      },
+    });
+
+    if (!post) return [];
+
+    // For private communities, require membership
+    if (post.community.type === "PRIVATE") {
+      if (!userId) return []; // Not logged in
+      const memberCheck = await isMember(userId, post.communityId);
+      if (!memberCheck) return [];
+    }
+
     // Import here to avoid circular dependencies
     const { getPostComments } = await import("@/lib/db/posts");
     return await getPostComments(postId, sort, userId);

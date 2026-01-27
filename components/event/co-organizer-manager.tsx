@@ -7,7 +7,6 @@ import { addCoOrganizer, removeCoOrganizer } from "@/lib/actions/event";
 interface CoOrganizer {
   id: string;
   name: string | null;
-  email: string;
   image: string | null;
 }
 
@@ -16,7 +15,6 @@ interface Member {
   user: {
     id: string;
     name: string | null;
-    email: string;
     image: string | null;
   };
 }
@@ -103,26 +101,25 @@ export function CoOrganizerManager({
                 {co.image ? (
                   <img
                     src={co.image}
-                    alt={co.name || co.email}
+                    alt={co.name || "Unknown"}
                     className="w-8 h-8 rounded-full"
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
                     <span className="text-primary-700 font-medium text-xs">
-                      {(co.name || co.email).charAt(0).toUpperCase()}
+                      {(co.name || "Unknown").charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-neutral-900 truncate">
-                    {co.name || co.email}
+                    {co.name || "Unknown"}
                   </p>
-                  <p className="text-xs text-neutral-500 truncate">{co.email}</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => handleRemove(co.id, co.name || co.email)}
+                onClick={() => handleRemove(co.id, co.name || "Unknown")}
                 disabled={removingId === co.id}
                 className="text-sm text-error-600 hover:text-error-700 disabled:opacity-50"
               >
@@ -151,7 +148,7 @@ export function CoOrganizerManager({
             <option value="">Select a member...</option>
             {availableMembers.map((member) => (
               <option key={member.user.id} value={member.user.id}>
-                {member.user.name || member.user.email}
+                {member.user.name || "Unknown"}
               </option>
             ))}
           </select>

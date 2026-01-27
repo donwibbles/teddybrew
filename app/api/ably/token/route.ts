@@ -21,8 +21,66 @@ export async function GET() {
 
     const communityIds = memberships.map((m) => m.communityId);
 
+    // Get general (non-event) chat channels for each community
+    const generalChannels = await prisma.chatChannel.findMany({
+      where: {
+        communityId: { in: communityIds },
+        event: null, // Not linked to an event
+      },
+      select: {
+        id: true,
+        communityId: true,
+      },
+    });
+
+    // Build map of communityId -> general chat channel IDs
+    const generalChannelsByCommunity = new Map<string, Set<string>>();
+    for (const channel of generalChannels) {
+      if (!generalChannelsByCommunity.has(channel.communityId)) {
+        generalChannelsByCommunity.set(channel.communityId, new Set());
+      }
+      generalChannelsByCommunity.get(channel.communityId)!.add(channel.id);
+    }
+
+    // Get event chat channel IDs where user has RSVP'd GOING
+    const rsvpedEvents = await prisma.rSVP.findMany({
+      where: {
+        userId,
+        status: "GOING",
+      },
+      select: {
+        session: {
+          select: {
+            event: {
+              select: {
+                communityId: true,
+                chatChannelId: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Build map of communityId -> event chat channel IDs (only for RSVP'd events)
+    const eventChannelsByCommunity = new Map<string, Set<string>>();
+    for (const rsvp of rsvpedEvents) {
+      const { communityId, chatChannelId } = rsvp.session.event;
+      if (chatChannelId) {
+        if (!eventChannelsByCommunity.has(communityId)) {
+          eventChannelsByCommunity.set(communityId, new Set());
+        }
+        eventChannelsByCommunity.get(communityId)!.add(chatChannelId);
+      }
+    }
+
     // Generate scoped token request
-    const tokenRequest = await generateAblyTokenRequest(userId, communityIds);
+    const tokenRequest = await generateAblyTokenRequest(
+      userId,
+      communityIds,
+      generalChannelsByCommunity,
+      eventChannelsByCommunity
+    );
 
     return NextResponse.json(tokenRequest);
   } catch (error) {

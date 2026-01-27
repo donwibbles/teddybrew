@@ -37,7 +37,6 @@ export async function getCommunityWithDetails(slug: string) {
         select: {
           id: true,
           name: true,
-          email: true,
           image: true,
         },
       },
@@ -47,7 +46,6 @@ export async function getCommunityWithDetails(slug: string) {
             select: {
               id: true,
               name: true,
-              email: true,
               image: true,
             },
           },
