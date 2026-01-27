@@ -4,6 +4,7 @@ import { getUserById } from "@/lib/db/users";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ProfileEditForm } from "@/components/profile/profile-edit-form";
+import { AvatarUpload } from "@/components/profile/avatar-upload";
 
 export const metadata = {
   title: "Settings - Hive Community",
@@ -35,6 +36,21 @@ export default async function SettingsPage({
         <h1 className="text-2xl font-semibold text-neutral-900">Settings</h1>
         <p className="text-neutral-600 mt-1">Manage your account and preferences</p>
       </div>
+
+      {/* Profile Picture Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile Picture</CardTitle>
+          <CardDescription>Upload a photo to personalize your profile</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center py-6">
+          <AvatarUpload
+            userId={user.id}
+            currentImage={user.image}
+            userName={user.name}
+          />
+        </CardContent>
+      </Card>
 
       {/* Profile Section */}
       <Card>
