@@ -15,6 +15,11 @@ interface Author {
   role?: string | null;
 }
 
+interface Community {
+  slug: string;
+  name: string;
+}
+
 interface PostCardProps {
   id: string;
   title: string;
@@ -26,6 +31,10 @@ interface PostCardProps {
   commentCount: number;
   isPinned: boolean;
   communitySlug: string;
+  /** Show community badge (for global forum view) */
+  showCommunity?: boolean;
+  /** Community info (required when showCommunity is true) */
+  community?: Community;
 }
 
 export function PostCard({
@@ -39,6 +48,8 @@ export function PostCard({
   commentCount,
   isPinned,
   communitySlug,
+  showCommunity,
+  community,
 }: PostCardProps) {
   const timestamp =
     createdAt instanceof Date ? createdAt : new Date(createdAt);
@@ -86,7 +97,18 @@ export function PostCard({
           </div>
 
           {/* Meta */}
-          <div className="flex items-center gap-3 mt-3 text-sm text-neutral-500">
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-neutral-500">
+            {showCommunity && community && (
+              <>
+                <Link
+                  href={`/communities/${community.slug}`}
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors"
+                >
+                  {community.name}
+                </Link>
+                <span>·</span>
+              </>
+            )}
             <div className="flex items-center gap-2">
               <Avatar className="h-5 w-5">
                 <AvatarImage

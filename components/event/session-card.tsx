@@ -20,6 +20,10 @@ interface SessionCardProps {
   isGoing: boolean;
   isPast: boolean;
   isMember: boolean;
+  /** Whether the community is public (allows auto-join on RSVP) */
+  isPublicCommunity?: boolean;
+  /** Whether the user is logged in */
+  isLoggedIn?: boolean;
   sessionIndex: number;
   totalSessions: number;
 }
@@ -31,6 +35,8 @@ export function SessionCard({
   isGoing,
   isPast,
   isMember,
+  isPublicCommunity = false,
+  isLoggedIn = false,
   sessionIndex,
   totalSessions,
 }: SessionCardProps) {
@@ -131,7 +137,9 @@ export function SessionCard({
         <div className="shrink-0">
           {isPast ? (
             <span className="text-sm text-neutral-500">Past session</span>
-          ) : !isMember ? (
+          ) : !isLoggedIn ? (
+            <span className="text-sm text-neutral-500">Sign in to RSVP</span>
+          ) : !isMember && !isPublicCommunity ? (
             <span className="text-sm text-neutral-500">Join to RSVP</span>
           ) : optimisticIsGoing ? (
             <div className="space-y-2">
@@ -160,14 +168,19 @@ export function SessionCard({
           ) : isFull ? (
             <span className="text-sm text-warning-600">Full</span>
           ) : (
-            <button
-              onClick={handleRSVP}
-              disabled={isPending}
-              className="px-4 py-2 text-sm bg-primary-500 text-white rounded-lg
-                         hover:bg-primary-600 disabled:opacity-50 transition-colors"
-            >
-              {isPending ? "..." : "RSVP"}
-            </button>
+            <div className="text-center">
+              <button
+                onClick={handleRSVP}
+                disabled={isPending}
+                className="px-4 py-2 text-sm bg-primary-500 text-white rounded-lg
+                           hover:bg-primary-600 disabled:opacity-50 transition-colors"
+              >
+                {isPending ? "..." : "RSVP"}
+              </button>
+              {!isMember && isPublicCommunity && (
+                <p className="text-xs text-neutral-500 mt-1">Joins community</p>
+              )}
+            </div>
           )}
         </div>
       </div>

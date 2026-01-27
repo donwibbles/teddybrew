@@ -18,7 +18,8 @@ interface HeaderProps {
 const navLinks = [
   { href: "/communities", label: "Communities" },
   { href: "/events", label: "Events" },
-  { href: "/my-events", label: "My Events" },
+  { href: "/forum", label: "Forum" },
+  { href: "/my-communities", label: "My Communities" },
 ];
 
 export function Header({ userEmail, userName, userId, userImage, unreadNotificationCount = 0 }: HeaderProps) {

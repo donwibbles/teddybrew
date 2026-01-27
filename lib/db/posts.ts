@@ -119,7 +119,7 @@ export async function getPosts(
         role: post.author.memberships[0]?.role ?? null,
       },
       userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
-      commentCount: post._count.comments,
+      commentCount: post.commentCount,
     })),
     nextCursor,
     hasMore,
@@ -173,7 +173,123 @@ export async function getPostById(postId: string, userId?: string) {
       role: authorMembership?.role ?? null,
     },
     userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
-    commentCount: post._count.comments,
+    commentCount: post.commentCount,
+  };
+}
+
+/**
+ * Get posts from all PUBLIC communities for global forum
+ */
+export async function getPublicPosts(
+  sort: PostSortType,
+  limit: number = 20,
+  cursor?: string,
+  userId?: string
+) {
+  // Build order by clause based on sort type
+  let orderBy: object[];
+
+  switch (sort) {
+    case "new":
+      orderBy = [{ createdAt: "desc" as const }];
+      break;
+    case "top":
+      orderBy = [{ voteScore: "desc" as const }, { createdAt: "desc" as const }];
+      break;
+    case "hot":
+    default:
+      // For hot, we'll sort in memory after fetching
+      orderBy = [{ createdAt: "desc" as const }];
+      break;
+  }
+
+  const posts = await prisma.post.findMany({
+    where: {
+      deletedAt: null,
+      community: {
+        type: "PUBLIC",
+      },
+    },
+    take: sort === "hot" ? 100 : limit + 1,
+    cursor: cursor && sort !== "hot" ? { id: cursor } : undefined,
+    skip: cursor && sort !== "hot" ? 1 : 0,
+    orderBy,
+    include: {
+      author: {
+        select: {
+          id: true,
+          name: true,
+          image: true,
+        },
+      },
+      community: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+        },
+      },
+      _count: {
+        select: { comments: true },
+      },
+      ...(userId
+        ? {
+            votes: {
+              where: { userId },
+              select: { value: true },
+            },
+          }
+        : {}),
+    },
+  });
+
+  // Apply hot sorting in memory if needed
+  let sortedPosts = posts;
+  if (sort === "hot") {
+    sortedPosts = [...posts].sort((a, b) => {
+      const aScore = getHotScore(a.voteScore, a.createdAt);
+      const bScore = getHotScore(b.voteScore, b.createdAt);
+      return bScore - aScore;
+    });
+    // Apply pagination manually
+    let startIndex = 0;
+    if (cursor) {
+      const cursorIndex = sortedPosts.findIndex((p) => p.id === cursor);
+      if (cursorIndex === -1) {
+        return { posts: [], nextCursor: undefined, hasMore: false };
+      }
+      startIndex = cursorIndex + 1;
+    }
+    sortedPosts = sortedPosts.slice(startIndex, startIndex + limit + 1);
+  }
+
+  const hasMore = sortedPosts.length > limit;
+  const items = hasMore ? sortedPosts.slice(0, -1) : sortedPosts;
+  const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
+
+  return {
+    posts: items.map((post) => ({
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      voteScore: post.voteScore,
+      isPinned: post.isPinned,
+      createdAt: post.createdAt,
+      author: {
+        id: post.author.id,
+        name: post.author.name,
+        image: post.author.image,
+      },
+      community: {
+        id: post.community.id,
+        slug: post.community.slug,
+        name: post.community.name,
+      },
+      userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
+      commentCount: post.commentCount,
+    })),
+    nextCursor,
+    hasMore,
   };
 }
 

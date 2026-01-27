@@ -116,6 +116,7 @@ export default async function EventPage({ params }: EventPageProps) {
               eventLocation={event.location}
               currentUserId={membership.userId}
               isMember={membership.isMember}
+              isPublicCommunity={event.community.type === "PUBLIC"}
             />
           </div>
 
@@ -218,7 +219,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
                     <span className="text-primary-700 font-medium">
-                      {(event.organizer.name || event.organizer.email)
+                      {(event.organizer.name || "Event Organizer")
                         .charAt(0)
                         .toUpperCase()}
                     </span>
@@ -226,7 +227,7 @@ export default async function EventPage({ params }: EventPageProps) {
                 )}
                 <div>
                   <p className="font-medium text-neutral-900">
-                    {event.organizer.name || event.organizer.email}
+                    {event.organizer.name || "Event Organizer"}
                   </p>
                   <p className="text-xs text-neutral-500">Organizer</p>
                 </div>

@@ -56,7 +56,7 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
             location: true,
             meetingUrl: true,
             timezone: true,
-            community: { select: { slug: true, name: true } },
+            community: { select: { slug: true, name: true, type: true } },
           },
         },
       },
@@ -73,11 +73,26 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
 
     // Check if user is a member of the community
     const memberCheck = await isMember(userId, session.event.communityId);
+    let autoJoined = false;
+
     if (!memberCheck) {
-      return {
-        success: false,
-        error: "You must be a member of this community to RSVP",
-      };
+      // For private communities, membership is required
+      if (session.event.community.type === "PRIVATE") {
+        return {
+          success: false,
+          error: "You must be a member of this community to RSVP",
+        };
+      }
+
+      // Auto-join public community on RSVP
+      await prisma.member.create({
+        data: {
+          userId,
+          communityId: session.event.communityId,
+          role: "MEMBER",
+        },
+      });
+      autoJoined = true;
     }
 
     // Determine effective capacity (session overrides event)
@@ -197,6 +212,12 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
     );
     revalidatePath("/events");
     revalidatePath("/my-events");
+    revalidatePath("/my-communities");
+
+    // If auto-joined, also revalidate the community page
+    if (autoJoined) {
+      revalidatePath(`/communities/${session.event.community.slug}`);
+    }
 
     return { success: true, data: undefined };
   } catch (error) {
@@ -294,7 +315,7 @@ export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
         id: true,
         communityId: true,
         capacity: true,
-        community: { select: { slug: true } },
+        community: { select: { slug: true, type: true } },
         sessions: {
           where: { startTime: { gt: new Date() } },
           select: { id: true, capacity: true },
@@ -312,11 +333,26 @@ export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
 
     // Check membership
     const memberCheck = await isMember(userId, event.communityId);
+    let autoJoined = false;
+
     if (!memberCheck) {
-      return {
-        success: false,
-        error: "You must be a member of this community to RSVP",
-      };
+      // For private communities, membership is required
+      if (event.community.type === "PRIVATE") {
+        return {
+          success: false,
+          error: "You must be a member of this community to RSVP",
+        };
+      }
+
+      // Auto-join public community on RSVP
+      await prisma.member.create({
+        data: {
+          userId,
+          communityId: event.communityId,
+          role: "MEMBER",
+        },
+      });
+      autoJoined = true;
     }
 
     // Create RSVPs for all sessions
@@ -352,6 +388,12 @@ export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
     revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);
     revalidatePath("/events");
     revalidatePath("/my-events");
+    revalidatePath("/my-communities");
+
+    // If auto-joined, also revalidate the community page
+    if (autoJoined) {
+      revalidatePath(`/communities/${event.community.slug}`);
+    }
 
     return { success: true, data: undefined };
   } catch (error) {

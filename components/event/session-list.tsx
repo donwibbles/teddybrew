@@ -19,6 +19,8 @@ interface SessionListProps {
   eventLocation: string | null;
   currentUserId: string | null;
   isMember: boolean;
+  /** Whether the community is public (allows auto-join on RSVP) */
+  isPublicCommunity?: boolean;
 }
 
 export function SessionList({
@@ -27,6 +29,7 @@ export function SessionList({
   eventLocation,
   currentUserId,
   isMember,
+  isPublicCommunity = false,
 }: SessionListProps) {
   const now = new Date();
 
@@ -79,6 +82,8 @@ export function SessionList({
               isGoing={isGoing}
               isPast={isPast}
               isMember={isMember}
+              isPublicCommunity={isPublicCommunity}
+              isLoggedIn={!!currentUserId}
               sessionIndex={index}
               totalSessions={sessions.length}
             />

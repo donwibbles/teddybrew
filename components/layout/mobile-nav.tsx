@@ -14,7 +14,8 @@ interface MobileNavProps {
 const navLinks = [
   { href: "/communities", label: "Communities" },
   { href: "/events", label: "Events" },
-  { href: "/my-events", label: "My Events" },
+  { href: "/forum", label: "Forum" },
+  { href: "/my-communities", label: "My Communities" },
   { href: "/profile", label: "Profile" },
   { href: "/settings", label: "Settings" },
 ];

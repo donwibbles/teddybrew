@@ -11,6 +11,7 @@ import {
   votePostSchema,
   pinPostSchema,
   getPostsSchema,
+  getPublicPostsSchema,
 } from "@/lib/validations/post";
 import { publishToChannel, getForumChannelName } from "@/lib/ably";
 import { checkPostRateLimit, checkVoteRateLimit } from "@/lib/rate-limit";
@@ -380,6 +381,35 @@ export async function getPosts(input: unknown) {
     // Import here to avoid circular dependencies
     const { getPosts: getPostsDb } = await import("@/lib/db/posts");
     return await getPostsDb(communityId, sort, limit, cursor, userId);
+  } catch {
+    return { posts: [], nextCursor: undefined, hasMore: false };
+  }
+}
+
+/**
+ * Get public posts from all public communities (global forum)
+ */
+export async function getPublicPostsAction(input: unknown) {
+  try {
+    const parsed = getPublicPostsSchema.safeParse(input);
+    if (!parsed.success) {
+      return { posts: [], nextCursor: undefined, hasMore: false };
+    }
+
+    const { sort, cursor, limit } = parsed.data;
+
+    // Try to get user ID for vote status
+    let userId: string | undefined;
+    try {
+      const session = await verifySession();
+      userId = session.userId;
+    } catch {
+      // Not logged in
+    }
+
+    // Import here to avoid circular dependencies
+    const { getPublicPosts } = await import("@/lib/db/posts");
+    return await getPublicPosts(sort, limit, cursor, userId);
   } catch {
     return { posts: [], nextCursor: undefined, hasMore: false };
   }

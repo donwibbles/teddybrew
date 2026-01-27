@@ -87,3 +87,14 @@ export const getPostsSchema = z.object({
 });
 
 export type GetPostsInput = z.infer<typeof getPostsSchema>;
+
+/**
+ * Schema for getting public posts (global forum)
+ */
+export const getPublicPostsSchema = z.object({
+  sort: postSortSchema,
+  cursor: z.string().optional(),
+  limit: z.number().min(1).max(50).default(20),
+});
+
+export type GetPublicPostsInput = z.infer<typeof getPublicPostsSchema>;
