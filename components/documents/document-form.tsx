@@ -136,6 +136,14 @@ export function DocumentForm({
     };
   }, [document?.id, isNew, lockedByOther]);
 
+  // Handle editor ready - get initial HTML
+  const handleEditorReady = useCallback((html: string) => {
+    // Only set if we don't already have content HTML (prevents override on re-mount)
+    if (!contentHtml) {
+      setContentHtml(html);
+    }
+  }, [contentHtml]);
+
   // Handle content change
   const handleContentChange = useCallback((newContent: JSONContent, html: string) => {
     setContent(newContent);
@@ -153,12 +161,15 @@ export function DocumentForm({
     }
   }, []);
 
-  // Save document
-  const handleSave = useCallback(async (isAutosave = false) => {
-    if (lockedByOther) return;
+  // Ref to store the slug after save (for publish navigation)
+  const savedSlugRef = useRef(document?.slug);
+
+  // Internal save function that returns result (used by handleSave and handlePublish)
+  const saveInternal = useCallback(async (isAutosave = false): Promise<{ success: boolean; slug?: string }> => {
+    if (lockedByOther) return { success: false };
     if (!title.trim()) {
       if (!isAutosave) setError("Title is required");
-      return;
+      return { success: false };
     }
 
     setIsSaving(true);
@@ -177,12 +188,13 @@ export function DocumentForm({
 
         if (result.success) {
           documentIdRef.current = result.data.documentId;
+          savedSlugRef.current = result.data.slug;
           setLastSaved(new Date());
           setHasUnsavedChanges(false);
-          // Redirect to edit page
-          router.replace(`/communities/${communitySlug}/docs/${result.data.slug}/edit`);
+          return { success: true, slug: result.data.slug };
         } else {
           setError(result.error || "Failed to create document");
+          return { success: false };
         }
       } else {
         // Update existing document
@@ -197,39 +209,69 @@ export function DocumentForm({
         if (result.success) {
           setLastSaved(new Date());
           setHasUnsavedChanges(false);
+          return { success: true, slug: savedSlugRef.current };
         } else {
           setError(result.error || "Failed to save document");
+          return { success: false };
         }
       }
     } catch (err) {
       setError("Failed to save document");
+      return { success: false };
     } finally {
       setIsSaving(false);
     }
-  }, [isNew, communityId, communitySlug, title, content, contentHtml, folderId, lockedByOther, router]);
+  }, [isNew, communityId, title, content, contentHtml, folderId, lockedByOther]);
+
+  // Save document (public handler that redirects after create)
+  const handleSave = useCallback(async (isAutosave = false) => {
+    const result = await saveInternal(isAutosave);
+    if (result.success && result.slug && (isNew || !document?.id)) {
+      // Redirect to edit page after creating new document
+      router.replace(`/communities/${communitySlug}/docs/${result.slug}/edit`);
+    }
+  }, [saveInternal, isNew, document?.id, communitySlug, router]);
 
   // Publish document
   const handlePublish = useCallback(async () => {
-    if (!documentIdRef.current || lockedByOther) return;
+    if (lockedByOther) return;
 
-    // Save first if there are unsaved changes
-    if (hasUnsavedChanges) {
-      await handleSave();
+    // Validate title before anything
+    if (!title.trim()) {
+      setError("Title is required");
+      return;
     }
 
     setIsPublishing(true);
     setError(null);
 
     try {
+      // For new documents, save first to create them
+      if (!documentIdRef.current) {
+        const saveResult = await saveInternal();
+        if (!saveResult.success) {
+          setIsPublishing(false);
+          return;
+        }
+      } else if (hasUnsavedChanges) {
+        // Save existing doc if there are unsaved changes
+        const saveResult = await saveInternal();
+        if (!saveResult.success) {
+          setIsPublishing(false);
+          return;
+        }
+      }
+
+      // Now publish (documentIdRef.current is guaranteed to be set)
       const result = await publishDocument({
-        documentId: documentIdRef.current,
+        documentId: documentIdRef.current!,
       });
 
       if (result.success) {
         setStatus(DocumentStatus.PUBLISHED);
         setLastSaved(new Date());
-        // Navigate to view page
-        router.push(`/communities/${communitySlug}/docs/${document?.slug}`);
+        // Navigate to view page using the saved slug
+        router.push(`/communities/${communitySlug}/docs/${savedSlugRef.current}`);
       } else {
         setError(result.error || "Failed to publish document");
       }
@@ -238,7 +280,7 @@ export function DocumentForm({
     } finally {
       setIsPublishing(false);
     }
-  }, [document?.slug, communitySlug, hasUnsavedChanges, handleSave, lockedByOther, router]);
+  }, [communitySlug, title, hasUnsavedChanges, saveInternal, lockedByOther, router]);
 
   // Handle beforeunload
   useEffect(() => {
@@ -398,6 +440,7 @@ export function DocumentForm({
             <TipTapEditor
               content={content}
               onChange={handleContentChange}
+              onEditorReady={handleEditorReady}
               communityId={communityId}
               documentId={document?.id}
               disabled={lockedByOther}

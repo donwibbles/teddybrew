@@ -12,6 +12,7 @@ import { ImageDialog } from "./image-dialog";
 interface TipTapEditorProps {
   content: JSONContent;
   onChange: (content: JSONContent, html: string) => void;
+  onEditorReady?: (html: string) => void;
   placeholder?: string;
   communityId: string;
   documentId?: string;
@@ -22,6 +23,7 @@ interface TipTapEditorProps {
 export function TipTapEditor({
   content,
   onChange,
+  onEditorReady,
   placeholder,
   communityId,
   documentId,
@@ -35,6 +37,12 @@ export function TipTapEditor({
     extensions: getExtensions(placeholder),
     content,
     editable: !disabled,
+    onCreate: ({ editor }) => {
+      // Provide initial HTML to parent on editor creation
+      if (onEditorReady) {
+        onEditorReady(editor.getHTML());
+      }
+    },
     onUpdate: ({ editor }) => {
       const json = editor.getJSON();
       const html = editor.getHTML();

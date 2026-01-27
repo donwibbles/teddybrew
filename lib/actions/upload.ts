@@ -86,7 +86,9 @@ export async function getPresignedUploadUrl(input: {
     };
   } catch (error) {
     console.error("Failed to generate presigned URL:", error);
-    return { success: false, error: "Failed to generate upload URL" };
+    // Surface actual error message to help diagnose B2 configuration issues
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return { success: false, error: `Failed to generate upload URL: ${errorMessage}` };
   }
 }
 
