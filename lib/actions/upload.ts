@@ -136,18 +136,30 @@ async function checkUploadPermission(
     }
 
     case "event-cover": {
-      // Event organizer or community mod can upload event images
+      // entityId can be an event ID (editing) or community ID (creating)
       const event = await prisma.event.findUnique({
         where: { id: entityId },
         select: { id: true, organizerId: true, communityId: true },
       });
-      if (!event) {
-        return { allowed: false, error: "Event not found" };
+      if (event) {
+        // Editing an existing event — check organizer or mod
+        const isOrganizer = event.organizerId === userId;
+        const canMod = await canModerate(userId, event.communityId);
+        if (!isOrganizer && !canMod) {
+          return { allowed: false, error: "Only event organizers can upload event images" };
+        }
+        return { allowed: true, entityPath: entityId };
       }
-      const isOrganizer = event.organizerId === userId;
-      const canMod = await canModerate(userId, event.communityId);
-      if (!isOrganizer && !canMod) {
-        return { allowed: false, error: "Only event organizers can upload event images" };
+      // Creating a new event — entityId is a communityId, check membership
+      const community = await prisma.community.findUnique({
+        where: { id: entityId },
+        select: { id: true },
+      });
+      if (!community) {
+        return { allowed: false, error: "Community or event not found" };
+      }
+      if (!(await isMember(userId, entityId))) {
+        return { allowed: false, error: "Only community members can upload event images" };
       }
       return { allowed: true, entityPath: entityId };
     }
