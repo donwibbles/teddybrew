@@ -36,6 +36,8 @@ export async function getEventWithDetails(id: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       coOrganizers: {
@@ -43,6 +45,8 @@ export async function getEventWithDetails(id: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -56,6 +60,8 @@ export async function getEventWithDetails(id: string) {
                   id: true,
                   name: true,
                   image: true,
+                  username: true,
+                  isPublic: true,
                 },
               },
             },
@@ -83,6 +89,8 @@ export async function getCommunityEvents(communityId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -124,6 +132,8 @@ export async function getUpcomingCommunityEvents(communityId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -163,6 +173,8 @@ export async function getPastCommunityEvents(communityId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -241,6 +253,8 @@ export async function getUpcomingEvents(limit: number = 20) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -315,6 +329,8 @@ export async function getUserOrganizedEvents(userId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -367,6 +383,8 @@ export async function getUserAttendingEvents(userId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -419,6 +437,8 @@ export async function getUserPastEvents(userId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -474,6 +494,8 @@ export async function getUserPublicUpcomingEvents(userId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {
@@ -523,6 +545,8 @@ export async function getUserPublicPastEvents(userId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       sessions: {

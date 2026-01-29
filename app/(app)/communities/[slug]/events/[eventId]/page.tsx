@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { MessageSquare, Video, ExternalLink } from "lucide-react";
+import { ProfileLink } from "@/components/ui/profile-link";
 import { getEventWithDetails } from "@/lib/db/events";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { SessionList } from "@/components/event/session-list";
@@ -242,9 +243,12 @@ export default async function EventPage({ params }: EventPageProps) {
                   </div>
                 )}
                 <div>
-                  <p className="font-medium text-neutral-900">
+                  <ProfileLink
+                    user={event.organizer}
+                    className="font-medium text-neutral-900 hover:text-primary-600"
+                  >
                     {event.organizer.name || "Event Organizer"}
-                  </p>
+                  </ProfileLink>
                   <p className="text-xs text-neutral-500">Organizer</p>
                 </div>
               </div>
@@ -266,9 +270,10 @@ export default async function EventPage({ params }: EventPageProps) {
                     </div>
                   )}
                   <div>
-                    <p className="font-medium text-neutral-900">
-                      {co.name || "Anonymous"}
-                    </p>
+                    <ProfileLink
+                      user={co}
+                      className="font-medium text-neutral-900 hover:text-primary-600"
+                    />
                     <p className="text-xs text-neutral-500">Co-organizer</p>
                   </div>
                 </div>
@@ -327,9 +332,10 @@ export default async function EventPage({ params }: EventPageProps) {
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-neutral-900 truncate">
-                          {user.name || "Anonymous"}
-                        </p>
+                        <ProfileLink
+                          user={user}
+                          className="text-sm font-medium text-neutral-900 truncate block hover:text-primary-600"
+                        />
                         {totalSessions > 1 && (
                           <p className="text-xs text-neutral-500">
                             {sessionCount} of {totalSessions} sessions

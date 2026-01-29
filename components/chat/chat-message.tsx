@@ -9,6 +9,7 @@ import { MessageReactions } from "./message-reactions";
 import { EmojiPicker } from "./emoji-picker";
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { ProfileLink } from "@/components/ui/profile-link";
 import type { EmojiKey } from "@/lib/constants/emoji";
 
 interface Author {
@@ -16,6 +17,8 @@ interface Author {
   name: string | null;
   image: string | null;
   role?: string | null;
+  username?: string | null;
+  isPublic?: boolean | null;
 }
 
 interface ReplyTo {
@@ -116,14 +119,13 @@ export function ChatMessage({
         )}
 
         <div className="flex items-center gap-2">
-          <span
+          <ProfileLink
+            user={author}
             className={cn(
-              "font-medium text-sm",
+              "font-medium text-sm hover:text-primary-600",
               isOwnMessage ? "text-primary-700" : "text-neutral-900"
             )}
-          >
-            {author.name || "Anonymous"}
-          </span>
+          />
           {author.role && <RoleBadge role={author.role} size="sm" />}
           <span className="text-xs text-neutral-400">{timeAgo}</span>
         </div>

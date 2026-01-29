@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileLink } from "@/components/ui/profile-link";
 import { DocumentStatusBadge } from "./document-status-badge";
 import { DocumentStatus } from "@prisma/client";
 
@@ -28,6 +29,8 @@ interface DocumentCardProps {
       id: string;
       name: string | null;
       image: string | null;
+      username?: string | null;
+      isPublic?: boolean | null;
     };
     folder: {
       id: string;
@@ -39,6 +42,8 @@ interface DocumentCardProps {
       id: string;
       name: string | null;
       image: string | null;
+      username?: string | null;
+      isPublic?: boolean | null;
     } | null;
   };
   communitySlug: string;
@@ -170,15 +175,18 @@ export function DocumentCard({
               {document.author.name?.[0] || "?"}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-neutral-600">
+          <ProfileLink
+            user={document.author}
+            className="text-sm text-neutral-600 hover:text-primary-600"
+          >
             {document.author.name || "Unknown"}
-          </span>
+          </ProfileLink>
         </div>
 
         {document.isLocked && document.lockedBy && (
           <span className="flex items-center gap-1 text-xs text-amber-600">
             <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-            Being edited by {document.lockedBy.name}
+            Being edited by <ProfileLink user={document.lockedBy} className="hover:text-amber-700" />
           </span>
         )}
       </div>

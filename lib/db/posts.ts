@@ -104,6 +104,8 @@ export async function getPosts(
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
           memberships: {
             where: { communityId },
             select: { role: true },
@@ -165,6 +167,8 @@ export async function getPosts(
         id: post.author.id,
         name: post.author.name,
         image: post.author.image,
+        username: post.author.username,
+        isPublic: post.author.isPublic,
         role: post.author.memberships[0]?.role ?? null,
       },
       userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
@@ -183,7 +187,7 @@ export async function getPostById(postId: string, userId?: string) {
     where: { id: postId },
     include: {
       author: {
-        select: { id: true, name: true, image: true },
+        select: { id: true, name: true, image: true, username: true, isPublic: true },
       },
       community: {
         select: { id: true, slug: true, name: true, ownerId: true },
@@ -242,7 +246,7 @@ export async function getPostBySlug(
     },
     include: {
       author: {
-        select: { id: true, name: true, image: true },
+        select: { id: true, name: true, image: true, username: true, isPublic: true },
       },
       community: {
         select: { id: true, slug: true, name: true, ownerId: true },
@@ -328,6 +332,8 @@ export async function getPublicPosts(
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       community: {
@@ -390,6 +396,8 @@ export async function getPublicPosts(
         id: post.author.id,
         name: post.author.name,
         image: post.author.image,
+        username: post.author.username,
+        isPublic: post.author.isPublic,
       },
       community: {
         id: post.community.id,
@@ -434,6 +442,8 @@ export async function getPostComments(
         id: true,
         name: true,
         image: true,
+        username: true,
+        isPublic: true,
         memberships: {
           where: { communityId: post.communityId },
           select: { role: true },
@@ -510,6 +520,8 @@ export async function getPostComments(
       id: string;
       name: string | null;
       image: string | null;
+      username: string | null;
+      isPublic: boolean;
       role: string | null;
     };
     userVote: number;
@@ -545,6 +557,8 @@ export async function getPostComments(
         id: comment.author.id,
         name: comment.author.name,
         image: comment.author.image,
+        username: comment.author.username,
+        isPublic: comment.author.isPublic,
         role: comment.author.memberships[0]?.role ?? null,
       },
       userVote: userId && "votes" in comment ? comment.votes[0]?.value ?? 0 : 0,
@@ -599,6 +613,8 @@ export async function getCommentReplies(
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
           memberships: {
             where: { communityId: post.communityId },
             select: { role: true },
@@ -640,6 +656,8 @@ export async function getCommentReplies(
         id: comment.author.id,
         name: comment.author.name,
         image: comment.author.image,
+        username: comment.author.username,
+        isPublic: comment.author.isPublic,
         role: comment.author.memberships[0]?.role ?? null,
       },
       userVote:

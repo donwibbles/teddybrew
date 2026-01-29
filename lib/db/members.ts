@@ -138,6 +138,8 @@ export async function getCommunityMembers(
           name: true,
           email: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
     },

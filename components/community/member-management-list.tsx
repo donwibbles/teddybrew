@@ -7,6 +7,7 @@ import { Users, ShieldCheck, ShieldOff } from "lucide-react";
 import { removeMember, promoteMember, demoteMember } from "@/lib/actions/membership";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { ProfileLink } from "@/components/ui/profile-link";
 
 interface Member {
   id: string;
@@ -16,6 +17,8 @@ interface Member {
     id: string;
     name: string | null;
     image: string | null;
+    username?: string | null;
+    isPublic?: boolean | null;
   };
 }
 
@@ -140,9 +143,10 @@ export function MemberManagementList({
               {/* Info */}
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-neutral-900 truncate">
-                    {member.user.name || "Anonymous"}
-                  </p>
+                  <ProfileLink
+                    user={member.user}
+                    className="text-sm font-medium text-neutral-900 truncate hover:text-primary-600"
+                  />
                   <RoleBadge role={member.role} />
                 </div>
                 <p className="text-xs text-neutral-500">

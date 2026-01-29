@@ -14,12 +14,15 @@ import { deletePost, pinPost } from "@/lib/actions/post";
 import type { JSONContent } from "@tiptap/react";
 import { toast } from "sonner";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { ProfileLink } from "@/components/ui/profile-link";
 
 interface Author {
   id: string;
   name: string | null;
   image: string | null;
   role?: string | null;
+  username?: string | null;
+  isPublic?: boolean | null;
 }
 
 interface PostDetailProps {
@@ -152,9 +155,7 @@ export function PostDetail({
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="font-medium text-neutral-700">
-                  {author.name || "Anonymous"}
-                </span>
+                <ProfileLink user={author} className="font-medium text-neutral-700 hover:text-primary-600" />
                 {author.role && <RoleBadge role={author.role} size="sm" />}
               </div>
               <span>·</span>

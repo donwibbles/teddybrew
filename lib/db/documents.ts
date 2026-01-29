@@ -49,6 +49,8 @@ export async function getDocuments(
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       folder: {
@@ -63,6 +65,8 @@ export async function getDocuments(
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
     },
@@ -100,6 +104,8 @@ export async function getDocumentById(documentId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       folder: {
@@ -114,6 +120,8 @@ export async function getDocumentById(documentId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       publishedBy: {
@@ -121,6 +129,8 @@ export async function getDocumentById(documentId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       community: {
@@ -171,6 +181,8 @@ export async function getDocumentBySlug(communitySlug: string, documentSlug: str
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       folder: {
@@ -185,6 +197,8 @@ export async function getDocumentBySlug(communitySlug: string, documentSlug: str
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       publishedBy: {
@@ -192,6 +206,8 @@ export async function getDocumentBySlug(communitySlug: string, documentSlug: str
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       community: {
@@ -239,6 +255,8 @@ export async function getDocumentVersions(
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
     },
@@ -267,6 +285,8 @@ export async function getDocumentVersion(versionId: string) {
           id: true,
           name: true,
           image: true,
+          username: true,
+          isPublic: true,
         },
       },
       document: {

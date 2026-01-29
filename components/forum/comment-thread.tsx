@@ -14,12 +14,15 @@ import { cn } from "@/lib/utils";
 import { MAX_COMMENT_DEPTH } from "@/lib/validations/comment";
 import { EmptyState } from "@/components/ui/empty-state";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { ProfileLink } from "@/components/ui/profile-link";
 
 interface Author {
   id: string;
   name: string | null;
   image: string | null;
   role?: string | null;
+  username?: string | null;
+  isPublic?: boolean | null;
 }
 
 interface Comment {
@@ -120,9 +123,7 @@ function CommentItem({
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <span className="text-sm font-medium text-neutral-700">
-              {comment.author.name || "Anonymous"}
-            </span>
+            <ProfileLink user={comment.author} className="text-sm font-medium text-neutral-700 hover:text-primary-600" />
             {comment.author.role && <RoleBadge role={comment.author.role} size="sm" />}
             <span className="text-xs text-neutral-400">·</span>
             <span className="text-xs text-neutral-400">{timeAgo}</span>

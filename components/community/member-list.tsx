@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MemberRole } from "@prisma/client";
+import { ProfileLink } from "@/components/ui/profile-link";
 
 interface Member {
   id: string;
@@ -8,6 +9,8 @@ interface Member {
     id: string;
     name: string | null;
     image: string | null;
+    username?: string | null;
+    isPublic?: boolean | null;
   };
 }
 
@@ -51,9 +54,10 @@ export function MemberList({
 
             {/* Name and role */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900 truncate">
-                {member.user.name || "Anonymous"}
-              </p>
+              <ProfileLink
+                user={member.user}
+                className="text-sm font-medium text-neutral-900 truncate block hover:text-primary-600"
+              />
               {member.role === MemberRole.OWNER && (
                 <span className="text-xs text-primary-600">Owner</span>
               )}

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { MessageSquare, Pin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RoleBadge } from "@/components/ui/role-badge";
+import { ProfileLink } from "@/components/ui/profile-link";
 import { VoteButton } from "./vote-button";
 import { MarkdownPreview } from "./markdown-renderer";
 
@@ -13,6 +14,8 @@ interface Author {
   name: string | null;
   image: string | null;
   role?: string | null;
+  username?: string | null;
+  isPublic?: boolean | null;
 }
 
 interface Community {
@@ -128,7 +131,7 @@ export function PostCard({
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <span>{author.name || "Anonymous"}</span>
+              <ProfileLink user={author} className="hover:text-primary-600" />
               {author.role && <RoleBadge role={author.role} size="sm" />}
             </div>
             <span>·</span>
