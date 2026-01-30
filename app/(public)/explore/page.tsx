@@ -83,11 +83,11 @@ async function PublicCommunityList({
   sizeFilter: string;
   sortBy: string;
 }) {
-  const communities = await searchCommunities(
+  const communities = await searchCommunities({
     query,
-    sizeFilter as "all" | "small" | "medium" | "large",
-    sortBy as "recent" | "popular"
-  );
+    sizeFilter: sizeFilter as "all" | "small" | "medium" | "large",
+    sortBy: sortBy as "recent" | "popular",
+  });
 
   if (communities.length === 0) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Bell, Check } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -35,6 +35,10 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
   const [isLoading, setIsLoading] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const notificationRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // Subscribe to real-time notifications
   useAblyChannel(
@@ -91,32 +95,80 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
     }
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       if (!target.closest("[data-notification-dropdown]")) {
         setIsOpen(false);
+        setFocusedIndex(-1);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      switch (event.key) {
+        case "Escape":
+          setIsOpen(false);
+          setFocusedIndex(-1);
+          buttonRef.current?.focus();
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          setFocusedIndex((prev) =>
+            prev < notifications.length - 1 ? prev + 1 : prev
+          );
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          setFocusedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+          break;
+        case "Tab":
+          // Allow tab to cycle within dropdown
+          if (event.shiftKey && focusedIndex === 0) {
+            event.preventDefault();
+            buttonRef.current?.focus();
+          }
+          break;
       }
     };
 
     if (isOpen) {
       document.addEventListener("click", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
     }
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, [isOpen]);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, notifications.length, focusedIndex]);
+
+  // Focus notification when focusedIndex changes
+  useEffect(() => {
+    if (focusedIndex >= 0 && notificationRefs.current[focusedIndex]) {
+      notificationRefs.current[focusedIndex]?.focus();
+    }
+  }, [focusedIndex]);
 
   return (
     <div className="relative" data-notification-dropdown>
       {/* Bell Button */}
       <button
+        ref={buttonRef}
         onClick={handleToggle}
         className="relative p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-controls="notification-dropdown"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-500 text-[10px] font-medium text-white">
+          <span
+            className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-500 text-[10px] font-medium text-white"
+            aria-hidden="true"
+          >
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -124,16 +176,25 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden bg-white rounded-lg border border-neutral-200 shadow-lg z-50">
+        <div
+          ref={dropdownRef}
+          id="notification-dropdown"
+          role="menu"
+          aria-label="Notifications"
+          className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden bg-white rounded-lg border border-neutral-200 shadow-lg z-50"
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
-            <h3 className="font-semibold text-neutral-900">Notifications</h3>
+            <h3 id="notification-dropdown-title" className="font-semibold text-neutral-900">
+              Notifications
+            </h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
                 className="text-xs text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                aria-label="Mark all notifications as read"
               >
-                <Check className="h-3 w-3" />
+                <Check className="h-3 w-3" aria-hidden="true" />
                 Mark all read
               </button>
             )}
@@ -151,11 +212,16 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
                 <p className="text-sm text-neutral-500">No notifications yet</p>
               </div>
             ) : (
-              notifications.map((notification) => (
+              notifications.map((notification, index) => (
                 <button
                   key={notification.id}
+                  ref={(el) => {
+                    notificationRefs.current[index] = el;
+                  }}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`w-full text-left px-4 py-3 hover:bg-neutral-50 transition-colors border-b border-neutral-50 last:border-0 ${
+                  role="menuitem"
+                  tabIndex={focusedIndex === index ? 0 : -1}
+                  className={`w-full text-left px-4 py-3 hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors border-b border-neutral-50 last:border-0 ${
                     !notification.isRead ? "bg-primary-50/50" : ""
                   }`}
                 >

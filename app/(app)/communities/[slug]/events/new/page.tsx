@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
+import { getIssueTags } from "@/lib/actions/community";
 import { CreateEventForm } from "@/components/event/create-event-form";
 
 interface NewEventPageProps {
@@ -31,7 +32,10 @@ export default async function NewEventPage({ params }: NewEventPageProps) {
   }
 
   // Check if user is a member (only members can create events)
-  const membership = await getMembershipStatus(community.id);
+  const [membership, availableTags] = await Promise.all([
+    getMembershipStatus(community.id),
+    getIssueTags(),
+  ]);
 
   if (!membership.isMember) {
     redirect(`/communities/${slug}`);
@@ -66,6 +70,7 @@ export default async function NewEventPage({ params }: NewEventPageProps) {
         <CreateEventForm
           communityId={community.id}
           communityName={community.name}
+          availableTags={availableTags}
         />
       </div>
     </div>

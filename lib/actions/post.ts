@@ -33,7 +33,7 @@ export async function createPost(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, title, content, contentJson } = parsed.data;
+    const { communityId, title, content, contentJson, postType, issueTagIds } = parsed.data;
 
     // Rate limiting: 1 post per minute
     const rateLimit = await checkPostRateLimit(userId);
@@ -72,6 +72,10 @@ export async function createPost(
           contentJson: contentJson ?? undefined,
           communityId,
           authorId: userId,
+          postType: postType || null,
+          issueTags: issueTagIds?.length
+            ? { connect: issueTagIds.map((id) => ({ id })) }
+            : undefined,
         },
       });
 
@@ -117,7 +121,7 @@ export async function updatePost(input: unknown): Promise<ActionResult<{ postSlu
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { postId, title, content, contentJson } = parsed.data;
+    const { postId, title, content, contentJson, postType, issueTagIds } = parsed.data;
 
     // Get post
     const post = await prisma.post.findUnique({
@@ -150,6 +154,10 @@ export async function updatePost(input: unknown): Promise<ActionResult<{ postSlu
         ...(title && sanitizeText(title) !== post.title && { slug: newSlug }),
         ...(content && { content }),
         ...(contentJson !== undefined && { contentJson }),
+        ...(postType !== undefined && { postType: postType || null }),
+        ...(issueTagIds !== undefined && {
+          issueTags: { set: issueTagIds.map((id) => ({ id })) },
+        }),
         updatedAt: new Date(),
       },
     });

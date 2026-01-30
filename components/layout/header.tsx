@@ -16,10 +16,10 @@ interface HeaderProps {
 }
 
 const navLinks = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/communities", label: "Communities" },
   { href: "/events", label: "Events" },
-  { href: "/forum", label: "Forum" },
-  { href: "/my-communities", label: "My Communities" },
+  { href: "/feed", label: "Feed" },
 ];
 
 export function Header({ userEmail, userName, userId, userImage, unreadNotificationCount = 0 }: HeaderProps) {
@@ -30,12 +30,16 @@ export function Header({ userEmail, userName, userId, userImage, unreadNotificat
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/communities" className="font-semibold text-xl text-primary-600">
+          <Link
+            href="/dashboard"
+            className="font-semibold text-xl text-primary-600"
+            aria-label="Hive Community - Go to dashboard"
+          >
             Hive Community
           </Link>
 
           {/* Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || pathname.startsWith(link.href + "/");
 

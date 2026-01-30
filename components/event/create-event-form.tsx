@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 import { createEvent } from "@/lib/actions/event";
 import { AddSessionForm } from "./add-session-form";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { StateSelect } from "@/components/ui/state-select";
+import { EventTypeSelect } from "@/components/tags/event-type-select";
+import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import {
   localDateTimeToUTC,
   getMinDateTimeForTimezone,
   COMMON_TIMEZONES,
 } from "@/lib/utils/timezone";
+import type { USStateCode } from "@/lib/constants/us-states";
+import type { EventTypeValue } from "@/lib/validations/event";
 
 interface Session {
   title?: string;
@@ -19,14 +24,22 @@ interface Session {
   capacity?: number;
 }
 
+interface IssueTag {
+  id: string;
+  slug: string;
+  name: string;
+}
+
 interface CreateEventFormProps {
   communityId: string;
   communityName: string;
+  availableTags: IssueTag[];
 }
 
 export function CreateEventForm({
   communityId,
   communityName,
+  availableTags,
 }: CreateEventFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,6 +57,12 @@ export function CreateEventForm({
   const [sessions, setSessions] = useState<Session[]>([
     { startTime: "", endTime: "" },
   ]);
+
+  // New fields: location (city/state), event type, and issue tags
+  const [city, setCity] = useState("");
+  const [state, setState] = useState<USStateCode | null>(null);
+  const [eventType, setEventType] = useState<EventTypeValue | null>(null);
+  const [issueTagIds, setIssueTagIds] = useState<string[]>([]);
 
   // Get user's timezone on mount
   useEffect(() => {
@@ -78,6 +97,12 @@ export function CreateEventForm({
       coverImage: coverImage || undefined,
       isVirtual,
       meetingUrl: meetingUrl || undefined,
+      // Location fields (city/state)
+      city: isVirtual ? null : (city || null),
+      state: isVirtual ? null : state,
+      // Event categorization
+      eventType: eventType || null,
+      issueTagIds,
       timezone: timezone || "America/New_York",
       sessions: sessions.map((s) => ({
         title: s.title || undefined,
@@ -271,6 +296,71 @@ export function CreateEventForm({
           Maximum attendees per session. Leave empty for no limit.
         </p>
       </div>
+
+      {/* Event Type */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Event Type
+        </label>
+        <EventTypeSelect
+          value={eventType}
+          onChange={setEventType}
+          disabled={isSubmitting}
+          placeholder="Select event type (optional)"
+        />
+      </div>
+
+      {/* Issue Tags */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Issue Tags
+        </label>
+        <p className="text-sm text-neutral-500 mb-2">
+          Select the issues this event relates to (optional)
+        </p>
+        <IssueTagSelect
+          availableTags={availableTags}
+          selectedTagIds={issueTagIds}
+          onChange={setIssueTagIds}
+          disabled={isSubmitting}
+          placeholder="Select issue tags..."
+        />
+      </div>
+
+      {/* City/State Location (not virtual) */}
+      {!isVirtual && (
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Event Location (City/State)
+          </label>
+          <p className="text-sm text-neutral-500 mb-2">
+            Where is this event taking place? (for search/filtering)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <input
+                id="city"
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g., San Francisco"
+                disabled={isSubmitting}
+                maxLength={100}
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                           disabled:bg-neutral-50 disabled:text-neutral-500"
+              />
+            </div>
+            <div>
+              <StateSelect
+                value={state}
+                onChange={setState}
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Virtual Event Toggle */}
       <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">

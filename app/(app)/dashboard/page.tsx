@@ -13,7 +13,7 @@ import { ActivityFeed, ActivityFeedSkeleton } from "@/components/activity/activi
 import { EmptyState } from "@/components/ui/empty-state";
 
 export const metadata = {
-  title: "My Communities - Hive Community",
+  title: "Dashboard - Hive Community",
   description: "Your communities, events, and activity feed",
 };
 
@@ -190,12 +190,12 @@ async function CommunitiesSidebar() {
   );
 }
 
-export default function MyCommunitiesPage() {
+export default function DashboardPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900">My Communities</h1>
+        <h1 className="text-2xl font-semibold text-neutral-900">Dashboard</h1>
         <p className="text-neutral-600 mt-1">
           Your events and activity from communities you&apos;ve joined
         </p>

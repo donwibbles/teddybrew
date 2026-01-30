@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { TagBadgeList } from "@/components/tags/tag-badge";
+import { EventTypeBadge } from "@/components/tags/event-type-select";
+import type { EventTypeValue } from "@/lib/validations/event";
 
 interface Session {
   id: string;
@@ -16,6 +19,9 @@ interface EventCardProps {
     location: string | null;
     capacity: number | null;
     timezone?: string | null;
+    isVirtual?: boolean;
+    eventType?: string | null;
+    state?: string | null;
     community: {
       slug: string;
       name: string;
@@ -25,6 +31,7 @@ interface EventCardProps {
       image: string | null;
     };
     sessions: Session[];
+    issueTags?: Array<{ slug: string; name: string }>;
   };
   currentUserId?: string;
   showCommunity?: boolean;
@@ -168,7 +175,7 @@ export function EventCard({
 
         {/* Location */}
         {event.location && (
-          <div className="flex items-center gap-2 text-sm text-neutral-600 mb-3">
+          <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4 text-neutral-400"
@@ -182,6 +189,33 @@ export function EventCard({
               />
             </svg>
             <span className="truncate">{event.location}</span>
+          </div>
+        )}
+
+        {/* Tags row */}
+        {(event.eventType || event.isVirtual || event.state || (event.issueTags && event.issueTags.length > 0)) && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-3">
+            {event.eventType && (
+              <EventTypeBadge type={event.eventType as EventTypeValue} size="sm" />
+            )}
+            {event.isVirtual && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                Virtual
+              </span>
+            )}
+            {event.state && !event.isVirtual && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
+                {event.state}
+              </span>
+            )}
+            {event.issueTags && event.issueTags.length > 0 && (
+              <TagBadgeList
+                tags={event.issueTags}
+                maxVisible={2}
+                size="sm"
+                variant="default"
+              />
+            )}
           </div>
         )}
 

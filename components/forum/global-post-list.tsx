@@ -31,6 +31,8 @@ interface Post {
   userVote: number;
   commentCount: number;
   isPinned: boolean;
+  postType?: string | null;
+  issueTags?: Array<{ slug: string; name: string }>;
 }
 
 interface GlobalPostListProps {
@@ -119,6 +121,8 @@ export function GlobalPostList({
           commentCount={post.commentCount}
           isPinned={post.isPinned}
           communitySlug={post.community.slug}
+          postType={post.postType}
+          issueTags={post.issueTags}
           showCommunity={true}
           community={post.community}
           basePath={basePath}

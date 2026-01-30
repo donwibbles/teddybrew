@@ -44,6 +44,38 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      // Route renaming: /my-communities -> /dashboard
+      {
+        source: '/my-communities',
+        destination: '/dashboard',
+        permanent: true,
+      },
+      // Route renaming: /forum -> /feed
+      {
+        source: '/forum',
+        destination: '/feed',
+        permanent: true,
+      },
+      {
+        source: '/forum/:path*',
+        destination: '/feed/:path*',
+        permanent: true,
+      },
+      // Route renaming: /explore/forum -> /explore/feed
+      {
+        source: '/explore/forum',
+        destination: '/explore/feed',
+        permanent: true,
+      },
+      {
+        source: '/explore/forum/:path*',
+        destination: '/explore/feed/:path*',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

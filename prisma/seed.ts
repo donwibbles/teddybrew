@@ -2,6 +2,41 @@ import "dotenv/config";
 import { CommunityType, MemberRole, RSVPStatus } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 
+/**
+ * Seed issue tags (idempotent - safe to rerun)
+ */
+async function seedIssueTags() {
+  console.log("🏷️  Seeding issue tags...");
+
+  const issueTags = [
+    { slug: "healthcare", name: "Healthcare", sortOrder: 1 },
+    { slug: "environment-climate", name: "Environment & Climate", sortOrder: 2 },
+    { slug: "economy-jobs", name: "Economy & Jobs", sortOrder: 3 },
+    { slug: "education", name: "Education", sortOrder: 4 },
+    { slug: "housing", name: "Housing", sortOrder: 5 },
+    { slug: "immigration", name: "Immigration", sortOrder: 6 },
+    { slug: "voting-rights", name: "Voting Rights", sortOrder: 7 },
+    { slug: "criminal-justice", name: "Criminal Justice Reform", sortOrder: 8 },
+    { slug: "gun-safety", name: "Gun Safety", sortOrder: 9 },
+    { slug: "reproductive-rights", name: "Reproductive Rights", sortOrder: 10 },
+    { slug: "lgbtq-rights", name: "LGBTQ+ Rights", sortOrder: 11 },
+    { slug: "labor-workers", name: "Labor & Workers Rights", sortOrder: 12 },
+    { slug: "social-security-medicare", name: "Social Security & Medicare", sortOrder: 13 },
+    { slug: "foreign-policy", name: "Foreign Policy", sortOrder: 14 },
+    { slug: "civil-rights", name: "Civil Rights", sortOrder: 15 },
+  ];
+
+  for (const tag of issueTags) {
+    await prisma.issueTag.upsert({
+      where: { slug: tag.slug },
+      update: { name: tag.name, sortOrder: tag.sortOrder },
+      create: tag,
+    });
+  }
+
+  console.log(`✅ Seeded ${issueTags.length} issue tags`);
+}
+
 async function main() {
   console.log("🌱 Starting database seed...");
 
@@ -370,13 +405,17 @@ async function main() {
 
   console.log(`✅ Created RSVPs`);
 
+  // Seed issue tags (idempotent)
+  await seedIssueTags();
+
   console.log("\n🎉 Database seed completed successfully!\n");
   console.log("Summary:");
   console.log(`  • ${users.length} users`);
   console.log(`  • 3 communities (2 public, 1 private)`);
   console.log(`  • 5 events (4 upcoming, 1 past)`);
   console.log(`  • Multiple members per community`);
-  console.log(`  • Multiple RSVPs per event\n`);
+  console.log(`  • Multiple RSVPs per event`);
+  console.log(`  • 15 issue tags\n`);
 }
 
 main()

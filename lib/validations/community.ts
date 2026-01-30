@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { US_STATE_CODES } from "@/lib/constants/us-states";
 
 /**
  * Validation schemas for community operations
@@ -6,6 +7,28 @@ import { z } from "zod";
 
 // Slug validation - lowercase, alphanumeric, hyphens only
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+// Location fields
+export const citySchema = z
+  .string()
+  .max(100, "City must be at most 100 characters")
+  .optional()
+  .nullable()
+  .transform((val) => val?.trim() || null);
+
+export const stateSchema = z
+  .enum(US_STATE_CODES, { message: "Invalid state code" })
+  .optional()
+  .nullable();
+
+export const isVirtualSchema = z.boolean().default(false);
+
+// Issue tags (array of tag IDs)
+export const issueTagIdsSchema = z
+  .array(z.string().min(1))
+  .max(10, "Maximum 10 tags allowed")
+  .optional()
+  .default([]);
 
 export const slugSchema = z
   .string()
@@ -41,6 +64,12 @@ export const createCommunitySchema = z.object({
   slug: slugSchema,
   description: communityDescriptionSchema,
   type: communityTypeSchema.default("PUBLIC"),
+  // Location fields
+  city: citySchema,
+  state: stateSchema,
+  isVirtual: isVirtualSchema,
+  // Issue tags
+  issueTagIds: issueTagIdsSchema,
 });
 
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
@@ -54,6 +83,12 @@ export const updateCommunitySchema = z.object({
   name: communityNameSchema.optional(),
   description: communityDescriptionSchema,
   type: communityTypeSchema.optional(),
+  // Location fields
+  city: citySchema,
+  state: stateSchema,
+  isVirtual: isVirtualSchema.optional(),
+  // Issue tags
+  issueTagIds: issueTagIdsSchema,
 });
 
 export type UpdateCommunityInput = z.infer<typeof updateCommunitySchema>;
@@ -126,6 +161,18 @@ export const searchCommunitiesSchema = z.object({
     .optional()
     .transform((val) => val?.trim().toLowerCase() || undefined),
   type: z.enum(["ALL", "PUBLIC", "PRIVATE"]).optional().default("ALL"),
+  // Location filters
+  state: stateSchema,
+  isVirtual: z.boolean().optional(),
+  // Tag filters
+  issueTagSlugs: z.array(z.string()).optional(),
+  // Size filter
+  size: z.enum(["all", "small", "medium", "large"]).optional().default("all"),
+  // Sort
+  sort: z
+    .enum(["recent-created", "most-members"])
+    .optional()
+    .default("recent-created"),
 });
 
 export type SearchCommunitiesInput = z.infer<typeof searchCommunitiesSchema>;

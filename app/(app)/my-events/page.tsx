@@ -6,6 +6,6 @@ export const metadata = {
 };
 
 export default function MyEventsPage() {
-  // Redirect to the new my-communities page
-  redirect("/my-communities");
+  // Redirect to the dashboard
+  redirect("/dashboard");
 }

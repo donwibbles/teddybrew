@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type PostSortType = "hot" | "new" | "top";
@@ -181,13 +182,23 @@ export async function getPosts(
 
 /**
  * Get a single post by ID
+ * Optimized to fetch author's community role in a single query
  */
 export async function getPostById(postId: string, userId?: string) {
   const post = await prisma.post.findUnique({
     where: { id: postId },
     include: {
       author: {
-        select: { id: true, name: true, image: true, username: true, isPublic: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          username: true,
+          isPublic: true,
+          memberships: {
+            select: { communityId: true, role: true },
+          },
+        },
       },
       community: {
         select: { id: true, slug: true, name: true, ownerId: true },
@@ -208,22 +219,20 @@ export async function getPostById(postId: string, userId?: string) {
 
   if (!post || post.deletedAt) return null;
 
-  // Get author's role in this community
-  const authorMembership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: {
-        userId: post.authorId,
-        communityId: post.communityId,
-      },
-    },
-    select: { role: true },
-  });
+  // Find the author's role in this specific community from the included memberships
+  const authorRole = post.author.memberships.find(
+    (m) => m.communityId === post.communityId
+  )?.role ?? null;
 
   return {
     ...post,
     author: {
-      ...post.author,
-      role: authorMembership?.role ?? null,
+      id: post.author.id,
+      name: post.author.name,
+      image: post.author.image,
+      username: post.author.username,
+      isPublic: post.author.isPublic,
+      role: authorRole,
     },
     userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
     commentCount: post.commentCount,
@@ -232,6 +241,7 @@ export async function getPostById(postId: string, userId?: string) {
 
 /**
  * Get a single post by community slug + post slug
+ * Optimized to fetch author's community role in a single query
  */
 export async function getPostBySlug(
   communitySlug: string,
@@ -246,7 +256,16 @@ export async function getPostBySlug(
     },
     include: {
       author: {
-        select: { id: true, name: true, image: true, username: true, isPublic: true },
+        select: {
+          id: true,
+          name: true,
+          image: true,
+          username: true,
+          isPublic: true,
+          memberships: {
+            select: { communityId: true, role: true },
+          },
+        },
       },
       community: {
         select: { id: true, slug: true, name: true, ownerId: true },
@@ -267,22 +286,20 @@ export async function getPostBySlug(
 
   if (!post) return null;
 
-  // Get author's role in this community
-  const authorMembership = await prisma.member.findUnique({
-    where: {
-      userId_communityId: {
-        userId: post.authorId,
-        communityId: post.communityId,
-      },
-    },
-    select: { role: true },
-  });
+  // Find the author's role in this specific community from the included memberships
+  const authorRole = post.author.memberships.find(
+    (m) => m.communityId === post.communityId
+  )?.role ?? null;
 
   return {
     ...post,
     author: {
-      ...post.author,
-      role: authorMembership?.role ?? null,
+      id: post.author.id,
+      name: post.author.name,
+      image: post.author.image,
+      username: post.author.username,
+      isPublic: post.author.isPublic,
+      role: authorRole,
     },
     userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
     commentCount: post.commentCount,
@@ -290,14 +307,49 @@ export async function getPostBySlug(
 }
 
 /**
+ * Filter parameters for public posts
+ */
+export interface GetPublicPostsParams {
+  sort?: PostSortType;
+  limit?: number;
+  cursor?: string;
+  userId?: string;
+  postType?: string | null;
+  issueTagSlugs?: string[];
+}
+
+/**
  * Get posts from all PUBLIC communities for global forum
+ * Supports filtering by post type and issue tags
  */
 export async function getPublicPosts(
-  sort: PostSortType,
-  limit: number = 20,
-  cursor?: string,
-  userId?: string
+  sortOrParams: PostSortType | GetPublicPostsParams,
+  limitArg?: number,
+  cursorArg?: string,
+  userIdArg?: string
 ) {
+  // Support both old positional args and new params object
+  let sort: PostSortType;
+  let limit: number;
+  let cursor: string | undefined;
+  let userId: string | undefined;
+  let postType: string | undefined | null;
+  let issueTagSlugs: string[] | undefined;
+
+  if (typeof sortOrParams === "object") {
+    sort = sortOrParams.sort ?? "hot";
+    limit = sortOrParams.limit ?? 20;
+    cursor = sortOrParams.cursor;
+    userId = sortOrParams.userId;
+    postType = sortOrParams.postType;
+    issueTagSlugs = sortOrParams.issueTagSlugs;
+  } else {
+    sort = sortOrParams;
+    limit = limitArg ?? 20;
+    cursor = cursorArg;
+    userId = userIdArg;
+  }
+
   // Build order by clause based on sort type
   let orderBy: object[];
 
@@ -315,13 +367,28 @@ export async function getPublicPosts(
       break;
   }
 
+  // Build where conditions
+  const andConditions: Prisma.PostWhereInput[] = [
+    { deletedAt: null },
+    { community: { type: "PUBLIC" } },
+  ];
+
+  // Post type filter
+  if (postType) {
+    andConditions.push({ postType: postType as import("@prisma/client").PostType });
+  }
+
+  // Issue tag filter (AND logic)
+  if (issueTagSlugs?.length) {
+    for (const slug of issueTagSlugs) {
+      andConditions.push({ issueTags: { some: { slug } } });
+    }
+  }
+
+  const whereConditions: Prisma.PostWhereInput = { AND: andConditions };
+
   const posts = await prisma.post.findMany({
-    where: {
-      deletedAt: null,
-      community: {
-        type: "PUBLIC",
-      },
-    },
+    where: whereConditions,
     take: sort === "hot" ? 100 : limit + 1,
     cursor: cursor && sort !== "hot" ? { id: cursor } : undefined,
     skip: cursor && sort !== "hot" ? 1 : 0,
@@ -342,6 +409,13 @@ export async function getPublicPosts(
           slug: true,
           name: true,
         },
+      },
+      issueTags: {
+        select: {
+          slug: true,
+          name: true,
+        },
+        orderBy: { sortOrder: "asc" },
       },
       _count: {
         select: { comments: true },
@@ -392,6 +466,7 @@ export async function getPublicPosts(
       voteScore: post.voteScore,
       isPinned: post.isPinned,
       createdAt: post.createdAt,
+      postType: post.postType,
       author: {
         id: post.author.id,
         name: post.author.name,
@@ -404,6 +479,7 @@ export async function getPublicPosts(
         slug: post.community.slug,
         name: post.community.name,
       },
+      issueTags: post.issueTags,
       userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
       commentCount: post.commentCount,
     })),

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Calendar } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { searchEvents } from "@/lib/actions/event";
+import { getIssueTags } from "@/lib/actions/community";
 import { getPublicCommunities } from "@/lib/db/communities";
 import { EventCard } from "@/components/event/event-card";
 import { EventFilters } from "@/components/event/event-filters";
@@ -19,6 +20,10 @@ interface ExploreEventsPageProps {
     q?: string;
     community?: string;
     showPast?: string;
+    state?: string;
+    virtual?: string;
+    type?: string;
+    tags?: string;
   }>;
 }
 
@@ -29,8 +34,18 @@ async function EventsList({
 }) {
   const params = await searchParams;
   const showPast = params.showPast === "true";
+  const virtualOnly = params.virtual === "true";
+  const tagSlugs = params.tags?.split(",").filter(Boolean) || [];
 
-  const events = await searchEvents(params.q, params.community, showPast);
+  const events = await searchEvents({
+    query: params.q,
+    communityId: params.community,
+    showPast,
+    state: params.state || undefined,
+    isVirtual: virtualOnly || undefined,
+    eventType: params.type || undefined,
+    issueTagSlugs: tagSlugs.length > 0 ? tagSlugs : undefined,
+  });
 
   if (events.length === 0) {
     return (
@@ -68,7 +83,10 @@ export default async function ExploreEventsPage({ searchParams }: ExploreEventsP
     redirect("/events");
   }
 
-  const communities = await getPublicCommunities();
+  const [communities, availableTags] = await Promise.all([
+    getPublicCommunities(),
+    getIssueTags(),
+  ]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -104,7 +122,7 @@ export default async function ExploreEventsPage({ searchParams }: ExploreEventsP
 
       {/* Filters */}
       <Suspense fallback={<div className="h-12 bg-neutral-100 rounded animate-pulse" />}>
-        <EventFilters communities={communities} basePath="/explore/events" />
+        <EventFilters communities={communities} availableTags={availableTags} basePath="/explore/events" />
       </Suspense>
 
       {/* Events List */}

@@ -100,3 +100,15 @@ export const updateProfileSchema = z.object({
 
 export type UpdateProfileInput = z.input<typeof updateProfileSchema>;
 export type UpdateProfileData = z.output<typeof updateProfileSchema>;
+
+/**
+ * Account deletion schema
+ * Requires exact confirmation phrase for safety
+ */
+export const deleteAccountSchema = z.object({
+  confirmationPhrase: z
+    .string()
+    .min(1, "Confirmation phrase is required"),
+});
+
+export type DeleteAccountInput = z.input<typeof deleteAccountSchema>;

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ProfileEditForm } from "@/components/profile/profile-edit-form";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
 
 export const metadata = {
   title: "Settings - Hive Community",
@@ -137,12 +138,7 @@ export default async function SettingsPage({
                 Permanently delete your account and all associated data. This action cannot be undone.
               </p>
             </div>
-            <button
-              disabled
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-error-600 border border-error-300 rounded-lg opacity-50 cursor-not-allowed"
-            >
-              Delete Account (Coming Soon)
-            </button>
+            <DeleteAccountDialog />
           </div>
         </CardContent>
       </Card>

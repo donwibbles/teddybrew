@@ -228,7 +228,7 @@ export async function rsvpToSession(input: unknown): Promise<ActionResult> {
     );
     revalidatePath("/events");
     revalidatePath("/my-events");
-    revalidatePath("/my-communities");
+    revalidatePath("/dashboard");
 
     // If auto-joined, also revalidate the community page
     if (autoJoined) {
@@ -418,7 +418,7 @@ export async function rsvpToAllSessions(input: unknown): Promise<ActionResult> {
     revalidatePath(`/communities/${event.community.slug}/events/${eventId}`);
     revalidatePath("/events");
     revalidatePath("/my-events");
-    revalidatePath("/my-communities");
+    revalidatePath("/dashboard");
 
     // If auto-joined, also revalidate the community page
     if (autoJoined) {

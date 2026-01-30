@@ -9,7 +9,7 @@ import {
   updateCommunitySchema,
   deleteCommunitySchema,
 } from "@/lib/validations/community";
-import { MemberRole } from "@prisma/client";
+import { MemberRole, Prisma } from "@prisma/client";
 import { checkCommunityRateLimit } from "@/lib/rate-limit";
 import { captureServerError } from "@/lib/sentry";
 
@@ -47,12 +47,13 @@ export async function createCommunity(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { name, slug, description, type } = parsed.data;
+    const { name, slug, description, type, city, state, isVirtual, issueTagIds } = parsed.data;
 
-    // Sanitize description
+    // Sanitize inputs
     const sanitizedDescription = description
       ? sanitizeText(description)
       : undefined;
+    const sanitizedCity = city ? sanitizeText(city) : null;
 
     // Check if slug is already taken
     const existingCommunity = await prisma.community.findUnique({
@@ -74,6 +75,12 @@ export async function createCommunity(
           description: sanitizedDescription,
           type,
           ownerId: userId,
+          city: isVirtual ? null : sanitizedCity,
+          state: isVirtual ? null : state,
+          isVirtual: isVirtual ?? false,
+          issueTags: issueTagIds?.length
+            ? { connect: issueTagIds.map((id) => ({ id })) }
+            : undefined,
         },
       });
 
@@ -135,7 +142,10 @@ export async function updateCommunity(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, name, description, type } = parsed.data;
+    const { communityId, name, description, type, city, state, isVirtual, issueTagIds } = parsed.data;
+
+    // Sanitize city if provided
+    const sanitizedCity = city !== undefined ? (city ? sanitizeText(city) : null) : undefined;
 
     // Get community and check ownership
     const community = await prisma.community.findUnique({
@@ -158,6 +168,9 @@ export async function updateCommunity(
     const sanitizedDescription =
       description !== undefined ? sanitizeText(description) : undefined;
 
+    // Determine if community is virtual (for clearing location)
+    const effectiveIsVirtual = isVirtual ?? false;
+
     // Update community
     await prisma.community.update({
       where: { id: communityId },
@@ -167,6 +180,16 @@ export async function updateCommunity(
           description: sanitizedDescription || null,
         }),
         ...(type && { type }),
+        ...(isVirtual !== undefined && { isVirtual: effectiveIsVirtual }),
+        ...(sanitizedCity !== undefined && {
+          city: effectiveIsVirtual ? null : sanitizedCity,
+        }),
+        ...(state !== undefined && {
+          state: effectiveIsVirtual ? null : state,
+        }),
+        ...(issueTagIds !== undefined && {
+          issueTags: { set: issueTagIds.map((id) => ({ id })) },
+        }),
       },
     });
 
@@ -254,43 +277,79 @@ export type SizeFilter = "all" | "small" | "medium" | "large";
 export type SortOption = "recent" | "popular";
 
 /**
+ * Search parameters for communities
+ */
+export interface SearchCommunitiesParams {
+  query?: string;
+  sizeFilter?: SizeFilter;
+  sortBy?: SortOption;
+  state?: string | null;
+  isVirtual?: boolean;
+  issueTagSlugs?: string[];
+}
+
+/**
  * Get communities for discovery page
- * - Supports search, size filtering, and sorting
+ * - Supports search, size filtering, sorting, location, and tag filters
  * - Case-insensitive search
  * - By default only shows PUBLIC communities (PRIVATE communities are hidden)
+ *
+ * Filter behavior:
+ * - state=XX + isVirtual=false: Only communities in that state
+ * - state=null + isVirtual=true: Only virtual communities
+ * - state=null + isVirtual=false: All communities
+ * - issueTagSlugs: AND logic (must have all tags)
  */
-export async function searchCommunities(
-  query?: string,
-  sizeFilter: SizeFilter = "all",
-  sortBy: SortOption = "recent"
-) {
+export async function searchCommunities(params: SearchCommunitiesParams = {}) {
   try {
+    const {
+      query,
+      sizeFilter = "all",
+      sortBy = "recent",
+      state,
+      isVirtual,
+      issueTagSlugs,
+    } = params;
+
     const trimmedQuery = query?.trim().toLowerCase();
+
+    // Build where conditions
+    const andConditions: Prisma.CommunityWhereInput[] = [
+      // Always PUBLIC only - private communities never appear in search
+      { type: "PUBLIC" },
+    ];
+
+    // Search query (case-insensitive)
+    if (trimmedQuery) {
+      andConditions.push({
+        OR: [
+          { name: { contains: trimmedQuery, mode: "insensitive" } },
+          { description: { contains: trimmedQuery, mode: "insensitive" } },
+        ],
+      });
+    }
+
+    // Location filter: if isVirtual is true, only show virtual; if state is set, only show that state
+    if (isVirtual === true) {
+      andConditions.push({ isVirtual: true });
+    } else if (state) {
+      andConditions.push({ state, isVirtual: false });
+    }
+
+    // Issue tag filter (AND logic)
+    if (issueTagSlugs?.length) {
+      for (const slug of issueTagSlugs) {
+        andConditions.push({ issueTags: { some: { slug } } });
+      }
+    }
+
+    const whereConditions: Prisma.CommunityWhereInput = { AND: andConditions };
 
     // SECURITY: Only PUBLIC communities appear in search results.
     // Private communities are discoverable only through direct invitations
     // or user's membership list.
     const communities = await prisma.community.findMany({
-      where: {
-        AND: [
-          // Always PUBLIC only - private communities never appear in search
-          { type: "PUBLIC" },
-          // Search query (case-insensitive)
-          trimmedQuery
-            ? {
-                OR: [
-                  { name: { contains: trimmedQuery, mode: "insensitive" } },
-                  {
-                    description: {
-                      contains: trimmedQuery,
-                      mode: "insensitive",
-                    },
-                  },
-                ],
-              }
-            : {},
-        ],
-      },
+      where: whereConditions,
       include: {
         owner: {
           select: {
@@ -298,6 +357,13 @@ export async function searchCommunities(
             name: true,
             image: true,
           },
+        },
+        issueTags: {
+          select: {
+            slug: true,
+            name: true,
+          },
+          orderBy: { sortOrder: "asc" },
         },
         _count: {
           select: {
@@ -333,6 +399,27 @@ export async function searchCommunities(
   } catch (error) {
     console.error("Failed to search communities:", error);
     captureServerError("community.search", error);
+    return [];
+  }
+}
+
+/**
+ * Get all issue tags (for forms and filters)
+ */
+export async function getIssueTags() {
+  try {
+    const tags = await prisma.issueTag.findMany({
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+      },
+      orderBy: { sortOrder: "asc" },
+    });
+    return tags;
+  } catch (error) {
+    console.error("Failed to fetch issue tags:", error);
+    captureServerError("issueTags.get", error);
     return [];
   }
 }

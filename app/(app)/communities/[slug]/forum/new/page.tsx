@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
+import { getIssueTags } from "@/lib/actions/community";
 import { getSession } from "@/lib/dal";
 import { CreatePostForm } from "@/components/forum/create-post-form";
 
@@ -36,7 +37,10 @@ export default async function NewPostPage({ params }: NewPostPageProps) {
     redirect(`/sign-in?callbackUrl=/communities/${slug}/forum/new`);
   }
 
-  const membership = await getMembershipStatus(community.id);
+  const [membership, availableTags] = await Promise.all([
+    getMembershipStatus(community.id),
+    getIssueTags(),
+  ]);
 
   // Only members can create posts
   if (!membership.isMember) {
@@ -62,6 +66,7 @@ export default async function NewPostPage({ params }: NewPostPageProps) {
         <CreatePostForm
           communityId={community.id}
           communitySlug={community.slug}
+          availableTags={availableTags}
         />
       </div>
     </div>

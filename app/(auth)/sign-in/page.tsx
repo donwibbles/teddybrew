@@ -18,7 +18,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   const params = await searchParams;
 
   if (session?.user) {
-    redirect(params.callbackUrl || "/communities");
+    redirect(params.callbackUrl || "/dashboard");
   }
 
   const errorMessage = params.error

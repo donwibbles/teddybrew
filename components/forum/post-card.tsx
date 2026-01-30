@@ -6,8 +6,11 @@ import { MessageSquare, Pin } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { RoleBadge } from "@/components/ui/role-badge";
 import { ProfileLink } from "@/components/ui/profile-link";
+import { TagBadgeList } from "@/components/tags/tag-badge";
+import { PostTypeBadge } from "@/components/tags/post-type-select";
 import { VoteButton } from "./vote-button";
 import { MarkdownPreview } from "./markdown-renderer";
+import type { PostTypeValue } from "@/lib/validations/post";
 
 interface Author {
   id: string;
@@ -35,6 +38,10 @@ interface PostCardProps {
   commentCount: number;
   isPinned: boolean;
   communitySlug: string;
+  /** Post type (optional) */
+  postType?: string | null;
+  /** Issue tags (optional) */
+  issueTags?: Array<{ slug: string; name: string }>;
   /** Show community badge (for global forum view) */
   showCommunity?: boolean;
   /** Community info (required when showCommunity is true) */
@@ -57,6 +64,8 @@ export function PostCard({
   commentCount,
   isPinned,
   communitySlug,
+  postType,
+  issueTags,
   showCommunity,
   community,
   basePath = "/communities",
@@ -107,6 +116,23 @@ export function PostCard({
           <div className="mt-1">
             <MarkdownPreview content={content} maxLength={150} />
           </div>
+
+          {/* Tags row */}
+          {(postType || (issueTags && issueTags.length > 0)) && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              {postType && (
+                <PostTypeBadge type={postType as PostTypeValue} size="sm" />
+              )}
+              {issueTags && issueTags.length > 0 && (
+                <TagBadgeList
+                  tags={issueTags}
+                  maxVisible={2}
+                  size="sm"
+                  variant="default"
+                />
+              )}
+            </div>
+          )}
 
           {/* Meta */}
           <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-neutral-500">

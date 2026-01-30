@@ -86,23 +86,20 @@ export async function joinCommunity(
       return { success: false, error: "You are already a member of this community" };
     }
 
-    // Create membership
-    await prisma.member.create({
-      data: {
-        userId,
-        communityId,
-        role: MemberRole.MEMBER,
-      },
-    });
-
-    // Update community lastActivityAt (fire and forget)
-    prisma.community.update({
-      where: { id: communityId },
-      data: { lastActivityAt: new Date() },
-    }).catch((err) => {
-      console.warn("Failed to update lastActivityAt:", err);
-      captureFireAndForgetError("membership.updateLastActivityAt", err);
-    });
+    // Create membership and update community lastActivityAt in a transaction
+    await prisma.$transaction([
+      prisma.member.create({
+        data: {
+          userId,
+          communityId,
+          role: MemberRole.MEMBER,
+        },
+      }),
+      prisma.community.update({
+        where: { id: communityId },
+        data: { lastActivityAt: new Date() },
+      }),
+    ]);
 
     // Get joining user's name for notification
     const joiningUser = await prisma.user.findUnique({

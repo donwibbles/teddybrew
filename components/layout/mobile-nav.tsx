@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { Hash, ChevronDown, ChevronRight } from "lucide-react";
@@ -18,10 +18,10 @@ interface MobileNavProps {
 }
 
 const navLinks = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/communities", label: "Communities" },
   { href: "/events", label: "Events" },
-  { href: "/forum", label: "Forum" },
-  { href: "/my-communities", label: "My Communities" },
+  { href: "/feed", label: "Feed" },
   { href: "/profile", label: "Profile" },
   { href: "/settings", label: "Settings" },
 ];
@@ -34,6 +34,9 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   // Check if we're on a chat page
   const chatMatch = pathname.match(/^\/communities\/([^/]+)\/chat$/);
@@ -71,16 +74,53 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
     }
   }, [isOnChatPage]);
 
-  // Prevent scroll when menu is open
+  // Prevent scroll when menu is open and handle keyboard events
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      // Focus the close button when drawer opens
+      setTimeout(() => closeButtonRef.current?.focus(), 100);
     } else {
       document.body.style.overflow = "";
     }
     return () => {
       document.body.style.overflow = "";
     };
+  }, [isOpen]);
+
+  // Handle Escape key and focus trap
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      if (event.key === "Escape") {
+        setIsOpen(false);
+        openButtonRef.current?.focus();
+        return;
+      }
+
+      // Focus trap - keep focus within the drawer
+      if (event.key === "Tab" && drawerRef.current) {
+        const focusableElements = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement?.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+          event.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
   const handleChannelSelect = (channelId: string) => {
@@ -92,10 +132,12 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
     <div className="md:hidden">
       {/* Hamburger button */}
       <button
+        ref={openButtonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 text-neutral-600 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
         aria-label={isOpen ? "Close menu" : "Open menu"}
         aria-expanded={isOpen}
+        aria-controls="mobile-nav-drawer"
       >
         {isOpen ? (
           <svg
@@ -141,6 +183,11 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
 
       {/* Slide-out drawer */}
       <div
+        ref={drawerRef}
+        id="mobile-nav-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
         className={cn(
           "fixed top-0 right-0 h-full w-72 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "translate-x-full"
@@ -151,6 +198,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
           <div className="flex items-center justify-between p-4 border-b border-neutral-200">
             <span className="font-semibold text-lg text-primary-600">Menu</span>
             <button
+              ref={closeButtonRef}
               onClick={() => setIsOpen(false)}
               className="p-2 text-neutral-600 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
               aria-label="Close menu"

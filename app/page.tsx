@@ -5,9 +5,9 @@ import Link from "next/link";
 export default async function HomePage() {
   const session = await auth();
 
-  // Redirect authenticated users to the communities dashboard
+  // Redirect authenticated users to the dashboard
   if (session?.user) {
-    redirect("/communities");
+    redirect("/dashboard");
   }
 
   return (

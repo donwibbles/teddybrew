@@ -19,10 +19,10 @@ export function PublicHeader() {
               Explore Communities
             </Link>
             <Link
-              href="/explore/forum"
+              href="/explore/feed"
               className="text-sm text-neutral-600 hover:text-primary-600 transition-colors"
             >
-              Forum
+              Feed
             </Link>
             <Link
               href="/explore/events"

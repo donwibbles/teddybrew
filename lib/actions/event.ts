@@ -80,6 +80,10 @@ export async function createEvent(
       isVirtual,
       meetingUrl,
       timezone,
+      city,
+      state,
+      eventType,
+      issueTagIds,
     } = parsed.data;
 
     // Check if user is a member of the community
@@ -101,10 +105,11 @@ export async function createEvent(
       return { success: false, error: "Community not found" };
     }
 
-    // Sanitize description
+    // Sanitize inputs
     const sanitizedDescription = description
       ? sanitizeText(description)
       : undefined;
+    const sanitizedCity = city ? sanitizeText(city) : null;
 
     // Generate unique channel name outside transaction if needed
     const channelName = isVirtual
@@ -141,6 +146,14 @@ export async function createEvent(
           meetingUrl: meetingUrl || null,
           chatChannelId: chatChannelId || null,
           timezone: timezone || "America/New_York",
+          // Location fields
+          city: isVirtual ? null : sanitizedCity,
+          state: isVirtual ? null : (state || null),
+          // Event categorization
+          eventType: eventType || null,
+          issueTags: issueTagIds?.length
+            ? { connect: issueTagIds.map((id) => ({ id })) }
+            : undefined,
           sessions: {
             create: sessions.map((session) => ({
               title: session.title || null,
@@ -213,6 +226,10 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       isVirtual,
       meetingUrl,
       timezone,
+      city,
+      state,
+      eventType,
+      issueTagIds,
     } = parsed.data;
 
     // Check if user is an organizer
@@ -241,9 +258,11 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       return { success: false, error: "Event not found" };
     }
 
-    // Sanitize description
+    // Sanitize inputs
     const sanitizedDescription =
       description !== undefined ? sanitizeText(description) : undefined;
+    const sanitizedCity =
+      city !== undefined ? (city ? sanitizeText(city) : null) : undefined;
 
     // Use transaction for atomic update
     await prisma.$transaction(async (tx) => {
@@ -271,6 +290,9 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
         chatChannelId = channel.id;
       }
 
+      // Determine if event is virtual (for clearing location)
+      const effectiveIsVirtual = isVirtual !== undefined ? isVirtual : event.isVirtual;
+
       // Update event base fields
       await tx.event.update({
         where: { id: eventId },
@@ -286,6 +308,18 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
           ...(meetingUrl !== undefined && { meetingUrl: meetingUrl || null }),
           ...(chatChannelId !== event.chatChannelId && { chatChannelId }),
           ...(timezone !== undefined && { timezone }),
+          // Location fields
+          ...(sanitizedCity !== undefined && {
+            city: effectiveIsVirtual ? null : sanitizedCity,
+          }),
+          ...(state !== undefined && {
+            state: effectiveIsVirtual ? null : state,
+          }),
+          // Event categorization
+          ...(eventType !== undefined && { eventType: eventType || null }),
+          ...(issueTagIds !== undefined && {
+            issueTags: { set: issueTagIds.map((id) => ({ id })) },
+          }),
         },
       });
 
@@ -546,16 +580,41 @@ export async function removeCoOrganizer(input: unknown): Promise<ActionResult> {
 }
 
 /**
+ * Search parameters for events
+ */
+export interface SearchEventsParams {
+  query?: string;
+  communityId?: string;
+  showPast?: boolean;
+  state?: string | null;
+  isVirtual?: boolean;
+  eventType?: string | null;
+  issueTagSlugs?: string[];
+}
+
+/**
  * Search/filter events
  * - Only shows events from PUBLIC communities (unless filtering by specific communityId)
  * - When filtering by communityId, membership is checked elsewhere (at page level)
+ *
+ * Filter behavior:
+ * - state=XX + isVirtual=false: Only events in that state
+ * - state=null + isVirtual=true: Only virtual events
+ * - state=null + isVirtual=false: All events
+ * - issueTagSlugs: AND logic (must have all tags)
  */
-export async function searchEvents(
-  query?: string,
-  communityId?: string,
-  showPast: boolean = false
-) {
+export async function searchEvents(params: SearchEventsParams = {}) {
   try {
+    const {
+      query,
+      communityId,
+      showPast = false,
+      state,
+      isVirtual,
+      eventType,
+      issueTagSlugs,
+    } = params;
+
     const trimmedQuery = query?.trim().toLowerCase();
     const now = new Date();
 
@@ -585,6 +644,20 @@ export async function searchEvents(
                 ],
               }
             : {},
+          // Location filter: if isVirtual is true, only show virtual; if state is set, only show that state
+          ...(isVirtual === true
+            ? [{ isVirtual: true }]
+            : state
+              ? [{ state, isVirtual: false }]
+              : []),
+          // Event type filter
+          ...(eventType ? [{ eventType: eventType as import("@prisma/client").EventType }] : []),
+          // Issue tag filter (AND logic)
+          ...(issueTagSlugs?.length
+            ? issueTagSlugs.map((slug) => ({
+                issueTags: { some: { slug } },
+              }))
+            : []),
         ],
       },
       include: {
@@ -611,6 +684,13 @@ export async function searchEvents(
             endTime: true,
             _count: { select: { rsvps: true } },
           },
+        },
+        issueTags: {
+          select: {
+            slug: true,
+            name: true,
+          },
+          orderBy: { sortOrder: "asc" },
         },
       },
     });

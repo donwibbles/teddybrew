@@ -10,9 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TipTapEditor } from "@/components/documents/tiptap/editor";
+import { PostTypeSelect } from "@/components/tags/post-type-select";
+import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import { createPost } from "@/lib/actions/post";
 import { toast } from "sonner";
 import type { JSONContent } from "@tiptap/react";
+import type { PostTypeValue } from "@/lib/validations/post";
 
 const createPostFormSchema = z.object({
   title: z
@@ -23,9 +26,16 @@ const createPostFormSchema = z.object({
 
 type FormData = z.infer<typeof createPostFormSchema>;
 
+interface IssueTag {
+  id: string;
+  slug: string;
+  name: string;
+}
+
 interface CreatePostFormProps {
   communityId: string;
   communitySlug: string;
+  availableTags: IssueTag[];
 }
 
 const emptyContent: JSONContent = { type: "doc", content: [{ type: "paragraph" }] };
@@ -33,12 +43,17 @@ const emptyContent: JSONContent = { type: "doc", content: [{ type: "paragraph" }
 export function CreatePostForm({
   communityId,
   communitySlug,
+  availableTags,
 }: CreatePostFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
   const contentJsonRef = useRef<JSONContent>(emptyContent);
   const contentHtmlRef = useRef<string>("");
+
+  // Post type and tags state
+  const [postType, setPostType] = useState<PostTypeValue | null>(null);
+  const [issueTagIds, setIssueTagIds] = useState<string[]>([]);
 
   const {
     register,
@@ -78,6 +93,8 @@ export function CreatePostForm({
       title: data.title,
       content: html,
       contentJson: contentJsonRef.current,
+      postType: postType || null,
+      issueTagIds,
     });
 
     if (result.success) {
@@ -117,6 +134,32 @@ export function CreatePostForm({
         {contentError && (
           <p className="text-sm text-error-500">{contentError}</p>
         )}
+      </div>
+
+      {/* Post Type */}
+      <div className="space-y-2">
+        <Label>Post Type</Label>
+        <PostTypeSelect
+          value={postType}
+          onChange={setPostType}
+          disabled={isSubmitting}
+          placeholder="Select post type (optional)"
+        />
+      </div>
+
+      {/* Issue Tags */}
+      <div className="space-y-2">
+        <Label>Issue Tags</Label>
+        <p className="text-sm text-neutral-500">
+          Select the issues this post relates to (optional)
+        </p>
+        <IssueTagSelect
+          availableTags={availableTags}
+          selectedTagIds={issueTagIds}
+          onChange={setIssueTagIds}
+          disabled={isSubmitting}
+          placeholder="Select issue tags..."
+        />
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-4">

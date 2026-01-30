@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
@@ -10,12 +10,25 @@ import {
   generateSlug,
 } from "@/lib/validations/community";
 import { z } from "zod";
+import { StateSelect } from "@/components/ui/state-select";
+import { IssueTagSelect } from "@/components/tags/issue-tag-select";
+import type { USStateCode } from "@/lib/constants/us-states";
 
 // Form input type (before Zod transforms)
 type CreateCommunityFormInput = z.input<typeof createCommunitySchema>;
 import { createCommunity } from "@/lib/actions/community";
 
-export function CreateCommunityForm() {
+interface IssueTag {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+interface CreateCommunityFormProps {
+  availableTags: IssueTag[];
+}
+
+export function CreateCommunityForm({ availableTags }: CreateCommunityFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -25,6 +38,7 @@ export function CreateCommunityForm() {
     handleSubmit,
     watch,
     setValue,
+    control,
     formState: { errors },
   } = useForm<CreateCommunityFormInput>({
     resolver: zodResolver(createCommunitySchema),
@@ -33,8 +47,14 @@ export function CreateCommunityForm() {
       slug: "",
       description: "",
       type: "PUBLIC",
+      city: "",
+      state: null,
+      isVirtual: false,
+      issueTagIds: [],
     },
   });
+
+  const isVirtual = watch("isVirtual");
 
   // Auto-generate slug from name
   const name = watch("name");
@@ -191,6 +211,97 @@ export function CreateCommunityForm() {
         {errors.type && (
           <p className="mt-1 text-sm text-error-600">{errors.type.message}</p>
         )}
+      </div>
+
+      {/* Location Section */}
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-3">
+            Location
+          </label>
+          <label className="flex items-center gap-3 p-4 border border-neutral-200 rounded-lg cursor-pointer hover:bg-neutral-50 transition-colors">
+            <input
+              type="checkbox"
+              {...register("isVirtual")}
+              disabled={isSubmitting}
+              className="h-4 w-4 text-primary-500 focus:ring-primary-500 rounded"
+            />
+            <div>
+              <span className="block font-medium text-neutral-900">
+                Virtual Community
+              </span>
+              <span className="block text-sm text-neutral-500">
+                This is an online-only community with no physical location
+              </span>
+            </div>
+          </label>
+        </div>
+
+        {!isVirtual && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor="city"
+                className="block text-sm font-medium text-neutral-700 mb-1"
+              >
+                City
+              </label>
+              <input
+                id="city"
+                type="text"
+                {...register("city")}
+                placeholder="e.g., San Francisco"
+                disabled={isSubmitting}
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                           disabled:bg-neutral-50 disabled:text-neutral-500"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="state"
+                className="block text-sm font-medium text-neutral-700 mb-1"
+              >
+                State
+              </label>
+              <Controller
+                name="state"
+                control={control}
+                render={({ field }) => (
+                  <StateSelect
+                    value={field.value as USStateCode | null}
+                    onChange={field.onChange}
+                    disabled={isSubmitting}
+                    error={errors.state?.message}
+                  />
+                )}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Issue Tags */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Issue Tags
+        </label>
+        <p className="text-sm text-neutral-500 mb-2">
+          Select the issues your community focuses on (optional)
+        </p>
+        <Controller
+          name="issueTagIds"
+          control={control}
+          render={({ field }) => (
+            <IssueTagSelect
+              availableTags={availableTags}
+              selectedTagIds={field.value ?? []}
+              onChange={field.onChange}
+              disabled={isSubmitting}
+              placeholder="Select issue tags..."
+            />
+          )}
+        />
       </div>
 
       {/* Submit button */}

@@ -144,6 +144,11 @@ model Community {
   cardImage   String?
   bannerImage String?
 
+  // Location fields
+  city      String?   @db.VarChar(100)
+  state     String?   @db.VarChar(2)    // US state abbreviation (AL, AK, etc.)
+  isVirtual Boolean   @default(false)   // Online-only community
+
   // Relations
   owner           User              @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members         Member[]
@@ -154,11 +159,14 @@ model Community {
   moderationLogs  ModerationLog[]
   documents       Document[]
   documentFolders DocumentFolder[]
+  issueTags       IssueTag[]
 
   @@index([slug])
   @@index([ownerId])
   @@index([type])
   @@index([lastActivityAt])
+  @@index([state])
+  @@index([isVirtual])
 }
 
 // Community Type Enum
@@ -183,6 +191,7 @@ model Member {
   @@index([userId])
   @@index([communityId])
   @@index([role])
+  @@index([communityId, role])
 }
 
 // Member Role Enum
@@ -215,7 +224,7 @@ model Event {
   id          String    @id @default(cuid())
   title       String
   description String?
-  location    String?   // Default location (sessions can override)
+  location    String?   // Default location/venue (sessions can override)
   capacity    Int?      // Default capacity (sessions can override)
   communityId String
   organizerId String
@@ -231,6 +240,14 @@ model Event {
   // Image field
   coverImage String?
 
+  // Location fields (separate from venue/address in location field)
+  city      String?   @db.VarChar(100)
+  state     String?   @db.VarChar(2)    // US state abbreviation
+
+  // Event categorization
+  eventType   EventType?
+  issueTags   IssueTag[]
+
   // Relations
   community    Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
   organizer    User           @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
@@ -240,6 +257,9 @@ model Event {
 
   @@index([communityId])
   @@index([organizerId])
+  @@index([communityId, createdAt(sort: Desc)])
+  @@index([state])
+  @@index([communityId, state])
 }
 
 // Event Session - Each event has one or more sessions
@@ -336,6 +356,7 @@ model Message {
   @@index([channelId, createdAt(sort: Desc)])
   @@index([authorId])
   @@index([replyToId])
+  @@index([replyToId, deletedAt])
 }
 
 // Message Reaction - emoji reactions on chat messages
@@ -371,6 +392,10 @@ model Post {
   deletedAt    DateTime?
   deletedById  String?
 
+  // Post categorization
+  postType    PostType?
+  issueTags   IssueTag[]
+
   community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
   author      User       @relation("PostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
   deletedBy   User?      @relation("PostDeletedBy", fields: [deletedById], references: [id])
@@ -382,6 +407,7 @@ model Post {
   @@index([communityId, voteScore(sort: Desc)])
   @@index([communityId, isPinned, createdAt(sort: Desc)])
   @@index([authorId])
+  @@index([deletedAt, communityId])
 }
 
 model Comment {
@@ -408,6 +434,7 @@ model Comment {
   @@index([postId, voteScore(sort: Desc)])
   @@index([parentId])
   @@index([authorId])
+  @@index([postId, parentId])
 }
 
 model PostVote {
@@ -561,6 +588,7 @@ model Document {
   @@index([communityId, status])
   @@index([communityId, folderId])
   @@index([authorId])
+  @@index([communityId, folderId, deletedAt])
 }
 
 model DocumentVersion {
@@ -579,4 +607,52 @@ model DocumentVersion {
 
   @@unique([documentId, version])
   @@index([documentId])
+}
+
+// ============ EVENT & POST CATEGORIZATION ============
+
+// Event type enum (single selection per event)
+enum EventType {
+  CANVASS
+  PHONE_BANK
+  TEXT_BANK
+  MEETING
+  RALLY
+  TOWN_HALL
+  FUNDRAISER
+  TRAINING
+  SIGN_WAVING
+  VOTER_REGISTRATION
+  TABLING
+  WATCH_PARTY
+  OTHER
+}
+
+// Post type enum (single selection per post)
+enum PostType {
+  OPINION
+  NEWS_DISCUSSION
+  LEGISLATION_POLICY
+  CANDIDATES_ELECTIONS
+  CALL_TO_ACTION
+  QUESTION
+  RESOURCE_GUIDE
+  OTHER
+}
+
+// Issue tags (many-to-many, shared across entities)
+model IssueTag {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String   @unique
+  description String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  communities Community[]
+  events      Event[]
+  posts       Post[]
+
+  @@index([slug])
+  @@index([sortOrder])
 }

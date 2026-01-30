@@ -1,9 +1,72 @@
 import { z } from "zod";
 import { isValidTimezone } from "@/lib/utils/timezone";
+import { US_STATE_CODES } from "@/lib/constants/us-states";
 
 /**
  * Validation schemas for event operations
  */
+
+// Event type enum values (must match Prisma enum)
+export const EVENT_TYPES = [
+  "CANVASS",
+  "PHONE_BANK",
+  "TEXT_BANK",
+  "MEETING",
+  "RALLY",
+  "TOWN_HALL",
+  "FUNDRAISER",
+  "TRAINING",
+  "SIGN_WAVING",
+  "VOTER_REGISTRATION",
+  "TABLING",
+  "WATCH_PARTY",
+  "OTHER",
+] as const;
+
+export type EventTypeValue = (typeof EVENT_TYPES)[number];
+
+// Event type display labels
+export const EVENT_TYPE_LABELS: Record<EventTypeValue, string> = {
+  CANVASS: "Canvass",
+  PHONE_BANK: "Phone Bank",
+  TEXT_BANK: "Text Bank",
+  MEETING: "Meeting",
+  RALLY: "Rally",
+  TOWN_HALL: "Town Hall",
+  FUNDRAISER: "Fundraiser",
+  TRAINING: "Training",
+  SIGN_WAVING: "Sign Waving",
+  VOTER_REGISTRATION: "Voter Registration",
+  TABLING: "Tabling",
+  WATCH_PARTY: "Watch Party",
+  OTHER: "Other",
+};
+
+// Location fields for events
+export const eventCitySchema = z
+  .string()
+  .max(100, "City must be at most 100 characters")
+  .optional()
+  .nullable()
+  .transform((val) => val?.trim() || null);
+
+export const eventStateSchema = z
+  .enum(US_STATE_CODES, { message: "Invalid state code" })
+  .optional()
+  .nullable();
+
+// Event type schema (optional)
+export const eventTypeSchema = z
+  .enum(EVENT_TYPES, { message: "Invalid event type" })
+  .optional()
+  .nullable();
+
+// Issue tags (array of tag IDs)
+export const issueTagIdsSchema = z
+  .array(z.string().min(1))
+  .max(10, "Maximum 10 tags allowed")
+  .optional()
+  .default([]);
 
 export const eventTitleSchema = z
   .string()
@@ -90,13 +153,19 @@ export const createEventSchema = z
     communityId: z.string().min(1, "Community ID is required"),
     title: eventTitleSchema,
     description: eventDescriptionSchema,
-    location: eventLocationSchema, // Default location
+    location: eventLocationSchema, // Default location/venue
     capacity: eventCapacitySchema, // Default capacity
     // Virtual event fields
     isVirtual: z.boolean().optional().default(false),
     meetingUrl: meetingUrlSchema,
     // Cover image URL
     coverImage: z.string().url().max(500).optional().nullable(),
+    // Location fields (separate from venue)
+    city: eventCitySchema,
+    state: eventStateSchema,
+    // Event categorization
+    eventType: eventTypeSchema,
+    issueTagIds: issueTagIdsSchema,
     // Timezone (IANA format, e.g., "America/New_York")
     timezone: z
       .string()
@@ -118,8 +187,7 @@ export const createEventSchema = z
       message: "All sessions must be in the future",
       path: ["sessions"],
     }
-  )
-;
+  );
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 
@@ -150,6 +218,12 @@ export const updateEventSchema = z.object({
   // Virtual event fields
   isVirtual: z.boolean().optional(),
   meetingUrl: meetingUrlSchema,
+  // Location fields (separate from venue)
+  city: eventCitySchema,
+  state: eventStateSchema,
+  // Event categorization
+  eventType: eventTypeSchema,
+  issueTagIds: issueTagIdsSchema,
   // Timezone (IANA format, e.g., "America/New_York")
   timezone: z
     .string()
@@ -232,6 +306,12 @@ export const searchEventsSchema = z.object({
     .transform((val) => val?.trim().toLowerCase() || undefined),
   communityId: z.string().optional(),
   showPast: z.boolean().optional().default(false),
+  // Location filters
+  state: eventStateSchema,
+  isVirtual: z.boolean().optional(),
+  // Type and tag filters
+  eventType: eventTypeSchema,
+  issueTagSlugs: z.array(z.string()).optional(),
 });
 
 export type SearchEventsInput = z.infer<typeof searchEventsSchema>;
