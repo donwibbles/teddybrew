@@ -1,6 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { EventTypeBadge } from "@/components/tags/event-type-select";
 import type { EventTypeValue } from "@/lib/validations/event";
+import { getEventTypeGradient } from "@/lib/utils/gradient-placeholder";
 
 interface Session {
   id: string;
@@ -22,6 +24,7 @@ interface EventCardProps {
     eventType?: string | null;
     state?: string | null;
     showAttendeeCount?: boolean;
+    coverImage?: string | null;
     community: {
       slug: string;
       name: string;
@@ -116,50 +119,88 @@ export function EventCard({
     return `${startDate} - ${endDate} - ${sessions.length} sessions`;
   };
 
+  const gradientClasses = getEventTypeGradient(event.eventType);
+
   return (
     <Link
       href={`${basePath}/${event.community.slug}/events/${event.id}`}
-      className="block bg-white rounded-lg border border-neutral-200 hover:border-primary-300 hover:shadow-sm transition-all"
+      className="block bg-white rounded-lg border border-neutral-200 hover:border-primary-300 hover:shadow-md transition-all overflow-hidden"
     >
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <div className="min-w-0 flex-1">
-            {showCommunity && (
-              <p className="text-xs text-neutral-500 mb-1">
-                {event.community.name}
-              </p>
+      {/* Cover Image Section */}
+      <div className="relative aspect-[16/9] w-full">
+        {event.coverImage ? (
+          <Image
+            src={event.coverImage}
+            alt={event.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${gradientClasses}`} />
+        )}
+
+        {/* Badges overlaid on image */}
+        <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-between">
+          {/* Left: Event type badge */}
+          <div className="flex items-center gap-1.5">
+            {event.eventType && (
+              <EventTypeBadge
+                type={event.eventType as EventTypeValue}
+                size="sm"
+                className="bg-white/90 backdrop-blur-sm shadow-sm"
+              />
             )}
-            <h3 className="font-medium text-neutral-900 truncate">
-              {event.title}
-            </h3>
+            {event.isVirtual && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/90 backdrop-blur-sm text-blue-700 shadow-sm">
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Virtual
+              </span>
+            )}
           </div>
 
-          {/* Status badges */}
-          <div className="flex-shrink-0 flex flex-col items-end gap-1">
+          {/* Right: Status badges */}
+          <div className="flex items-center gap-1.5">
             {isPast && (
-              <span className="px-2 py-0.5 bg-neutral-100 text-neutral-600 text-xs rounded">
+              <span className="px-2 py-0.5 bg-neutral-800/80 backdrop-blur-sm text-white text-xs rounded shadow-sm">
                 Past
               </span>
             )}
             {isGoing && !isPast && (
-              <span className="px-2 py-0.5 bg-success-100 text-success-700 text-xs rounded">
+              <span className="px-2 py-0.5 bg-success-600/90 backdrop-blur-sm text-white text-xs rounded shadow-sm">
                 Going
               </span>
             )}
             {isFull && !isPast && !isGoing && (
-              <span className="px-2 py-0.5 bg-warning-100 text-warning-700 text-xs rounded">
+              <span className="px-2 py-0.5 bg-warning-600/90 backdrop-blur-sm text-white text-xs rounded shadow-sm">
                 Full
               </span>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div className="p-4">
+        {/* Community name and title */}
+        <div className="mb-3">
+          {showCommunity && (
+            <p className="text-xs text-neutral-500 mb-1">
+              {event.community.name}
+            </p>
+          )}
+          <h3 className="font-semibold text-neutral-900 line-clamp-2">
+            {event.title}
+          </h3>
         </div>
 
         {/* Date & Time */}
         <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-neutral-400"
+            className="h-4 w-4 text-neutral-400 flex-shrink-0"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -169,15 +210,15 @@ export function EventCard({
               clipRule="evenodd"
             />
           </svg>
-          <span>{getDateDisplay()}</span>
+          <span className="truncate">{getDateDisplay()}</span>
         </div>
 
         {/* Location */}
-        {event.location && (
-          <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
+        {(event.location || event.state) && (
+          <div className="flex items-center gap-2 text-sm text-neutral-600 mb-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-neutral-400"
+              className="h-4 w-4 text-neutral-400 flex-shrink-0"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -187,54 +228,35 @@ export function EventCard({
                 clipRule="evenodd"
               />
             </svg>
-            <span className="truncate">{event.location}</span>
-          </div>
-        )}
-
-        {/* Tags row */}
-        {(event.eventType || event.isVirtual || event.state) && (
-          <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            {event.eventType && (
-              <EventTypeBadge type={event.eventType as EventTypeValue} size="sm" />
-            )}
-            {event.isVirtual && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-                Virtual
-              </span>
-            )}
-            {event.state && !event.isVirtual && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
-                {event.state}
-              </span>
-            )}
+            <span className="truncate">{event.location || event.state}</span>
           </div>
         )}
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
           {/* Organizer */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             {event.organizer.image ? (
               <img
                 src={event.organizer.image}
                 alt={event.organizer.name || "Organizer"}
-                className="w-6 h-6 rounded-full"
+                className="w-6 h-6 rounded-full flex-shrink-0"
               />
             ) : (
-              <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center">
+              <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
                 <span className="text-primary-700 text-xs font-medium">
                   {(event.organizer.name || "?").charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-neutral-500 truncate">
               by {event.organizer.name || "Anonymous"}
             </span>
           </div>
 
           {/* Attendees count - only show if showAttendeeCount is true (default) */}
           {(event.showAttendeeCount !== false) && (
-            <div className="flex items-center gap-1 text-xs text-neutral-500">
+            <div className="flex items-center gap-1 text-xs text-neutral-500 flex-shrink-0">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-4 w-4"
@@ -243,10 +265,7 @@ export function EventCard({
               >
                 <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
               </svg>
-              <span>
-                {totalRsvps} attending
-                {event.capacity && ` (${event.capacity} max/session)`}
-              </span>
+              <span>{totalRsvps} going</span>
             </div>
           )}
         </div>
