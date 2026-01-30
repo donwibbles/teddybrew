@@ -5,11 +5,15 @@ import { useRouter } from "next/navigation";
 import { updateEvent, deleteEvent } from "@/lib/actions/event";
 import { AddSessionForm } from "./add-session-form";
 import { ImageUpload } from "@/components/ui/image-upload";
+import { StateSelect } from "@/components/ui/state-select";
+import { EventTypeSelect } from "@/components/tags/event-type-select";
 import {
   localDateTimeToUTC,
   getMinDateTimeForTimezone,
   COMMON_TIMEZONES,
 } from "@/lib/utils/timezone";
+import type { USStateCode } from "@/lib/constants/us-states";
+import type { EventTypeValue } from "@/lib/validations/event";
 
 interface Session {
   id?: string;
@@ -31,6 +35,10 @@ interface EditEventFormProps {
     isVirtual?: boolean;
     meetingUrl?: string | null;
     timezone?: string;
+    city?: string | null;
+    state?: string | null;
+    eventType?: string | null;
+    showAttendeeCount?: boolean;
     sessions: Array<{
       id: string;
       title: string | null;
@@ -65,6 +73,18 @@ export function EditEventForm({
   const [coverImage, setCoverImage] = useState(event.coverImage || "");
   const [isVirtual, setIsVirtual] = useState(event.isVirtual || false);
   const [meetingUrl, setMeetingUrl] = useState(event.meetingUrl || "");
+  const [city, setCity] = useState(event.city || "");
+  const [state, setState] = useState<USStateCode | null>(
+    (event.state as USStateCode) || null
+  );
+  const [eventType, setEventType] = useState<EventTypeValue | null>(
+    (event.eventType as EventTypeValue) || null
+  );
+  const [showAttendeeCount, setShowAttendeeCount] = useState(
+    event.showAttendeeCount ?? true
+  );
+  const [stateError, setStateError] = useState<string | null>(null);
+  const [eventTypeError, setEventTypeError] = useState<string | null>(null);
 
   // Format UTC date to local datetime-local value in the event's timezone
   const formatDateForInput = (date: Date, tz: string) => {
@@ -124,6 +144,22 @@ export function EditEventForm({
       return;
     }
 
+    // Validate event type is selected (required)
+    if (!eventType) {
+      setEventTypeError("Please select an event type");
+      setIsSubmitting(false);
+      return;
+    }
+    setEventTypeError(null);
+
+    // Validate state is selected for non-virtual events
+    if (!isVirtual && !state) {
+      setStateError("State is required for non-virtual events");
+      setIsSubmitting(false);
+      return;
+    }
+    setStateError(null);
+
     const data = {
       eventId: event.id,
       title,
@@ -133,6 +169,10 @@ export function EditEventForm({
       coverImage: coverImage || null,
       isVirtual,
       meetingUrl: meetingUrl || undefined,
+      city: isVirtual ? null : (city || null),
+      state: isVirtual ? null : state,
+      eventType,
+      showAttendeeCount,
       timezone: timezone || "America/New_York",
       sessions: sessions.map((s) => ({
         id: s.id,
@@ -338,6 +378,86 @@ export function EditEventForm({
           Maximum attendees per session. Leave empty for no limit.
         </p>
       </div>
+
+      {/* Event Type (required) */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-1">
+          Event Type <span className="text-error-500">*</span>
+        </label>
+        <EventTypeSelect
+          value={eventType}
+          onChange={(val) => {
+            setEventType(val);
+            setEventTypeError(null);
+          }}
+          disabled={isSubmitting || isDeleting}
+          placeholder="Select event type"
+        />
+        {eventTypeError && (
+          <p className="mt-1 text-sm text-error-600">{eventTypeError}</p>
+        )}
+      </div>
+
+      {/* Show Attendee Count Toggle */}
+      <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showAttendeeCount}
+            onChange={(e) => setShowAttendeeCount(e.target.checked)}
+            disabled={isSubmitting || isDeleting}
+            className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500
+                       disabled:opacity-50"
+          />
+          <div>
+            <span className="font-medium text-neutral-900">Show Attendee Count</span>
+            <p className="text-sm text-neutral-500">
+              Display the number of attendees publicly on the event page
+            </p>
+          </div>
+        </label>
+      </div>
+
+      {/* City/State Location (not virtual) */}
+      {!isVirtual && (
+        <div>
+          <label className="block text-sm font-medium text-neutral-700 mb-1">
+            Event Location (City/State) <span className="text-error-500">*</span>
+          </label>
+          <p className="text-sm text-neutral-500 mb-2">
+            Where is this event taking place? (for search/filtering)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-neutral-500 mb-1">City</label>
+              <input
+                id="city"
+                type="text"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="e.g., San Francisco"
+                disabled={isSubmitting || isDeleting}
+                maxLength={100}
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+                           disabled:bg-neutral-50 disabled:text-neutral-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-neutral-500 mb-1">State <span className="text-error-500">*</span></label>
+              <StateSelect
+                value={state}
+                onChange={(val) => {
+                  setState(val);
+                  setStateError(null);
+                }}
+                disabled={isSubmitting || isDeleting}
+                error={stateError || undefined}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Virtual Event Toggle */}
       <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">

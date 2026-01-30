@@ -10,12 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TipTapEditor } from "@/components/documents/tiptap/editor";
-import { PostTypeSelect } from "@/components/tags/post-type-select";
 import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import { createPost } from "@/lib/actions/post";
 import { toast } from "sonner";
 import type { JSONContent } from "@tiptap/react";
-import type { PostTypeValue } from "@/lib/validations/post";
 
 const createPostFormSchema = z.object({
   title: z
@@ -48,11 +46,11 @@ export function CreatePostForm({
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
+  const [tagsError, setTagsError] = useState<string | null>(null);
   const contentJsonRef = useRef<JSONContent>(emptyContent);
   const contentHtmlRef = useRef<string>("");
 
-  // Post type and tags state
-  const [postType, setPostType] = useState<PostTypeValue | null>(null);
+  // Tags state (required)
   const [issueTagIds, setIssueTagIds] = useState<string[]>([]);
 
   const {
@@ -86,6 +84,13 @@ export function CreatePostForm({
       return;
     }
 
+    // Validate at least one tag is selected
+    if (issueTagIds.length === 0) {
+      setTagsError("Please select at least one tag");
+      return;
+    }
+    setTagsError(null);
+
     setIsSubmitting(true);
 
     const result = await createPost({
@@ -93,7 +98,6 @@ export function CreatePostForm({
       title: data.title,
       content: html,
       contentJson: contentJsonRef.current,
-      postType: postType || null,
       issueTagIds,
     });
 
@@ -109,7 +113,7 @@ export function CreatePostForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">Title <span className="text-error-500">*</span></Label>
         <Input
           id="title"
           {...register("title")}
@@ -122,8 +126,29 @@ export function CreatePostForm({
         )}
       </div>
 
+      {/* Tags (required) - moved above content */}
       <div className="space-y-2">
-        <Label>Content</Label>
+        <Label>Tags <span className="text-error-500">*</span></Label>
+        <p className="text-sm text-neutral-500">
+          Select at least one tag for your post
+        </p>
+        <IssueTagSelect
+          availableTags={availableTags}
+          selectedTagIds={issueTagIds}
+          onChange={(ids) => {
+            setIssueTagIds(ids);
+            if (ids.length > 0) setTagsError(null);
+          }}
+          disabled={isSubmitting}
+          placeholder="Select tags..."
+        />
+        {tagsError && (
+          <p className="text-sm text-error-500">{tagsError}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Content <span className="text-error-500">*</span></Label>
         <TipTapEditor
           content={emptyContent}
           onChange={handleContentChange}
@@ -134,32 +159,6 @@ export function CreatePostForm({
         {contentError && (
           <p className="text-sm text-error-500">{contentError}</p>
         )}
-      </div>
-
-      {/* Post Type */}
-      <div className="space-y-2">
-        <Label>Post Type</Label>
-        <PostTypeSelect
-          value={postType}
-          onChange={setPostType}
-          disabled={isSubmitting}
-          placeholder="Select post type (optional)"
-        />
-      </div>
-
-      {/* Issue Tags */}
-      <div className="space-y-2">
-        <Label>Issue Tags</Label>
-        <p className="text-sm text-neutral-500">
-          Select the issues this post relates to (optional)
-        </p>
-        <IssueTagSelect
-          availableTags={availableTags}
-          selectedTagIds={issueTagIds}
-          onChange={setIssueTagIds}
-          disabled={isSubmitting}
-          placeholder="Select issue tags..."
-        />
       </div>
 
       <div className="flex items-center justify-end gap-3 pt-4">

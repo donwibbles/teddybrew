@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
-import { getIssueTags } from "@/lib/actions/community";
 import { EditCommunityForm } from "@/components/community/edit-community-form";
 import { DeleteCommunityForm } from "@/components/community/delete-community-form";
 import { InvitationsSection } from "@/components/community/invitations-section";
@@ -37,10 +36,7 @@ export default async function CommunitySettingsPage({
   }
 
   // Check if user is owner
-  const [membership, availableTags] = await Promise.all([
-    getMembershipStatus(community.id),
-    getIssueTags(),
-  ]);
+  const membership = await getMembershipStatus(community.id);
 
   if (!membership.isOwner) {
     // Redirect non-owners back to community page
@@ -84,9 +80,7 @@ export default async function CommunitySettingsPage({
             city: community.city,
             state: community.state,
             isVirtual: community.isVirtual,
-            issueTags: community.issueTags,
           }}
-          availableTags={availableTags}
         />
       </div>
 

@@ -12,16 +12,14 @@ export const metadata = {
 };
 
 interface FeedPageProps {
-  searchParams: Promise<{ sort?: string; type?: string; tags?: string }>;
+  searchParams: Promise<{ sort?: string; tags?: string }>;
 }
 
 async function FeedPostsList({
   sort,
-  postType,
   tagSlugs,
 }: {
   sort: "hot" | "new" | "top";
-  postType?: string;
   tagSlugs?: string[];
 }) {
   const userId = await getCurrentUserId();
@@ -30,7 +28,6 @@ async function FeedPostsList({
     sort,
     limit: 20,
     userId: userId || undefined,
-    postType: postType || undefined,
     issueTagSlugs: tagSlugs?.length ? tagSlugs : undefined,
   });
 
@@ -47,7 +44,6 @@ async function FeedPostsList({
 export default async function FeedPage({ searchParams }: FeedPageProps) {
   const params = await searchParams;
   const sort = (params.sort === "new" || params.sort === "top" ? params.sort : "hot") as "hot" | "new" | "top";
-  const postType = params.type || "";
   const tagSlugs = params.tags?.split(",").filter(Boolean) || [];
 
   const availableTags = await getIssueTags();
@@ -70,7 +66,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
       {/* Post List */}
       <Suspense fallback={<GlobalPostListSkeleton count={5} />}>
-        <FeedPostsList sort={sort} postType={postType} tagSlugs={tagSlugs} />
+        <FeedPostsList sort={sort} tagSlugs={tagSlugs} />
       </Suspense>
     </div>
   );

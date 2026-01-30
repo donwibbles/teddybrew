@@ -87,6 +87,11 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
               capacity: event.capacity,
               isVirtual: event.isVirtual,
               meetingUrl: event.meetingUrl,
+              timezone: event.timezone,
+              city: event.city,
+              state: event.state,
+              eventType: event.eventType,
+              showAttendeeCount: event.showAttendeeCount,
               sessions: event.sessions,
             }}
             communitySlug={slug}

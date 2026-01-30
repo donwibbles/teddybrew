@@ -83,7 +83,7 @@ export async function createEvent(
       city,
       state,
       eventType,
-      issueTagIds,
+      showAttendeeCount,
     } = parsed.data;
 
     // Check if user is a member of the community
@@ -150,10 +150,9 @@ export async function createEvent(
           city: isVirtual ? null : sanitizedCity,
           state: isVirtual ? null : (state || null),
           // Event categorization
-          eventType: eventType || null,
-          issueTags: issueTagIds?.length
-            ? { connect: issueTagIds.map((id) => ({ id })) }
-            : undefined,
+          eventType: eventType,
+          // Attendee visibility
+          showAttendeeCount: showAttendeeCount ?? true,
           sessions: {
             create: sessions.map((session) => ({
               title: session.title || null,
@@ -229,7 +228,7 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
       city,
       state,
       eventType,
-      issueTagIds,
+      showAttendeeCount,
     } = parsed.data;
 
     // Check if user is an organizer
@@ -317,9 +316,8 @@ export async function updateEvent(input: unknown): Promise<ActionResult> {
           }),
           // Event categorization
           ...(eventType !== undefined && { eventType: eventType || null }),
-          ...(issueTagIds !== undefined && {
-            issueTags: { set: issueTagIds.map((id) => ({ id })) },
-          }),
+          // Attendee visibility
+          ...(showAttendeeCount !== undefined && { showAttendeeCount }),
         },
       });
 
@@ -589,7 +587,6 @@ export interface SearchEventsParams {
   state?: string | null;
   isVirtual?: boolean;
   eventType?: string | null;
-  issueTagSlugs?: string[];
 }
 
 /**
@@ -612,7 +609,6 @@ export async function searchEvents(params: SearchEventsParams = {}) {
       state,
       isVirtual,
       eventType,
-      issueTagSlugs,
     } = params;
 
     const trimmedQuery = query?.trim().toLowerCase();
@@ -652,12 +648,6 @@ export async function searchEvents(params: SearchEventsParams = {}) {
               : []),
           // Event type filter
           ...(eventType ? [{ eventType: eventType as import("@prisma/client").EventType }] : []),
-          // Issue tag filter (AND logic)
-          ...(issueTagSlugs?.length
-            ? issueTagSlugs.map((slug) => ({
-                issueTags: { some: { slug } },
-              }))
-            : []),
         ],
       },
       include: {
@@ -684,13 +674,6 @@ export async function searchEvents(params: SearchEventsParams = {}) {
             endTime: true,
             _count: { select: { rsvps: true } },
           },
-        },
-        issueTags: {
-          select: {
-            slug: true,
-            name: true,
-          },
-          orderBy: { sortOrder: "asc" },
         },
       },
     });
@@ -731,6 +714,10 @@ export async function getEventForEdit(eventId: string) {
         isVirtual: true,
         meetingUrl: true,
         timezone: true,
+        city: true,
+        state: true,
+        eventType: true,
+        showAttendeeCount: true,
         organizerId: true,
         community: {
           select: {

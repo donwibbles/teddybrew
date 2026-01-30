@@ -1,5 +1,4 @@
 import { CreateCommunityForm } from "@/components/community/create-community-form";
-import { getIssueTags } from "@/lib/actions/community";
 
 export const metadata = {
   title: "Create Community - Hive Community",
@@ -7,8 +6,6 @@ export const metadata = {
 };
 
 export default async function CreateCommunityPage() {
-  const availableTags = await getIssueTags();
-
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
@@ -21,7 +18,7 @@ export default async function CreateCommunityPage() {
       </div>
 
       <div className="bg-white rounded-lg border border-neutral-200 p-6 sm:p-8">
-        <CreateCommunityForm availableTags={availableTags} />
+        <CreateCommunityForm />
       </div>
     </div>
   );

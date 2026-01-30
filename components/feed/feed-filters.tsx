@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback } from "react";
-import { POST_TYPES, POST_TYPE_LABELS, type PostTypeValue } from "@/lib/validations/post";
+import { X, Plus } from "lucide-react";
 
 interface IssueTag {
   id: string;
@@ -22,22 +22,14 @@ export function FeedFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [postType, setPostType] = useState(searchParams.get("type") || "");
   const [selectedTags, setSelectedTags] = useState<string[]>(
     searchParams.get("tags")?.split(",").filter(Boolean) || []
   );
+  const [showTagPicker, setShowTagPicker] = useState(false);
 
   const updateFilters = useCallback(
-    (newParams: { type?: string; tags?: string[] }) => {
+    (newParams: { tags?: string[] }) => {
       const params = new URLSearchParams(searchParams.toString());
-
-      if (newParams.type !== undefined) {
-        if (newParams.type) {
-          params.set("type", newParams.type);
-        } else {
-          params.delete("type");
-        }
-      }
 
       if (newParams.tags !== undefined) {
         if (newParams.tags.length > 0) {
@@ -60,8 +52,13 @@ export function FeedFilters({
     updateFilters({ tags: newTags });
   };
 
+  const handleRemoveTag = (tagSlug: string) => {
+    const newTags = selectedTags.filter((t) => t !== tagSlug);
+    setSelectedTags(newTags);
+    updateFilters({ tags: newTags });
+  };
+
   const handleClearFilters = () => {
-    setPostType("");
     setSelectedTags([]);
     // Keep the sort param
     const params = new URLSearchParams();
@@ -72,63 +69,87 @@ export function FeedFilters({
     router.push(`${basePath}${params.toString() ? `?${params.toString()}` : ""}`);
   };
 
-  const hasActiveFilters = postType || selectedTags.length > 0;
+  const hasActiveFilters = selectedTags.length > 0;
+
+  // Get tag names for selected tags
+  const selectedTagObjects = selectedTags
+    .map((slug) => availableTags.find((t) => t.slug === slug))
+    .filter(Boolean) as IssueTag[];
+
+  // Get unselected tags for the picker
+  const unselectedTags = availableTags.filter(
+    (t) => !selectedTags.includes(t.slug)
+  );
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-3">
-      {/* First row: Post Type filter */}
-      <div className="flex flex-wrap gap-2 items-center">
-        {/* Post Type filter */}
-        <select
-          value={postType}
-          onChange={(e) => {
-            setPostType(e.target.value);
-            updateFilters({ type: e.target.value });
-          }}
-          aria-label="Filter by post type"
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="">All Post Types</option>
-          {POST_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {POST_TYPE_LABELS[type as PostTypeValue]}
-            </option>
-          ))}
-        </select>
+      {/* Tag chips row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-neutral-500">Tags:</span>
+
+        {/* Selected tag chips */}
+        {selectedTagObjects.map((tag) => (
+          <button
+            key={tag.slug}
+            type="button"
+            onClick={() => handleRemoveTag(tag.slug)}
+            className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-primary-100 text-primary-700 border border-primary-300 hover:bg-primary-200 transition-colors"
+          >
+            {tag.name}
+            <X className="h-3 w-3" />
+          </button>
+        ))}
+
+        {/* Add tag button */}
+        {unselectedTags.length > 0 && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowTagPicker(!showTagPicker)}
+              className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-white text-neutral-600 border border-neutral-300 hover:bg-neutral-50 transition-colors"
+            >
+              <Plus className="h-3 w-3" />
+              Add
+            </button>
+
+            {/* Tag picker dropdown */}
+            {showTagPicker && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowTagPicker(false)}
+                />
+                <div className="absolute top-full left-0 mt-1 z-20 bg-white rounded-lg border border-neutral-200 shadow-lg py-2 max-h-64 overflow-y-auto min-w-[200px]">
+                  {unselectedTags.map((tag) => (
+                    <button
+                      key={tag.slug}
+                      type="button"
+                      onClick={() => {
+                        handleTagToggle(tag.slug);
+                        setShowTagPicker(false);
+                      }}
+                      className="w-full px-4 py-2 text-sm text-left text-neutral-700 hover:bg-neutral-50 transition-colors"
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Clear filters button */}
         {hasActiveFilters && (
           <button
             type="button"
             onClick={handleClearFilters}
-            className="px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
           >
-            Clear filters
+            Clear
           </button>
         )}
       </div>
-
-      {/* Second row: Issue Tags (if available) */}
-      {availableTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-100">
-          <span className="text-sm text-neutral-500 py-1">Issues:</span>
-          {availableTags.map((tag) => (
-            <button
-              key={tag.slug}
-              type="button"
-              onClick={() => handleTagToggle(tag.slug)}
-              className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                selectedTags.includes(tag.slug)
-                  ? "bg-primary-100 text-primary-700 border-primary-300"
-                  : "bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50"
-              }`}
-            >
-              {tag.name}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

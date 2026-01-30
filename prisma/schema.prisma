@@ -159,7 +159,6 @@ model Community {
   moderationLogs  ModerationLog[]
   documents       Document[]
   documentFolders DocumentFolder[]
-  issueTags       IssueTag[]
 
   @@index([slug])
   @@index([ownerId])
@@ -246,7 +245,9 @@ model Event {
 
   // Event categorization
   eventType   EventType?
-  issueTags   IssueTag[]
+
+  // Attendee visibility settings
+  showAttendeeCount Boolean @default(true)
 
   // Relations
   community    Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
@@ -392,8 +393,7 @@ model Post {
   deletedAt    DateTime?
   deletedById  String?
 
-  // Post categorization
-  postType    PostType?
+  // Post categorization (tags only - postType merged into tags)
   issueTags   IssueTag[]
 
   community   Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
@@ -628,19 +628,8 @@ enum EventType {
   OTHER
 }
 
-// Post type enum (single selection per post)
-enum PostType {
-  OPINION
-  NEWS_DISCUSSION
-  LEGISLATION_POLICY
-  CANDIDATES_ELECTIONS
-  CALL_TO_ACTION
-  QUESTION
-  RESOURCE_GUIDE
-  OTHER
-}
-
-// Issue tags (many-to-many, shared across entities)
+// Issue tags (many-to-many, shared across posts)
+// Note: PostType enum has been merged into IssueTag with sortOrder 20+
 model IssueTag {
   id          String   @id @default(cuid())
   slug        String   @unique
@@ -649,8 +638,6 @@ model IssueTag {
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
 
-  communities Community[]
-  events      Event[]
   posts       Post[]
 
   @@index([slug])

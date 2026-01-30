@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { CommunityType } from "@prisma/client";
-import { TagBadgeList } from "@/components/tags/tag-badge";
 
 interface CommunityCardProps {
   community: {
@@ -16,7 +15,6 @@ interface CommunityCardProps {
       name: string | null;
       image: string | null;
     };
-    issueTags?: Array<{ slug: string; name: string }>;
     _count: {
       members: number;
       events: number;
@@ -77,27 +75,21 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
         </p>
       )}
 
-      {/* Location & Tags */}
-      <div className="flex flex-wrap items-center gap-2 mb-3">
-        {community.isVirtual && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
-            Virtual
-          </span>
-        )}
-        {community.state && !community.isVirtual && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
-            {community.state}
-          </span>
-        )}
-        {community.issueTags && community.issueTags.length > 0 && (
-          <TagBadgeList
-            tags={community.issueTags}
-            maxVisible={2}
-            size="sm"
-            variant="default"
-          />
-        )}
-      </div>
+      {/* Location */}
+      {(community.isVirtual || community.state) && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {community.isVirtual && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+              Virtual
+            </span>
+          )}
+          {community.state && !community.isVirtual && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
+              {community.state}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between text-sm text-neutral-500">
         <div className="flex items-center gap-4">

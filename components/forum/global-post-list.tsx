@@ -121,7 +121,6 @@ export function GlobalPostList({
           commentCount={post.commentCount}
           isPinned={post.isPinned}
           communitySlug={post.community.slug}
-          postType={post.postType}
           issueTags={post.issueTags}
           showCommunity={true}
           community={post.community}

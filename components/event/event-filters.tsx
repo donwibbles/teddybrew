@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useCallback } from "react";
 import { US_STATES } from "@/lib/constants/us-states";
 import { EVENT_TYPES, EVENT_TYPE_LABELS, type EventTypeValue } from "@/lib/validations/event";
+import { CollapsibleFilters } from "@/components/ui/collapsible-filters";
 
 interface Community {
   id: string;
@@ -11,21 +12,13 @@ interface Community {
   name: string;
 }
 
-interface IssueTag {
-  id: string;
-  slug: string;
-  name: string;
-}
-
 interface EventFiltersProps {
   communities: Community[];
-  availableTags?: IssueTag[];
   basePath?: string;
 }
 
 export function EventFilters({
   communities,
-  availableTags = [],
   basePath = "/events",
 }: EventFiltersProps) {
   const router = useRouter();
@@ -37,9 +30,6 @@ export function EventFilters({
   const [stateFilter, setStateFilter] = useState(searchParams.get("state") || "");
   const [virtualOnly, setVirtualOnly] = useState(searchParams.get("virtual") === "true");
   const [eventType, setEventType] = useState(searchParams.get("type") || "");
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    searchParams.get("tags")?.split(",").filter(Boolean) || []
-  );
 
   const updateFilters = useCallback(
     (newParams: {
@@ -49,7 +39,6 @@ export function EventFilters({
       state?: string;
       virtual?: boolean;
       type?: string;
-      tags?: string[];
     }) => {
       const params = new URLSearchParams(searchParams.toString());
 
@@ -101,14 +90,6 @@ export function EventFilters({
         }
       }
 
-      if (newParams.tags !== undefined) {
-        if (newParams.tags.length > 0) {
-          params.set("tags", newParams.tags.join(","));
-        } else {
-          params.delete("tags");
-        }
-      }
-
       router.push(`${basePath}?${params.toString()}`);
     },
     [router, searchParams, basePath]
@@ -119,14 +100,6 @@ export function EventFilters({
     updateFilters({ q: query });
   };
 
-  const handleTagToggle = (tagSlug: string) => {
-    const newTags = selectedTags.includes(tagSlug)
-      ? selectedTags.filter((t) => t !== tagSlug)
-      : [...selectedTags, tagSlug];
-    setSelectedTags(newTags);
-    updateFilters({ tags: newTags });
-  };
-
   const handleClearFilters = () => {
     setQuery("");
     setCommunity("");
@@ -134,23 +107,55 @@ export function EventFilters({
     setStateFilter("");
     setVirtualOnly(false);
     setEventType("");
-    setSelectedTags([]);
     router.push(basePath);
   };
 
   const hasActiveFilters =
     query ||
     community ||
-    showPast ||
     stateFilter ||
     virtualOnly ||
-    eventType ||
-    selectedTags.length > 0;
+    eventType;
+
+  // Count active secondary filters (for collapsible badge)
+  const activeSecondaryCount = [virtualOnly, community].filter(Boolean).length;
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-4">
-      {/* First row: Search, Community, Past toggle */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Prominent Upcoming/Past tabs */}
+      <div className="flex gap-1 p-1 bg-neutral-100 rounded-lg w-fit">
+        <button
+          type="button"
+          onClick={() => {
+            setShowPast(false);
+            updateFilters({ showPast: false });
+          }}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            !showPast
+              ? "bg-white text-neutral-900 shadow-sm"
+              : "text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Upcoming
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setShowPast(true);
+            updateFilters({ showPast: true });
+          }}
+          className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+            showPast
+              ? "bg-white text-neutral-900 shadow-sm"
+              : "text-neutral-600 hover:text-neutral-900"
+          }`}
+        >
+          Past
+        </button>
+      </div>
+
+      {/* Primary filters row: Search, Event Type, State */}
+      <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
         <form onSubmit={handleSearch} className="flex-1">
           <div className="relative">
@@ -177,42 +182,25 @@ export function EventFilters({
           </div>
         </form>
 
-        {/* Community Filter */}
+        {/* Event Type filter */}
         <select
-          value={community}
+          value={eventType}
           onChange={(e) => {
-            setCommunity(e.target.value);
-            updateFilters({ community: e.target.value });
+            setEventType(e.target.value);
+            updateFilters({ type: e.target.value });
           }}
-          aria-label="Filter by community"
-          className="px-4 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+          aria-label="Filter by event type"
+          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
-          <option value="">All Communities</option>
-          {communities.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
+          <option value="">All Types</option>
+          {EVENT_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {EVENT_TYPE_LABELS[type as EventTypeValue]}
             </option>
           ))}
         </select>
 
-        {/* Past Events Toggle */}
-        <label className="flex items-center gap-2 cursor-pointer px-3 py-2 border border-neutral-300 rounded-lg bg-white hover:bg-neutral-50">
-          <input
-            type="checkbox"
-            checked={showPast}
-            onChange={(e) => {
-              setShowPast(e.target.checked);
-              updateFilters({ showPast: e.target.checked });
-            }}
-            className="w-4 h-4 text-primary-500 border-neutral-300 rounded focus:ring-primary-500"
-          />
-          <span className="text-sm text-neutral-700 whitespace-nowrap">Past Events</span>
-        </label>
-      </div>
-
-      {/* Second row: Location, Event Type filters */}
-      <div className="flex flex-wrap gap-2 items-center">
         {/* State filter */}
         <select
           value={stateFilter}
@@ -233,39 +221,49 @@ export function EventFilters({
             </option>
           ))}
         </select>
+      </div>
 
-        {/* Virtual toggle */}
-        <label className="flex items-center gap-2 px-3 py-2 border border-neutral-300 rounded-lg bg-white text-sm cursor-pointer hover:bg-neutral-50">
-          <input
-            type="checkbox"
-            checked={virtualOnly}
-            onChange={(e) => {
-              setVirtualOnly(e.target.checked);
-              updateFilters({ virtual: e.target.checked });
-            }}
-            className="h-4 w-4 text-primary-500 focus:ring-primary-500 rounded"
-          />
-          <span className="text-neutral-700">Virtual Only</span>
-        </label>
-
-        {/* Event Type filter */}
-        <select
-          value={eventType}
-          onChange={(e) => {
-            setEventType(e.target.value);
-            updateFilters({ type: e.target.value });
-          }}
-          aria-label="Filter by event type"
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+      {/* Collapsible secondary filters */}
+      <div className="flex items-center justify-between">
+        <CollapsibleFilters
+          activeFilterCount={activeSecondaryCount}
+          label="More filters"
         >
-          <option value="">All Types</option>
-          {EVENT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {EVENT_TYPE_LABELS[type as EventTypeValue]}
-            </option>
-          ))}
-        </select>
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Virtual toggle */}
+            <label className="flex items-center gap-2 px-3 py-2 border border-neutral-300 rounded-lg bg-white text-sm cursor-pointer hover:bg-neutral-50">
+              <input
+                type="checkbox"
+                checked={virtualOnly}
+                onChange={(e) => {
+                  setVirtualOnly(e.target.checked);
+                  updateFilters({ virtual: e.target.checked });
+                }}
+                className="h-4 w-4 text-primary-500 focus:ring-primary-500 rounded"
+              />
+              <span className="text-neutral-700">Virtual Only</span>
+            </label>
+
+            {/* Community Filter */}
+            <select
+              value={community}
+              onChange={(e) => {
+                setCommunity(e.target.value);
+                updateFilters({ community: e.target.value });
+              }}
+              aria-label="Filter by community"
+              className="px-4 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="">All Communities</option>
+              {communities.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </CollapsibleFilters>
 
         {/* Clear filters button */}
         {hasActiveFilters && (
@@ -278,27 +276,6 @@ export function EventFilters({
           </button>
         )}
       </div>
-
-      {/* Third row: Issue Tags (if available) */}
-      {availableTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-100">
-          <span className="text-sm text-neutral-500 py-1">Issues:</span>
-          {availableTags.map((tag) => (
-            <button
-              key={tag.slug}
-              type="button"
-              onClick={() => handleTagToggle(tag.slug)}
-              className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                selectedTags.includes(tag.slug)
-                  ? "bg-primary-100 text-primary-700 border-primary-300"
-                  : "bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-50"
-              }`}
-            >
-              {tag.name}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

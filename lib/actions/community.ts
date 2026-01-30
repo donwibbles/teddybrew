@@ -47,7 +47,7 @@ export async function createCommunity(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { name, slug, description, type, city, state, isVirtual, issueTagIds } = parsed.data;
+    const { name, slug, description, type, city, state, isVirtual } = parsed.data;
 
     // Sanitize inputs
     const sanitizedDescription = description
@@ -78,9 +78,6 @@ export async function createCommunity(
           city: isVirtual ? null : sanitizedCity,
           state: isVirtual ? null : state,
           isVirtual: isVirtual ?? false,
-          issueTags: issueTagIds?.length
-            ? { connect: issueTagIds.map((id) => ({ id })) }
-            : undefined,
         },
       });
 
@@ -142,7 +139,7 @@ export async function updateCommunity(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, name, description, type, city, state, isVirtual, issueTagIds } = parsed.data;
+    const { communityId, name, description, type, city, state, isVirtual } = parsed.data;
 
     // Sanitize city if provided
     const sanitizedCity = city !== undefined ? (city ? sanitizeText(city) : null) : undefined;
@@ -186,9 +183,6 @@ export async function updateCommunity(
         }),
         ...(state !== undefined && {
           state: effectiveIsVirtual ? null : state,
-        }),
-        ...(issueTagIds !== undefined && {
-          issueTags: { set: issueTagIds.map((id) => ({ id })) },
         }),
       },
     });
@@ -285,7 +279,6 @@ export interface SearchCommunitiesParams {
   sortBy?: SortOption;
   state?: string | null;
   isVirtual?: boolean;
-  issueTagSlugs?: string[];
 }
 
 /**
@@ -308,7 +301,6 @@ export async function searchCommunities(params: SearchCommunitiesParams = {}) {
       sortBy = "recent",
       state,
       isVirtual,
-      issueTagSlugs,
     } = params;
 
     const trimmedQuery = query?.trim().toLowerCase();
@@ -336,13 +328,6 @@ export async function searchCommunities(params: SearchCommunitiesParams = {}) {
       andConditions.push({ state, isVirtual: false });
     }
 
-    // Issue tag filter (AND logic)
-    if (issueTagSlugs?.length) {
-      for (const slug of issueTagSlugs) {
-        andConditions.push({ issueTags: { some: { slug } } });
-      }
-    }
-
     const whereConditions: Prisma.CommunityWhereInput = { AND: andConditions };
 
     // SECURITY: Only PUBLIC communities appear in search results.
@@ -357,13 +342,6 @@ export async function searchCommunities(params: SearchCommunitiesParams = {}) {
             name: true,
             image: true,
           },
-        },
-        issueTags: {
-          select: {
-            slug: true,
-            name: true,
-          },
-          orderBy: { sortOrder: "asc" },
         },
         _count: {
           select: {

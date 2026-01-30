@@ -23,13 +23,6 @@ export const stateSchema = z
 
 export const isVirtualSchema = z.boolean().default(false);
 
-// Issue tags (array of tag IDs)
-export const issueTagIdsSchema = z
-  .array(z.string().min(1))
-  .max(10, "Maximum 10 tags allowed")
-  .optional()
-  .default([]);
-
 export const slugSchema = z
   .string()
   .min(3, "Slug must be at least 3 characters")
@@ -59,18 +52,27 @@ export const communityTypeSchema = z.enum(["PUBLIC", "PRIVATE"], {
 /**
  * Schema for creating a new community
  */
-export const createCommunitySchema = z.object({
-  name: communityNameSchema,
-  slug: slugSchema,
-  description: communityDescriptionSchema,
-  type: communityTypeSchema.default("PUBLIC"),
-  // Location fields
-  city: citySchema,
-  state: stateSchema,
-  isVirtual: isVirtualSchema,
-  // Issue tags
-  issueTagIds: issueTagIdsSchema,
-});
+export const createCommunitySchema = z
+  .object({
+    name: communityNameSchema,
+    slug: slugSchema,
+    description: communityDescriptionSchema,
+    type: communityTypeSchema.default("PUBLIC"),
+    // Location fields
+    city: citySchema,
+    state: stateSchema,
+    isVirtual: isVirtualSchema,
+  })
+  .superRefine((data, ctx) => {
+    // State is required for non-virtual communities
+    if (!data.isVirtual && !data.state) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "State is required for non-virtual communities",
+        path: ["state"],
+      });
+    }
+  });
 
 export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
 
@@ -78,18 +80,27 @@ export type CreateCommunityInput = z.infer<typeof createCommunitySchema>;
  * Schema for updating a community
  * Note: slug is immutable and cannot be changed after creation
  */
-export const updateCommunitySchema = z.object({
-  communityId: z.string().min(1, "Community ID is required"),
-  name: communityNameSchema.optional(),
-  description: communityDescriptionSchema,
-  type: communityTypeSchema.optional(),
-  // Location fields
-  city: citySchema,
-  state: stateSchema,
-  isVirtual: isVirtualSchema.optional(),
-  // Issue tags
-  issueTagIds: issueTagIdsSchema,
-});
+export const updateCommunitySchema = z
+  .object({
+    communityId: z.string().min(1, "Community ID is required"),
+    name: communityNameSchema.optional(),
+    description: communityDescriptionSchema,
+    type: communityTypeSchema.optional(),
+    // Location fields
+    city: citySchema,
+    state: stateSchema,
+    isVirtual: isVirtualSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    // State is required for non-virtual communities (only validate if isVirtual is explicitly false)
+    if (data.isVirtual === false && !data.state) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "State is required for non-virtual communities",
+        path: ["state"],
+      });
+    }
+  });
 
 export type UpdateCommunityInput = z.infer<typeof updateCommunitySchema>;
 
@@ -164,8 +175,6 @@ export const searchCommunitiesSchema = z.object({
   // Location filters
   state: stateSchema,
   isVirtual: z.boolean().optional(),
-  // Tag filters
-  issueTagSlugs: z.array(z.string()).optional(),
   // Size filter
   size: z.enum(["all", "small", "medium", "large"]).optional().default("all"),
   // Sort

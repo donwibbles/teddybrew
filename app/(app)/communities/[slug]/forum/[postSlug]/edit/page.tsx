@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getPostBySlug } from "@/lib/db/posts";
+import { getIssueTags } from "@/lib/actions/community";
 import { getSession } from "@/lib/dal";
 import { EditPostForm } from "@/components/forum/edit-post-form";
 
@@ -30,7 +31,10 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
     redirect(`/sign-in?callbackUrl=/communities/${slug}/forum/${postSlug}/edit`);
   }
 
-  const post = await getPostBySlug(slug, postSlug, session.user.id!);
+  const [post, availableTags] = await Promise.all([
+    getPostBySlug(slug, postSlug, session.user.id!),
+    getIssueTags(),
+  ]);
 
   if (!post) {
     notFound();
@@ -64,6 +68,8 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
           initialTitle={post.title}
           initialContent={post.content}
           initialContentJson={post.contentJson as import("@tiptap/react").JSONContent | null}
+          initialTagIds={post.issueTags?.map((t) => t.id) || []}
+          availableTags={availableTags}
         />
       </div>
     </div>

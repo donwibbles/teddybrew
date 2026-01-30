@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { Calendar } from "lucide-react";
 import { searchEvents } from "@/lib/actions/event";
-import { getIssueTags } from "@/lib/actions/community";
 import { getPublicCommunities } from "@/lib/db/communities";
 import { EventCard } from "@/components/event/event-card";
 import { EventFilters } from "@/components/event/event-filters";
@@ -21,7 +20,6 @@ interface EventsPageProps {
     state?: string;
     virtual?: string;
     type?: string;
-    tags?: string;
   }>;
 }
 
@@ -33,7 +31,6 @@ async function EventsList({
   const params = await searchParams;
   const showPast = params.showPast === "true";
   const virtualOnly = params.virtual === "true";
-  const tagSlugs = params.tags?.split(",").filter(Boolean) || [];
 
   // Get current user for RSVP status display
   let currentUserId: string | undefined;
@@ -51,7 +48,6 @@ async function EventsList({
     state: params.state || undefined,
     isVirtual: virtualOnly || undefined,
     eventType: params.type || undefined,
-    issueTagSlugs: tagSlugs.length > 0 ? tagSlugs : undefined,
   });
 
   if (events.length === 0) {
@@ -83,10 +79,7 @@ async function EventsList({
 }
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
-  const [communities, availableTags] = await Promise.all([
-    getPublicCommunities(),
-    getIssueTags(),
-  ]);
+  const communities = await getPublicCommunities();
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -100,7 +93,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
 
       {/* Filters */}
       <Suspense fallback={<div className="h-12 bg-neutral-100 rounded animate-pulse" />}>
-        <EventFilters communities={communities} availableTags={availableTags} />
+        <EventFilters communities={communities} />
       </Suspense>
 
       {/* Events List */}

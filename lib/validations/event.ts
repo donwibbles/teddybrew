@@ -55,18 +55,10 @@ export const eventStateSchema = z
   .optional()
   .nullable();
 
-// Event type schema (optional)
-export const eventTypeSchema = z
-  .enum(EVENT_TYPES, { message: "Invalid event type" })
-  .optional()
-  .nullable();
-
-// Issue tags (array of tag IDs)
-export const issueTagIdsSchema = z
-  .array(z.string().min(1))
-  .max(10, "Maximum 10 tags allowed")
-  .optional()
-  .default([]);
+// Event type schema (required)
+export const eventTypeSchema = z.enum(EVENT_TYPES, {
+  message: "Please select an event type",
+});
 
 export const eventTitleSchema = z
   .string()
@@ -163,9 +155,10 @@ export const createEventSchema = z
     // Location fields (separate from venue)
     city: eventCitySchema,
     state: eventStateSchema,
-    // Event categorization
+    // Event categorization (required)
     eventType: eventTypeSchema,
-    issueTagIds: issueTagIdsSchema,
+    // Attendee visibility
+    showAttendeeCount: z.boolean().default(true),
     // Timezone (IANA format, e.g., "America/New_York")
     timezone: z
       .string()
@@ -187,7 +180,17 @@ export const createEventSchema = z
       message: "All sessions must be in the future",
       path: ["sessions"],
     }
-  );
+  )
+  .superRefine((data, ctx) => {
+    // State is required for non-virtual events
+    if (!data.isVirtual && !data.state) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "State is required for non-virtual events",
+        path: ["state"],
+      });
+    }
+  });
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
 
@@ -207,35 +210,44 @@ export const sessionUpdateSchema = z.object({
 /**
  * Schema for updating an event
  */
-export const updateEventSchema = z.object({
-  eventId: z.string().min(1, "Event ID is required"),
-  title: eventTitleSchema.optional(),
-  description: eventDescriptionSchema,
-  location: eventLocationSchema,
-  capacity: eventCapacitySchema,
-  // Cover image URL
-  coverImage: z.string().url().max(500).optional().nullable(),
-  // Virtual event fields
-  isVirtual: z.boolean().optional(),
-  meetingUrl: meetingUrlSchema,
-  // Location fields (separate from venue)
-  city: eventCitySchema,
-  state: eventStateSchema,
-  // Event categorization
-  eventType: eventTypeSchema,
-  issueTagIds: issueTagIdsSchema,
-  // Timezone (IANA format, e.g., "America/New_York")
-  timezone: z
-    .string()
-    .refine(isValidTimezone, "Invalid timezone")
-    .optional(),
-  // Sessions to update/add - all sessions not in this list will be deleted
-  sessions: z
-    .array(sessionUpdateSchema)
-    .min(1, "At least one session is required")
-    .max(50, "Maximum 50 sessions allowed")
-    .optional(),
-});
+export const updateEventSchema = z
+  .object({
+    eventId: z.string().min(1, "Event ID is required"),
+    title: eventTitleSchema.optional(),
+    description: eventDescriptionSchema,
+    location: eventLocationSchema,
+    capacity: eventCapacitySchema,
+    // Cover image URL
+    coverImage: z.string().url().max(500).optional().nullable(),
+    // Virtual event fields
+    isVirtual: z.boolean().optional(),
+    meetingUrl: meetingUrlSchema,
+    // Location fields (separate from venue)
+    city: eventCitySchema,
+    state: eventStateSchema,
+    // Event categorization (required)
+    eventType: eventTypeSchema.optional(),
+    // Attendee visibility
+    showAttendeeCount: z.boolean().optional(),
+    // Timezone (IANA format, e.g., "America/New_York")
+    timezone: z.string().refine(isValidTimezone, "Invalid timezone").optional(),
+    // Sessions to update/add - all sessions not in this list will be deleted
+    sessions: z
+      .array(sessionUpdateSchema)
+      .min(1, "At least one session is required")
+      .max(50, "Maximum 50 sessions allowed")
+      .optional(),
+  })
+  .superRefine((data, ctx) => {
+    // State is required for non-virtual events (only validate if isVirtual is explicitly false)
+    if (data.isVirtual === false && !data.state) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "State is required for non-virtual events",
+        path: ["state"],
+      });
+    }
+  });
 
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 
@@ -309,9 +321,8 @@ export const searchEventsSchema = z.object({
   // Location filters
   state: eventStateSchema,
   isVirtual: z.boolean().optional(),
-  // Type and tag filters
-  eventType: eventTypeSchema,
-  issueTagSlugs: z.array(z.string()).optional(),
+  // Type filter
+  eventType: z.enum(EVENT_TYPES).optional().nullable(),
 });
 
 export type SearchEventsInput = z.infer<typeof searchEventsSchema>;

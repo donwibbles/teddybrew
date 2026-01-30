@@ -7,7 +7,6 @@ import { AddSessionForm } from "./add-session-form";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { StateSelect } from "@/components/ui/state-select";
 import { EventTypeSelect } from "@/components/tags/event-type-select";
-import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import {
   localDateTimeToUTC,
   getMinDateTimeForTimezone,
@@ -24,22 +23,14 @@ interface Session {
   capacity?: number;
 }
 
-interface IssueTag {
-  id: string;
-  slug: string;
-  name: string;
-}
-
 interface CreateEventFormProps {
   communityId: string;
   communityName: string;
-  availableTags: IssueTag[];
 }
 
 export function CreateEventForm({
   communityId,
   communityName,
-  availableTags,
 }: CreateEventFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,11 +49,13 @@ export function CreateEventForm({
     { startTime: "", endTime: "" },
   ]);
 
-  // New fields: location (city/state), event type, and issue tags
+  // New fields: location (city/state), event type, showAttendeeCount
   const [city, setCity] = useState("");
   const [state, setState] = useState<USStateCode | null>(null);
   const [eventType, setEventType] = useState<EventTypeValue | null>(null);
-  const [issueTagIds, setIssueTagIds] = useState<string[]>([]);
+  const [showAttendeeCount, setShowAttendeeCount] = useState(true);
+  const [stateError, setStateError] = useState<string | null>(null);
+  const [eventTypeError, setEventTypeError] = useState<string | null>(null);
 
   // Get user's timezone on mount
   useEffect(() => {
@@ -88,6 +81,22 @@ export function CreateEventForm({
       return;
     }
 
+    // Validate event type is selected (required)
+    if (!eventType) {
+      setEventTypeError("Please select an event type");
+      setIsSubmitting(false);
+      return;
+    }
+    setEventTypeError(null);
+
+    // Validate state is selected for non-virtual events
+    if (!isVirtual && !state) {
+      setStateError("State is required for non-virtual events");
+      setIsSubmitting(false);
+      return;
+    }
+    setStateError(null);
+
     const data = {
       communityId,
       title,
@@ -100,9 +109,10 @@ export function CreateEventForm({
       // Location fields (city/state)
       city: isVirtual ? null : (city || null),
       state: isVirtual ? null : state,
-      // Event categorization
-      eventType: eventType || null,
-      issueTagIds,
+      // Event categorization (required)
+      eventType,
+      // Attendee visibility
+      showAttendeeCount,
       timezone: timezone || "America/New_York",
       sessions: sessions.map((s) => ({
         title: s.title || undefined,
@@ -297,47 +307,57 @@ export function CreateEventForm({
         </p>
       </div>
 
-      {/* Event Type */}
+      {/* Event Type (required) */}
       <div>
         <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Event Type
+          Event Type <span className="text-error-500">*</span>
         </label>
         <EventTypeSelect
           value={eventType}
-          onChange={setEventType}
+          onChange={(val) => {
+            setEventType(val);
+            setEventTypeError(null);
+          }}
           disabled={isSubmitting}
-          placeholder="Select event type (optional)"
+          placeholder="Select event type"
         />
+        {eventTypeError && (
+          <p className="mt-1 text-sm text-error-600">{eventTypeError}</p>
+        )}
       </div>
 
-      {/* Issue Tags */}
-      <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Issue Tags
+      {/* Show Attendee Count Toggle */}
+      <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showAttendeeCount}
+            onChange={(e) => setShowAttendeeCount(e.target.checked)}
+            disabled={isSubmitting}
+            className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500
+                       disabled:opacity-50"
+          />
+          <div>
+            <span className="font-medium text-neutral-900">Show Attendee Count</span>
+            <p className="text-sm text-neutral-500">
+              Display the number of attendees publicly on the event page
+            </p>
+          </div>
         </label>
-        <p className="text-sm text-neutral-500 mb-2">
-          Select the issues this event relates to (optional)
-        </p>
-        <IssueTagSelect
-          availableTags={availableTags}
-          selectedTagIds={issueTagIds}
-          onChange={setIssueTagIds}
-          disabled={isSubmitting}
-          placeholder="Select issue tags..."
-        />
       </div>
 
       {/* City/State Location (not virtual) */}
       {!isVirtual && (
         <div>
           <label className="block text-sm font-medium text-neutral-700 mb-1">
-            Event Location (City/State)
+            Event Location (City/State) <span className="text-error-500">*</span>
           </label>
           <p className="text-sm text-neutral-500 mb-2">
             Where is this event taking place? (for search/filtering)
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
+              <label className="block text-xs text-neutral-500 mb-1">City</label>
               <input
                 id="city"
                 type="text"
@@ -352,10 +372,15 @@ export function CreateEventForm({
               />
             </div>
             <div>
+              <label className="block text-xs text-neutral-500 mb-1">State <span className="text-error-500">*</span></label>
               <StateSelect
                 value={state}
-                onChange={setState}
+                onChange={(val) => {
+                  setState(val);
+                  setStateError(null);
+                }}
                 disabled={isSubmitting}
+                error={stateError || undefined}
               />
             </div>
           </div>
@@ -422,7 +447,7 @@ export function CreateEventForm({
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || !title.trim() || sessions.some((s) => !s.startTime)}
+          disabled={isSubmitting || !title.trim() || !eventType || sessions.some((s) => !s.startTime)}
           className="flex-1 px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

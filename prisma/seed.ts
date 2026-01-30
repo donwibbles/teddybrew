@@ -9,6 +9,7 @@ async function seedIssueTags() {
   console.log("🏷️  Seeding issue tags...");
 
   const issueTags = [
+    // Issue tags (sortOrder 1-15)
     { slug: "healthcare", name: "Healthcare", sortOrder: 1 },
     { slug: "environment-climate", name: "Environment & Climate", sortOrder: 2 },
     { slug: "economy-jobs", name: "Economy & Jobs", sortOrder: 3 },
@@ -24,6 +25,15 @@ async function seedIssueTags() {
     { slug: "social-security-medicare", name: "Social Security & Medicare", sortOrder: 13 },
     { slug: "foreign-policy", name: "Foreign Policy", sortOrder: 14 },
     { slug: "civil-rights", name: "Civil Rights", sortOrder: 15 },
+    // Post type tags (sortOrder 20+, merged from PostType enum)
+    { slug: "opinion", name: "Opinion", sortOrder: 20 },
+    { slug: "news-discussion", name: "News Discussion", sortOrder: 21 },
+    { slug: "legislation-policy", name: "Legislation & Policy", sortOrder: 22 },
+    { slug: "candidates-elections", name: "Candidates & Elections", sortOrder: 23 },
+    { slug: "call-to-action", name: "Call to Action", sortOrder: 24 },
+    { slug: "question", name: "Question", sortOrder: 25 },
+    { slug: "resource-guide", name: "Resource/Guide", sortOrder: 26 },
+    { slug: "other-post", name: "Other", sortOrder: 27 },
   ];
 
   for (const tag of issueTags) {
@@ -34,7 +44,7 @@ async function seedIssueTags() {
     });
   }
 
-  console.log(`✅ Seeded ${issueTags.length} issue tags`);
+  console.log(`✅ Seeded ${issueTags.length} tags (15 issue tags + 8 post type tags)`);
 }
 
 async function main() {
@@ -415,7 +425,7 @@ async function main() {
   console.log(`  • 5 events (4 upcoming, 1 past)`);
   console.log(`  • Multiple members per community`);
   console.log(`  • Multiple RSVPs per event`);
-  console.log(`  • 15 issue tags\n`);
+  console.log(`  • 23 tags (15 issue + 8 post type)\n`);
 }
 
 main()

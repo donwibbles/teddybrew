@@ -14,22 +14,19 @@ export const metadata = {
 };
 
 interface ExploreFeedPageProps {
-  searchParams: Promise<{ sort?: string; type?: string; tags?: string }>;
+  searchParams: Promise<{ sort?: string; tags?: string }>;
 }
 
 async function FeedPostsList({
   sort,
-  postType,
   tagSlugs,
 }: {
   sort: "hot" | "new" | "top";
-  postType?: string;
   tagSlugs?: string[];
 }) {
   const { posts, nextCursor, hasMore } = await getPublicPosts({
     sort,
     limit: 20,
-    postType: postType || undefined,
     issueTagSlugs: tagSlugs?.length ? tagSlugs : undefined,
   });
 
@@ -55,7 +52,6 @@ export default async function ExploreFeedPage({ searchParams }: ExploreFeedPageP
 
   const params = await searchParams;
   const sort = (params.sort === "new" || params.sort === "top" ? params.sort : "hot") as "hot" | "new" | "top";
-  const postType = params.type || "";
   const tagSlugs = params.tags?.split(",").filter(Boolean) || [];
 
   const availableTags = await getIssueTags();
@@ -100,7 +96,7 @@ export default async function ExploreFeedPage({ searchParams }: ExploreFeedPageP
 
       {/* Post List */}
       <Suspense fallback={<GlobalPostListSkeleton count={5} />}>
-        <FeedPostsList sort={sort} postType={postType} tagSlugs={tagSlugs} />
+        <FeedPostsList sort={sort} tagSlugs={tagSlugs} />
       </Suspense>
     </div>
   );

@@ -9,33 +9,36 @@ import { z } from "zod";
 import { updateCommunity } from "@/lib/actions/community";
 import { CommunityType } from "@prisma/client";
 import { StateSelect } from "@/components/ui/state-select";
-import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import { US_STATE_CODES } from "@/lib/constants/us-states";
 import type { USStateCode } from "@/lib/constants/us-states";
 
-const editCommunitySchema = z.object({
-  name: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(100, "Name must be at most 100 characters"),
-  description: z
-    .string()
-    .max(2000, "Description must be at most 2000 characters")
-    .optional(),
-  type: z.enum(["PUBLIC", "PRIVATE"]),
-  city: z.string().max(100).optional().nullable(),
-  state: z.enum(US_STATE_CODES).optional().nullable(),
-  isVirtual: z.boolean().optional(),
-  issueTagIds: z.array(z.string()).optional(),
-});
+const editCommunitySchema = z
+  .object({
+    name: z
+      .string()
+      .min(3, "Name must be at least 3 characters")
+      .max(100, "Name must be at most 100 characters"),
+    description: z
+      .string()
+      .max(2000, "Description must be at most 2000 characters")
+      .optional(),
+    type: z.enum(["PUBLIC", "PRIVATE"]),
+    city: z.string().max(100).optional().nullable(),
+    state: z.enum(US_STATE_CODES).optional().nullable(),
+    isVirtual: z.boolean().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // State is required for non-virtual communities
+    if (data.isVirtual === false && !data.state) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "State is required for non-virtual communities",
+        path: ["state"],
+      });
+    }
+  });
 
 type EditCommunityInput = z.infer<typeof editCommunitySchema>;
-
-interface IssueTag {
-  id: string;
-  slug: string;
-  name: string;
-}
 
 interface EditCommunityFormProps {
   community: {
@@ -47,12 +50,10 @@ interface EditCommunityFormProps {
     city: string | null;
     state: string | null;
     isVirtual: boolean;
-    issueTags: Array<{ id: string; slug: string; name: string }>;
   };
-  availableTags: IssueTag[];
 }
 
-export function EditCommunityForm({ community, availableTags }: EditCommunityFormProps) {
+export function EditCommunityForm({ community }: EditCommunityFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -73,7 +74,6 @@ export function EditCommunityForm({ community, availableTags }: EditCommunityFor
       city: community.city || "",
       state: (community.state as USStateCode) || null,
       isVirtual: community.isVirtual,
-      issueTagIds: community.issueTags.map((t) => t.id),
     },
   });
 
@@ -92,7 +92,6 @@ export function EditCommunityForm({ community, availableTags }: EditCommunityFor
       city: data.isVirtual ? null : (data.city || null),
       state: data.isVirtual ? null : data.state,
       isVirtual: data.isVirtual,
-      issueTagIds: data.issueTagIds || [],
     });
 
     if (result.success) {
@@ -281,7 +280,7 @@ export function EditCommunityForm({ community, availableTags }: EditCommunityFor
                 htmlFor="state"
                 className="block text-sm font-medium text-neutral-700 mb-1"
               >
-                State
+                State <span className="text-error-500">*</span>
               </label>
               <Controller
                 name="state"
@@ -291,35 +290,13 @@ export function EditCommunityForm({ community, availableTags }: EditCommunityFor
                     value={field.value as USStateCode | null}
                     onChange={field.onChange}
                     disabled={isSubmitting}
+                    error={errors.state?.message}
                   />
                 )}
               />
             </div>
           </div>
         )}
-      </div>
-
-      {/* Issue Tags */}
-      <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Issue Tags
-        </label>
-        <p className="text-sm text-neutral-500 mb-2">
-          Select the issues your community focuses on
-        </p>
-        <Controller
-          name="issueTagIds"
-          control={control}
-          render={({ field }) => (
-            <IssueTagSelect
-              availableTags={availableTags}
-              selectedTagIds={field.value ?? []}
-              onChange={field.onChange}
-              disabled={isSubmitting}
-              placeholder="Select issue tags..."
-            />
-          )}
-        />
       </div>
 
       {/* Submit button */}

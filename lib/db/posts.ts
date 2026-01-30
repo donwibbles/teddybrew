@@ -270,6 +270,10 @@ export async function getPostBySlug(
       community: {
         select: { id: true, slug: true, name: true, ownerId: true },
       },
+      issueTags: {
+        select: { id: true, slug: true, name: true },
+        orderBy: { sortOrder: "asc" },
+      },
       _count: {
         select: { comments: true },
       },
@@ -314,7 +318,6 @@ export interface GetPublicPostsParams {
   limit?: number;
   cursor?: string;
   userId?: string;
-  postType?: string | null;
   issueTagSlugs?: string[];
 }
 
@@ -333,7 +336,6 @@ export async function getPublicPosts(
   let limit: number;
   let cursor: string | undefined;
   let userId: string | undefined;
-  let postType: string | undefined | null;
   let issueTagSlugs: string[] | undefined;
 
   if (typeof sortOrParams === "object") {
@@ -341,7 +343,6 @@ export async function getPublicPosts(
     limit = sortOrParams.limit ?? 20;
     cursor = sortOrParams.cursor;
     userId = sortOrParams.userId;
-    postType = sortOrParams.postType;
     issueTagSlugs = sortOrParams.issueTagSlugs;
   } else {
     sort = sortOrParams;
@@ -372,11 +373,6 @@ export async function getPublicPosts(
     { deletedAt: null },
     { community: { type: "PUBLIC" } },
   ];
-
-  // Post type filter
-  if (postType) {
-    andConditions.push({ postType: postType as import("@prisma/client").PostType });
-  }
 
   // Issue tag filter (AND logic)
   if (issueTagSlugs?.length) {
@@ -466,7 +462,6 @@ export async function getPublicPosts(
       voteScore: post.voteScore,
       isPinned: post.isPinned,
       createdAt: post.createdAt,
-      postType: post.postType,
       author: {
         id: post.author.id,
         name: post.author.name,

@@ -11,24 +11,13 @@ import {
 } from "@/lib/validations/community";
 import { z } from "zod";
 import { StateSelect } from "@/components/ui/state-select";
-import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import type { USStateCode } from "@/lib/constants/us-states";
 
 // Form input type (before Zod transforms)
 type CreateCommunityFormInput = z.input<typeof createCommunitySchema>;
 import { createCommunity } from "@/lib/actions/community";
 
-interface IssueTag {
-  id: string;
-  slug: string;
-  name: string;
-}
-
-interface CreateCommunityFormProps {
-  availableTags: IssueTag[];
-}
-
-export function CreateCommunityForm({ availableTags }: CreateCommunityFormProps) {
+export function CreateCommunityForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -50,7 +39,6 @@ export function CreateCommunityForm({ availableTags }: CreateCommunityFormProps)
       city: "",
       state: null,
       isVirtual: false,
-      issueTagIds: [],
     },
   });
 
@@ -262,7 +250,7 @@ export function CreateCommunityForm({ availableTags }: CreateCommunityFormProps)
                 htmlFor="state"
                 className="block text-sm font-medium text-neutral-700 mb-1"
               >
-                State
+                State <span className="text-error-500">*</span>
               </label>
               <Controller
                 name="state"
@@ -279,29 +267,6 @@ export function CreateCommunityForm({ availableTags }: CreateCommunityFormProps)
             </div>
           </div>
         )}
-      </div>
-
-      {/* Issue Tags */}
-      <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
-          Issue Tags
-        </label>
-        <p className="text-sm text-neutral-500 mb-2">
-          Select the issues your community focuses on (optional)
-        </p>
-        <Controller
-          name="issueTagIds"
-          control={control}
-          render={({ field }) => (
-            <IssueTagSelect
-              availableTags={availableTags}
-              selectedTagIds={field.value ?? []}
-              onChange={field.onChange}
-              disabled={isSubmitting}
-              placeholder="Select issue tags..."
-            />
-          )}
-        />
       </div>
 
       {/* Submit button */}

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TipTapEditor } from "@/components/documents/tiptap/editor";
+import { IssueTagSelect } from "@/components/tags/issue-tag-select";
 import { updatePost } from "@/lib/actions/post";
 import { toast } from "sonner";
 import { marked } from "marked";
@@ -24,6 +25,12 @@ const editPostFormSchema = z.object({
 
 type FormData = z.infer<typeof editPostFormSchema>;
 
+interface IssueTag {
+  id: string;
+  slug: string;
+  name: string;
+}
+
 interface EditPostFormProps {
   postId: string;
   postSlug: string;
@@ -31,6 +38,8 @@ interface EditPostFormProps {
   initialTitle: string;
   initialContent: string;
   initialContentJson?: JSONContent | null;
+  initialTagIds: string[];
+  availableTags: IssueTag[];
 }
 
 export function EditPostForm({
@@ -40,13 +49,18 @@ export function EditPostForm({
   initialTitle,
   initialContent,
   initialContentJson,
+  initialTagIds,
+  availableTags,
 }: EditPostFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contentError, setContentError] = useState<string | null>(null);
+  const [tagsError, setTagsError] = useState<string | null>(null);
   const contentJsonRef = useRef<JSONContent | null>(null);
   const contentHtmlRef = useRef<string>(initialContent);
   const [hasContentChanged, setHasContentChanged] = useState(false);
+  const [issueTagIds, setIssueTagIds] = useState<string[]>(initialTagIds);
+  const [hasTagsChanged, setHasTagsChanged] = useState(false);
 
   // Determine initial TipTap content:
   // If we have contentJson (new-format post), use it directly.
@@ -90,6 +104,13 @@ export function EditPostForm({
       return;
     }
 
+    // Validate at least one tag is selected
+    if (issueTagIds.length === 0) {
+      setTagsError("Please select at least one tag");
+      return;
+    }
+    setTagsError(null);
+
     setIsSubmitting(true);
 
     const result = await updatePost({
@@ -97,6 +118,7 @@ export function EditPostForm({
       title: data.title,
       content: html,
       contentJson: contentJsonRef.current,
+      issueTagIds,
     });
 
     if (result.success) {
@@ -112,7 +134,7 @@ export function EditPostForm({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">Title <span className="text-error-500">*</span></Label>
         <Input
           id="title"
           {...register("title")}
@@ -125,8 +147,30 @@ export function EditPostForm({
         )}
       </div>
 
+      {/* Tags (required) */}
       <div className="space-y-2">
-        <Label>Content</Label>
+        <Label>Tags <span className="text-error-500">*</span></Label>
+        <p className="text-sm text-neutral-500">
+          Select at least one tag for your post
+        </p>
+        <IssueTagSelect
+          availableTags={availableTags}
+          selectedTagIds={issueTagIds}
+          onChange={(ids) => {
+            setIssueTagIds(ids);
+            setHasTagsChanged(true);
+            if (ids.length > 0) setTagsError(null);
+          }}
+          disabled={isSubmitting}
+          placeholder="Select tags..."
+        />
+        {tagsError && (
+          <p className="text-sm text-error-500">{tagsError}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label>Content <span className="text-error-500">*</span></Label>
         <TipTapEditor
           content={editorContent as JSONContent}
           onChange={handleContentChange}
@@ -148,7 +192,7 @@ export function EditPostForm({
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting || (!isDirty && !hasContentChanged)}>
+        <Button type="submit" disabled={isSubmitting || (!isDirty && !hasContentChanged && !hasTagsChanged)}>
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
           Save Changes
         </Button>

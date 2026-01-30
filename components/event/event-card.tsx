@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { TagBadgeList } from "@/components/tags/tag-badge";
 import { EventTypeBadge } from "@/components/tags/event-type-select";
 import type { EventTypeValue } from "@/lib/validations/event";
 
@@ -22,6 +21,7 @@ interface EventCardProps {
     isVirtual?: boolean;
     eventType?: string | null;
     state?: string | null;
+    showAttendeeCount?: boolean;
     community: {
       slug: string;
       name: string;
@@ -31,7 +31,6 @@ interface EventCardProps {
       image: string | null;
     };
     sessions: Session[];
-    issueTags?: Array<{ slug: string; name: string }>;
   };
   currentUserId?: string;
   showCommunity?: boolean;
@@ -193,7 +192,7 @@ export function EventCard({
         )}
 
         {/* Tags row */}
-        {(event.eventType || event.isVirtual || event.state || (event.issueTags && event.issueTags.length > 0)) && (
+        {(event.eventType || event.isVirtual || event.state) && (
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
             {event.eventType && (
               <EventTypeBadge type={event.eventType as EventTypeValue} size="sm" />
@@ -207,14 +206,6 @@ export function EventCard({
               <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
                 {event.state}
               </span>
-            )}
-            {event.issueTags && event.issueTags.length > 0 && (
-              <TagBadgeList
-                tags={event.issueTags}
-                maxVisible={2}
-                size="sm"
-                variant="default"
-              />
             )}
           </div>
         )}
@@ -241,21 +232,23 @@ export function EventCard({
             </span>
           </div>
 
-          {/* Attendees count */}
-          <div className="flex items-center gap-1 text-xs text-neutral-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
-            </svg>
-            <span>
-              {totalRsvps} attending
-              {event.capacity && ` (${event.capacity} max/session)`}
-            </span>
-          </div>
+          {/* Attendees count - only show if showAttendeeCount is true (default) */}
+          {(event.showAttendeeCount !== false) && (
+            <div className="flex items-center gap-1 text-xs text-neutral-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+              </svg>
+              <span>
+                {totalRsvps} attending
+                {event.capacity && ` (${event.capacity} max/session)`}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </Link>

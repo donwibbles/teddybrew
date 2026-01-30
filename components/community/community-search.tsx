@@ -5,6 +5,7 @@ import { useState, useTransition, useCallback, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useKeyboardShortcut, useSearchShortcut } from "@/hooks/use-keyboard-shortcut";
 import { US_STATES } from "@/lib/constants/us-states";
+import { CollapsibleFilters } from "@/components/ui/collapsible-filters";
 
 interface CommunitySearchProps {
   initialQuery: string;
@@ -131,79 +132,87 @@ export function CommunitySearch({
     });
   };
 
+  // Count active secondary filters
+  const activeSecondaryCount = [
+    sizeFilter !== "all",
+    sortBy !== "recent",
+  ].filter(Boolean).length;
+
+  const hasActiveFilters = query || sizeFilter !== "all" || sortBy !== "recent" || stateFilter || virtualOnly;
+
   return (
     <div className="flex flex-col gap-3">
-      {/* Search input */}
-      <div className="relative flex-1">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          {isPending ? (
-            <svg
-              className="animate-spin h-5 w-5 text-neutral-400"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
+      {/* Primary filters row: Search, State, Virtual */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search input */}
+        <div className="relative flex-1">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            {isPending ? (
+              <svg
+                className="animate-spin h-5 w-5 text-neutral-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="h-5 w-5 text-neutral-400"
+                fill="none"
                 stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          ) : (
-            <svg
-              className="h-5 w-5 text-neutral-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            )}
+          </div>
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={handleQueryChange}
+            placeholder="Search communities... (/ or Cmd+K)"
+            aria-label="Search communities. Press slash or Command+K to focus."
+            className="block w-full pl-10 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                       focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          />
+          {query && (
+            <button
+              type="button"
+              onClick={handleClear}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
+              aria-label="Clear search"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
           )}
         </div>
-        <input
-          ref={inputRef}
-          type="search"
-          value={query}
-          onChange={handleQueryChange}
-          placeholder="Search communities... (/ or ⌘K)"
-          aria-label="Search communities. Press slash or Command+K to focus."
-          className="block w-full pl-10 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
-            aria-label="Clear search"
-          >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        )}
-      </div>
 
-      {/* Filters row */}
-      <div className="flex flex-wrap gap-2 items-center">
         {/* State filter */}
         <select
           value={stateFilter}
@@ -230,34 +239,55 @@ export function CommunitySearch({
             onChange={handleVirtualChange}
             className="h-4 w-4 text-primary-500 focus:ring-primary-500 rounded"
           />
-          <span className="text-neutral-700">Virtual Only</span>
+          <span className="text-neutral-700">Virtual</span>
         </label>
+      </div>
 
-        {/* Size filter */}
-        <select
-          value={sizeFilter}
-          onChange={handleSizeChange}
-          aria-label="Filter by community size"
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+      {/* Secondary filters row (collapsible) */}
+      <div className="flex items-center justify-between">
+        <CollapsibleFilters
+          activeFilterCount={activeSecondaryCount}
+          label="More filters"
         >
-          <option value="all">All Sizes</option>
-          <option value="small">Small (1-10)</option>
-          <option value="medium">Medium (11-50)</option>
-          <option value="large">Large (51+)</option>
-        </select>
+          <div className="flex flex-wrap gap-2 items-center">
+            {/* Size filter */}
+            <select
+              value={sizeFilter}
+              onChange={handleSizeChange}
+              aria-label="Filter by community size"
+              className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="all">All Sizes</option>
+              <option value="small">Small (1-10)</option>
+              <option value="medium">Medium (11-50)</option>
+              <option value="large">Large (51+)</option>
+            </select>
 
-        {/* Sort */}
-        <select
-          value={sortBy}
-          onChange={handleSortChange}
-          aria-label="Sort communities by"
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
-                     focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-        >
-          <option value="recent">Recently Created</option>
-          <option value="popular">Most Members</option>
-        </select>
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={handleSortChange}
+              aria-label="Sort communities by"
+              className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+                         focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="recent">Recently Created</option>
+              <option value="popular">Most Members</option>
+            </select>
+          </div>
+        </CollapsibleFilters>
+
+        {/* Clear all filters */}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+          >
+            Clear all
+          </button>
+        )}
       </div>
     </div>
   );

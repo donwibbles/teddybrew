@@ -4,44 +4,11 @@ import { z } from "zod";
  * Validation schemas for forum posts
  */
 
-// Post type enum values (must match Prisma enum)
-export const POST_TYPES = [
-  "OPINION",
-  "NEWS_DISCUSSION",
-  "LEGISLATION_POLICY",
-  "CANDIDATES_ELECTIONS",
-  "CALL_TO_ACTION",
-  "QUESTION",
-  "RESOURCE_GUIDE",
-  "OTHER",
-] as const;
-
-export type PostTypeValue = (typeof POST_TYPES)[number];
-
-// Post type display labels
-export const POST_TYPE_LABELS: Record<PostTypeValue, string> = {
-  OPINION: "Opinion",
-  NEWS_DISCUSSION: "News Discussion",
-  LEGISLATION_POLICY: "Legislation & Policy",
-  CANDIDATES_ELECTIONS: "Candidates & Elections",
-  CALL_TO_ACTION: "Call to Action",
-  QUESTION: "Question",
-  RESOURCE_GUIDE: "Resource Guide",
-  OTHER: "Other",
-};
-
-// Post type schema (optional)
-export const postTypeSchema = z
-  .enum(POST_TYPES, { message: "Invalid post type" })
-  .optional()
-  .nullable();
-
-// Issue tags (array of tag IDs)
+// Issue tags (array of tag IDs) - now required with at least 1 tag
 export const issueTagIdsSchema = z
   .array(z.string().min(1))
-  .max(10, "Maximum 10 tags allowed")
-  .optional()
-  .default([]);
+  .min(1, "Please select at least one tag")
+  .max(10, "Maximum 10 tags allowed");
 
 export const postTitleSchema = z
   .string()
@@ -72,8 +39,7 @@ export const createPostSchema = z.object({
   title: postTitleSchema,
   content: postContentSchema,
   contentJson: z.any().optional(),
-  // Post categorization
-  postType: postTypeSchema,
+  // Tags (required - at least 1)
   issueTagIds: issueTagIdsSchema,
 });
 
@@ -87,8 +53,7 @@ export const updatePostSchema = z.object({
   title: postTitleSchema.optional(),
   content: postContentSchema.optional(),
   contentJson: z.any().optional(),
-  // Post categorization
-  postType: postTypeSchema,
+  // Tags (required - at least 1)
   issueTagIds: issueTagIdsSchema,
 });
 
@@ -142,8 +107,7 @@ export const getPublicPostsSchema = z.object({
   sort: postSortSchema,
   cursor: z.string().optional(),
   limit: z.number().min(1).max(50).default(20),
-  // Type and tag filters
-  postType: postTypeSchema,
+  // Tag filters
   issueTagSlugs: z.array(z.string()).optional(),
 });
 

@@ -40,14 +40,6 @@ export async function getCommunityWithDetails(slug: string) {
           image: true,
         },
       },
-      issueTags: {
-        select: {
-          id: true,
-          slug: true,
-          name: true,
-        },
-        orderBy: { sortOrder: "asc" },
-      },
       events: {
         where: {
           sessions: { some: { startTime: { gte: new Date() } } },
