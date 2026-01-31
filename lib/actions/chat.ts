@@ -519,10 +519,12 @@ export async function getChatMessages(input: unknown) {
     }
 
     // Get messages with replyTo, reaction counts, and author role
+    // Only fetch root messages (depth=0) for main chat - replies are shown in thread panel
     const messages = await prisma.message.findMany({
       where: {
         channelId,
         deletedAt: null,
+        depth: 0,
       },
       take: limit + 1,
       cursor: cursor ? { id: cursor } : undefined,

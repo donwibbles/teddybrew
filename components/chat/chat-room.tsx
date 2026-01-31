@@ -140,6 +140,22 @@ export function ChatRoom({
         );
       }
 
+      // Only add root messages (depth=0) to main chat
+      // Replies are only shown in thread panel
+      if (messageData.depth && messageData.depth > 0) {
+        // Update reply count on the root message instead
+        if (messageData.threadRootId) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageData.threadRootId
+                ? { ...m, replyCount: (m.replyCount || 0) + 1 }
+                : m
+            )
+          );
+        }
+        return; // Don't add reply to main message list
+      }
+
       // Only scroll if user is near bottom when new message arrives
       const wasNearBottom = isNearBottom();
       setMessages((prev) => {
