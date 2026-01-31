@@ -32,6 +32,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     community: {
       findUnique: mockCommunityFindUnique,
+      update: vi.fn().mockResolvedValue({}),
     },
     member: {
       findUnique: mockMemberFindUnique,

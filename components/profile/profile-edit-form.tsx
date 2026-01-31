@@ -89,6 +89,7 @@ export function ProfileEditForm({
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- Known RHF limitation with watch
   const username = watch("username");
   const firstName = watch("firstName");
   const lastName = watch("lastName");

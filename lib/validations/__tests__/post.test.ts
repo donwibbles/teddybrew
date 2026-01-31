@@ -164,6 +164,7 @@ describe("Post Validation Schemas", () => {
         communityId: "community-123",
         title: "This is a test post",
         content: "This is the content of the test post which is long enough.",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(true);
     });
@@ -172,6 +173,7 @@ describe("Post Validation Schemas", () => {
       const result = createPostSchema.safeParse({
         title: "This is a test post",
         content: "This is the content of the test post which is long enough.",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(false);
     });
@@ -181,6 +183,7 @@ describe("Post Validation Schemas", () => {
         communityId: "",
         title: "This is a test post",
         content: "This is the content of the test post which is long enough.",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(false);
     });
@@ -192,6 +195,7 @@ describe("Post Validation Schemas", () => {
         postId: "post-123",
         title: "Updated title here",
         content: "Updated content that is long enough to pass validation.",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(true);
     });
@@ -200,6 +204,7 @@ describe("Post Validation Schemas", () => {
       const result = updatePostSchema.safeParse({
         postId: "post-123",
         title: "Updated title only",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(true);
     });
@@ -208,6 +213,7 @@ describe("Post Validation Schemas", () => {
       const result = updatePostSchema.safeParse({
         postId: "post-123",
         content: "Updated content that is long enough to pass validation.",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(true);
     });
@@ -215,6 +221,7 @@ describe("Post Validation Schemas", () => {
     it("should reject missing postId", () => {
       const result = updatePostSchema.safeParse({
         title: "Updated title",
+        issueTagIds: ["tag-1"],
       });
       expect(result.success).toBe(false);
     });

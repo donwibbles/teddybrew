@@ -29,6 +29,7 @@ export function InvitationsSection({ communityId }: InvitationsSectionProps) {
   }, [communityId]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- On-mount data fetch
     loadInvites();
   }, [loadInvites]);
 

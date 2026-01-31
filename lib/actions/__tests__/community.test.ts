@@ -1,53 +1,73 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createCommunity, updateCommunity, deleteCommunity } from "../community";
+
+// Use vi.hoisted to create mock functions that are available when vi.mock factories run
+const {
+  mockCommunityFindUnique,
+  mockCommunityCreate,
+  mockCommunityUpdate,
+  mockCommunityDelete,
+  mockMemberCreate,
+  mockChatChannelCreate,
+  mockTransaction,
+  mockVerifySession,
+  mockCheckCommunityRateLimit,
+} = vi.hoisted(() => ({
+  mockCommunityFindUnique: vi.fn(),
+  mockCommunityCreate: vi.fn(),
+  mockCommunityUpdate: vi.fn(),
+  mockCommunityDelete: vi.fn(),
+  mockMemberCreate: vi.fn(),
+  mockChatChannelCreate: vi.fn(),
+  mockTransaction: vi.fn(),
+  mockVerifySession: vi.fn(),
+  mockCheckCommunityRateLimit: vi.fn(),
+}));
 
 // Mock dependencies
 vi.mock("@/lib/dal", () => ({
-  verifySession: vi.fn(),
+  verifySession: mockVerifySession,
 }));
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     community: {
-      findUnique: vi.fn(),
-      create: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
+      findUnique: mockCommunityFindUnique,
+      create: mockCommunityCreate,
+      update: mockCommunityUpdate,
+      delete: mockCommunityDelete,
     },
     member: {
-      create: vi.fn(),
+      create: mockMemberCreate,
     },
     chatChannel: {
-      create: vi.fn(),
+      create: mockChatChannelCreate,
     },
-    $transaction: vi.fn(),
+    $transaction: mockTransaction,
   },
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
-  checkCommunityRateLimit: vi.fn(),
+  checkCommunityRateLimit: mockCheckCommunityRateLimit,
 }));
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
 }));
 
-// Import mocks
-import { verifySession } from "@/lib/dal";
-import { prisma } from "@/lib/prisma";
-import { checkCommunityRateLimit } from "@/lib/rate-limit";
+// Import after mocks are set up
+import { createCommunity, updateCommunity, deleteCommunity } from "../community";
 
 describe("Community Actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock implementations
-    vi.mocked(verifySession).mockResolvedValue({ userId: "user-123" });
-    vi.mocked(checkCommunityRateLimit).mockResolvedValue({ success: true });
+    mockVerifySession.mockResolvedValue({ userId: "user-123" });
+    mockCheckCommunityRateLimit.mockResolvedValue({ success: true });
   });
 
   describe("createCommunity", () => {
     it("should return error for unauthenticated user", async () => {
-      vi.mocked(verifySession).mockRejectedValue(new Error("Unauthorized"));
+      mockVerifySession.mockRejectedValue(new Error("Unauthorized"));
 
       const result = await createCommunity({
         name: "Test Community",
@@ -62,7 +82,7 @@ describe("Community Actions", () => {
     });
 
     it("should return error when rate limited", async () => {
-      vi.mocked(checkCommunityRateLimit).mockResolvedValue({ success: false });
+      mockCheckCommunityRateLimit.mockResolvedValue({ success: false });
 
       const result = await createCommunity({
         name: "Test Community",
@@ -97,14 +117,15 @@ describe("Community Actions", () => {
     });
 
     it("should return error if slug is already taken", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "existing-id",
-      } as any);
+      });
 
       const result = await createCommunity({
         name: "Test Community",
         slug: "test-community",
         type: "PUBLIC",
+        isVirtual: true,
       });
 
       expect(result.success).toBe(false);
@@ -114,8 +135,8 @@ describe("Community Actions", () => {
     });
 
     it("should create community with valid input", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.$transaction).mockImplementation(async (fn) => {
+      mockCommunityFindUnique.mockResolvedValue(null);
+      mockTransaction.mockImplementation(async (fn) => {
         return fn({
           community: {
             create: vi.fn().mockResolvedValue({
@@ -125,7 +146,7 @@ describe("Community Actions", () => {
           },
           member: { create: vi.fn() },
           chatChannel: { create: vi.fn() },
-        } as any);
+        });
       });
 
       const result = await createCommunity({
@@ -133,6 +154,7 @@ describe("Community Actions", () => {
         slug: "test-community",
         type: "PUBLIC",
         description: "A test community",
+        isVirtual: true,
       });
 
       expect(result.success).toBe(true);
@@ -144,11 +166,12 @@ describe("Community Actions", () => {
 
   describe("updateCommunity", () => {
     it("should return error for non-existent community", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue(null);
+      mockCommunityFindUnique.mockResolvedValue(null);
 
       const result = await updateCommunity({
         communityId: "non-existent",
         name: "Updated Name",
+        isVirtual: true,
       });
 
       expect(result.success).toBe(false);
@@ -158,15 +181,16 @@ describe("Community Actions", () => {
     });
 
     it("should return error when user is not owner", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "community-id",
         slug: "test-community",
         ownerId: "other-user", // Different user
-      } as any);
+      });
 
       const result = await updateCommunity({
         communityId: "community-id",
         name: "Updated Name",
+        isVirtual: true,
       });
 
       expect(result.success).toBe(false);
@@ -176,20 +200,21 @@ describe("Community Actions", () => {
     });
 
     it("should update community when user is owner", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "community-id",
         slug: "test-community",
         ownerId: "user-123", // Same as authenticated user
-      } as any);
-      vi.mocked(prisma.community.update).mockResolvedValue({} as any);
+      });
+      mockCommunityUpdate.mockResolvedValue({});
 
       const result = await updateCommunity({
         communityId: "community-id",
         name: "Updated Name",
+        isVirtual: true,
       });
 
       expect(result.success).toBe(true);
-      expect(prisma.community.update).toHaveBeenCalledWith({
+      expect(mockCommunityUpdate).toHaveBeenCalledWith({
         where: { id: "community-id" },
         data: expect.objectContaining({ name: "Updated Name" }),
       });
@@ -198,7 +223,7 @@ describe("Community Actions", () => {
 
   describe("deleteCommunity", () => {
     it("should return error for non-existent community", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue(null);
+      mockCommunityFindUnique.mockResolvedValue(null);
 
       const result = await deleteCommunity({
         communityId: "non-existent",
@@ -212,11 +237,11 @@ describe("Community Actions", () => {
     });
 
     it("should return error when user is not owner", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "community-id",
         name: "Test Community",
         ownerId: "other-user",
-      } as any);
+      });
 
       const result = await deleteCommunity({
         communityId: "community-id",
@@ -230,11 +255,11 @@ describe("Community Actions", () => {
     });
 
     it("should return error when confirmation name does not match", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "community-id",
         name: "Test Community",
         ownerId: "user-123",
-      } as any);
+      });
 
       const result = await deleteCommunity({
         communityId: "community-id",
@@ -248,12 +273,12 @@ describe("Community Actions", () => {
     });
 
     it("should delete community when confirmation matches", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "community-id",
         name: "Test Community",
         ownerId: "user-123",
-      } as any);
-      vi.mocked(prisma.community.delete).mockResolvedValue({} as any);
+      });
+      mockCommunityDelete.mockResolvedValue({});
 
       const result = await deleteCommunity({
         communityId: "community-id",
@@ -261,18 +286,18 @@ describe("Community Actions", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(prisma.community.delete).toHaveBeenCalledWith({
+      expect(mockCommunityDelete).toHaveBeenCalledWith({
         where: { id: "community-id" },
       });
     });
 
     it("should be case-insensitive for confirmation name", async () => {
-      vi.mocked(prisma.community.findUnique).mockResolvedValue({
+      mockCommunityFindUnique.mockResolvedValue({
         id: "community-id",
         name: "Test Community",
         ownerId: "user-123",
-      } as any);
-      vi.mocked(prisma.community.delete).mockResolvedValue({} as any);
+      });
+      mockCommunityDelete.mockResolvedValue({});
 
       const result = await deleteCommunity({
         communityId: "community-id",

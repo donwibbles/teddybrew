@@ -20,6 +20,9 @@ let _rsvpRateLimiter: Ratelimit | null = null;
 let _inviteRateLimiter: Ratelimit | null = null;
 let _uploadRateLimiter: Ratelimit | null = null;
 
+// Track whether we've already warned about Redis being unavailable
+let _redisWarned = false;
+
 function getRedis(): Redis | null {
   if (_redis) return _redis;
 
@@ -27,7 +30,13 @@ function getRedis(): Redis | null {
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
 
   if (!url || !token) {
-    console.error("Upstash Redis credentials not configured");
+    if (!_redisWarned) {
+      console.warn(
+        "[SECURITY] Rate limiting disabled: Upstash Redis credentials not configured. " +
+        "All requests will be allowed. Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for production."
+      );
+      _redisWarned = true;
+    }
     return null;
   }
 

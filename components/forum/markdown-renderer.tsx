@@ -187,6 +187,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 
   return (
     <>
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx global>{proseStyles}</style>
       <div
         className={`forum-prose max-w-none ${className || ""}`}

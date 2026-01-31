@@ -71,7 +71,7 @@ export function FolderDialog({
       if (!result.success) {
         setError(result.error || "Failed to save folder");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred");
     } finally {
       setIsSaving(false);

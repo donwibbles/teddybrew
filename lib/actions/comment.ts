@@ -64,30 +64,32 @@ export async function createComment(
       return { success: false, error: "You must be a member to comment" };
     }
 
-    // Calculate depth if replying to another comment
-    let depth = 0;
-    if (parentId) {
-      const parent = await prisma.comment.findUnique({
-        where: { id: parentId },
-        select: { depth: true, deletedAt: true },
-      });
+    // Create comment with depth check in transaction to prevent race condition
+    const result = await prisma.$transaction(async (tx): Promise<
+      | { error: string; comment?: undefined }
+      | { comment: Awaited<ReturnType<typeof tx.comment.create>>; error?: undefined }
+    > => {
+      // Calculate depth if replying to another comment
+      let depth = 0;
+      if (parentId) {
+        const parent = await tx.comment.findUnique({
+          where: { id: parentId },
+          select: { depth: true, deletedAt: true },
+        });
 
-      if (!parent || parent.deletedAt) {
-        return { success: false, error: "Parent comment not found" };
+        if (!parent || parent.deletedAt) {
+          return { error: "Parent comment not found" };
+        }
+
+        depth = parent.depth + 1;
+
+        if (depth > MAX_COMMENT_DEPTH) {
+          return {
+            error: "Maximum reply depth reached. Please reply to a higher comment.",
+          };
+        }
       }
 
-      depth = parent.depth + 1;
-
-      if (depth > MAX_COMMENT_DEPTH) {
-        return {
-          success: false,
-          error: "Maximum reply depth reached. Please reply to a higher comment.",
-        };
-      }
-    }
-
-    // Create comment and update count
-    const comment = await prisma.$transaction(async (tx) => {
       const newComment = await tx.comment.create({
         data: {
           content: sanitizeText(content),
@@ -110,8 +112,15 @@ export async function createComment(
         data: { lastActivityAt: new Date() },
       });
 
-      return newComment;
+      return { comment: newComment };
     });
+
+    // Handle transaction result
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    const comment = result.comment!;
 
     // Notify via Ably
     try {

@@ -42,6 +42,7 @@ export function CreateCommunityForm() {
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- Known RHF limitation with watch
   const isVirtual = watch("isVirtual");
 
   // Auto-generate slug from name

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { spawn } = require('node:child_process')
 
 const env = { ...process.env }

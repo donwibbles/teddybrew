@@ -29,6 +29,7 @@ export function LinkDialog({ editor, open, onOpenChange }: LinkDialogProps) {
   useEffect(() => {
     if (open && editor) {
       const { href } = editor.getAttributes("link");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync state when dialog opens
       setUrl(href || "");
 
       // Get selected text

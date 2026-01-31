@@ -55,10 +55,6 @@ export function ModerationLog({ communityId }: ModerationLogProps) {
   const [cursor, setCursor] = useState<string | undefined>();
   const [hasMore, setHasMore] = useState(false);
 
-  useEffect(() => {
-    loadLogs();
-  }, [communityId]);
-
   const loadLogs = async (loadCursor?: string) => {
     setIsLoading(true);
     const result = await getModerationLogs(communityId, loadCursor);
@@ -73,6 +69,11 @@ export function ModerationLog({ communityId }: ModerationLogProps) {
     setHasMore(result.hasMore);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    loadLogs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [communityId]);
 
   const loadMore = () => {
     if (cursor) {

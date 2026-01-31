@@ -119,6 +119,7 @@ export function EditEventForm({
   // Use event's stored timezone, or fallback to user's timezone
   useEffect(() => {
     if (event.timezone) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync with prop
       setTimezone(event.timezone);
     } else {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;

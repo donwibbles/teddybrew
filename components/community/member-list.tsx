@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { MemberRole } from "@prisma/client";
 import { ProfileLink } from "@/components/ui/profile-link";
 
@@ -38,10 +39,12 @@ export function MemberList({
             {/* Avatar */}
             <div className="flex-shrink-0">
               {member.user.image ? (
-                <img
+                <Image
                   src={member.user.image}
                   alt={member.user.name || "Anonymous"}
-                  className="w-10 h-10 rounded-full"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">

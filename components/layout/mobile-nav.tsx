@@ -50,6 +50,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
   // Fetch channels when on chat page and menu opens
   useEffect(() => {
     if (isOpen && isOnChatPage && communitySlug && channels.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Fetch channels on menu open
       setIsLoadingChannels(true);
       fetch(`/api/communities/${communitySlug}/channels`)
         .then((res) => res.json())
@@ -70,6 +71,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
   // Reset channels when leaving chat page
   useEffect(() => {
     if (!isOnChatPage) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Reset state on page change
       setChannels([]);
     }
   }, [isOnChatPage]);

@@ -159,6 +159,7 @@ export function DocumentForm({
         handleSave(true);
       }, AUTOSAVE_DEBOUNCE_MS);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSave accessed via ref pattern
   }, []);
 
   // Ref to store the slug after save (for publish navigation)
@@ -218,7 +219,7 @@ export function DocumentForm({
           return { success: false };
         }
       }
-    } catch (err) {
+    } catch {
       setError("Failed to save document");
       return { success: false };
     } finally {
@@ -278,7 +279,7 @@ export function DocumentForm({
       } else {
         setError(result.error || "Failed to publish document");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to publish document");
     } finally {
       setIsPublishing(false);

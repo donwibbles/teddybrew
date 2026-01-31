@@ -77,6 +77,7 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
     },
   });
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- Known RHF limitation with watch
   const isVirtual = watch("isVirtual");
 
   const onSubmit = async (data: EditCommunityInput) => {

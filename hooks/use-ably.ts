@@ -22,66 +22,67 @@ async function getAblyClient(): Promise<Ably.Realtime> {
 
   connectionState = "connecting";
 
-  connectionPromise = new Promise(async (resolve, reject) => {
-    try {
-      const response = await fetch("/api/ably/token");
-      if (!response.ok) {
-        throw new Error("Failed to get Ably token");
+  connectionPromise = createAblyConnection();
+  return connectionPromise;
+}
+
+async function createAblyConnection(): Promise<Ably.Realtime> {
+  // Fetch token first (async work outside Promise executor)
+  const response = await fetch("/api/ably/token");
+  if (!response.ok) {
+    connectionState = "failed";
+    connectionPromise = null;
+    throw new Error("Failed to get Ably token");
+  }
+  const tokenRequest = await response.json();
+
+  // Close existing client if any
+  if (ablyClient) {
+    ablyClient.close();
+    ablyClient = null;
+  }
+
+  ablyClient = new Ably.Realtime({
+    authCallback: async (_, callback) => {
+      try {
+        const res = await fetch("/api/ably/token");
+        if (!res.ok) throw new Error("Token refresh failed");
+        const token = await res.json();
+        callback(null, token);
+      } catch (err) {
+        callback(err instanceof Error ? err.message : String(err), null);
       }
-      const tokenRequest = await response.json();
-
-      // Close existing client if any
-      if (ablyClient) {
-        ablyClient.close();
-        ablyClient = null;
-      }
-
-      ablyClient = new Ably.Realtime({
-        authCallback: async (_, callback) => {
-          try {
-            const res = await fetch("/api/ably/token");
-            if (!res.ok) throw new Error("Token refresh failed");
-            const token = await res.json();
-            callback(null, token);
-          } catch (err) {
-            callback(err instanceof Error ? err.message : String(err), null);
-          }
-        },
-        disconnectedRetryTimeout: 5000,
-        suspendedRetryTimeout: 10000,
-        ...tokenRequest,
-      });
-
-      ablyClient.connection.on("connected", () => {
-        connectionState = "connected";
-        resolve(ablyClient!);
-      });
-
-      ablyClient.connection.on("failed", (err) => {
-        connectionState = "failed";
-        connectionPromise = null;
-        // Capture Ably connection failure in Sentry
-        Sentry.captureException(err, {
-          tags: { service: "ably", type: "connection_failure" },
-        });
-        reject(err);
-      });
-
-      ablyClient.connection.on("disconnected", () => {
-        connectionState = "disconnected";
-      });
-
-      ablyClient.connection.on("suspended", () => {
-        connectionState = "disconnected";
-      });
-    } catch (error) {
-      connectionState = "failed";
-      connectionPromise = null;
-      reject(error);
-    }
+    },
+    disconnectedRetryTimeout: 5000,
+    suspendedRetryTimeout: 10000,
+    ...tokenRequest,
   });
 
-  return connectionPromise;
+  // Return Promise for connection events (no async executor needed)
+  return new Promise((resolve, reject) => {
+    ablyClient!.connection.on("connected", () => {
+      connectionState = "connected";
+      resolve(ablyClient!);
+    });
+
+    ablyClient!.connection.on("failed", (err) => {
+      connectionState = "failed";
+      connectionPromise = null;
+      // Capture Ably connection failure in Sentry
+      Sentry.captureException(err, {
+        tags: { service: "ably", type: "connection_failure" },
+      });
+      reject(err);
+    });
+
+    ablyClient!.connection.on("disconnected", () => {
+      connectionState = "disconnected";
+    });
+
+    ablyClient!.connection.on("suspended", () => {
+      connectionState = "disconnected";
+    });
+  });
 }
 
 export interface AblyMessage {
@@ -212,10 +213,13 @@ export function useAblyChannel(
 
     connect();
 
+    // Capture ref value at effect start to avoid stale ref in cleanup
+    const queue = messageQueueRef.current;
+
     return () => {
       mounted = false;
-      if (messageQueueRef.current.timeout) {
-        clearTimeout(messageQueueRef.current.timeout);
+      if (queue.timeout) {
+        clearTimeout(queue.timeout);
       }
       if (channelRef.current) {
         channelRef.current.unsubscribe();

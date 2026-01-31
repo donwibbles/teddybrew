@@ -228,10 +228,12 @@ export default async function EventPage({ params }: EventPageProps) {
               {/* Main organizer */}
               <div className="flex items-center gap-3">
                 {event.organizer.image ? (
-                  <img
+                  <Image
                     src={event.organizer.image}
                     alt={event.organizer.name || "Organizer"}
-                    className="w-10 h-10 rounded-full"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
@@ -257,10 +259,12 @@ export default async function EventPage({ params }: EventPageProps) {
               {event.coOrganizers.map((co) => (
                 <div key={co.id} className="flex items-center gap-3">
                   {co.image ? (
-                    <img
+                    <Image
                       src={co.image}
                       alt={co.name || "Co-organizer"}
-                      className="w-10 h-10 rounded-full"
+                      width={40}
+                      height={40}
+                      className="rounded-full"
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
@@ -319,10 +323,12 @@ export default async function EventPage({ params }: EventPageProps) {
                   {attendees.slice(0, 10).map(({ user, sessionCount }) => (
                     <div key={user.id} className="flex items-center gap-3">
                       {user.image ? (
-                        <img
+                        <Image
                           src={user.image}
                           alt={user.name || "Attendee"}
-                          className="w-8 h-8 rounded-full"
+                          width={32}
+                          height={32}
+                          className="rounded-full"
                         />
                       ) : (
                         <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">

@@ -132,6 +132,7 @@ export function EditPostForm({
   };
 
   return (
+    // eslint-disable-next-line react-hooks/refs -- refs accessed in onSubmit callback, not during render
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="title">Title <span className="text-error-500">*</span></Label>

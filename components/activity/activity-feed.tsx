@@ -45,6 +45,7 @@ export function ActivityFeed({
   // Load more when scroll trigger is in view
   useEffect(() => {
     if (inView && hasMore && !isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Infinite scroll trigger
       loadMore();
     }
   }, [inView, hasMore, isLoading, loadMore]);

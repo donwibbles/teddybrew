@@ -60,6 +60,7 @@ export function CreateEventForm({
   // Get user's timezone on mount
   useEffect(() => {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Initialize timezone from browser
     setTimezone(tz);
   }, []);
 

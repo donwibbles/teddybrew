@@ -237,10 +237,12 @@ export function EventCard({
           {/* Organizer */}
           <div className="flex items-center gap-2 min-w-0">
             {event.organizer.image ? (
-              <img
+              <Image
                 src={event.organizer.image}
                 alt={event.organizer.name || "Organizer"}
-                className="w-6 h-6 rounded-full flex-shrink-0"
+                width={24}
+                height={24}
+                className="rounded-full flex-shrink-0"
               />
             ) : (
               <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">

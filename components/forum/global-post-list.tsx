@@ -59,6 +59,7 @@ export function GlobalPostList({
 
   // Reset when sort changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Sync state with props on sort change
     setPosts(initialPosts);
     setCursor(initialCursor);
     setHasMore(initialHasMore);
@@ -89,6 +90,7 @@ export function GlobalPostList({
   // Load more when scroll trigger is in view
   useEffect(() => {
     if (inView && hasMore && !isLoading) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- Infinite scroll trigger
       loadMore();
     }
   }, [inView, hasMore, isLoading, loadMore]);

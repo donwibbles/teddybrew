@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { MemberRole } from "@prisma/client";
 import { Users, ShieldCheck, ShieldOff } from "lucide-react";
 import { removeMember, promoteMember, demoteMember } from "@/lib/actions/membership";
@@ -124,10 +125,12 @@ export function MemberManagementList({
               {/* Avatar */}
               <div className="flex-shrink-0">
                 {member.user.image ? (
-                  <img
+                  <Image
                     src={member.user.image}
                     alt={member.user.name || "Anonymous"}
-                    className="w-10 h-10 rounded-full"
+                    width={40}
+                    height={40}
+                    className="rounded-full"
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">

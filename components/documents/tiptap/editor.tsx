@@ -83,6 +83,7 @@ export function TipTapEditor({
 
   return (
     <>
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx global>
         {editorProseStyles}
       </style>
@@ -149,6 +150,7 @@ export function TipTapViewer({ content, className }: TipTapViewerProps) {
 
   return (
     <>
+      {/* eslint-disable-next-line react/no-unknown-property */}
       <style jsx global>
         {editorProseStyles}
       </style>
