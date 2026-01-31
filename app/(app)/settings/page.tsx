@@ -74,7 +74,7 @@ export default async function SettingsPage({
             initialShowCommunities={user.showCommunities}
             initialEmailEventReminders={user.emailEventReminders}
             isSetup={isSetup}
-            redirectTo="/communities"
+            redirectTo="/dashboard"
           />
         </CardContent>
       </Card>
