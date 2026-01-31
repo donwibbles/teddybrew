@@ -35,6 +35,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Create cache directory with correct ownership for image optimization
+RUN mkdir -p .next/cache
+RUN chown -R nextjs:nodejs .next
+
 USER nextjs
 
 EXPOSE 3000
