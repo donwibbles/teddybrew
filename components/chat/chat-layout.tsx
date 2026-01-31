@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Menu, X, Users } from "lucide-react";
 import { ChannelList } from "./channel-list";
 import { ChatRoom } from "./chat-room";
+import { ThreadPanel } from "./thread-panel";
 import { OnlineMembers } from "./online-members";
 import { CreateChannelDialog } from "./create-channel-dialog";
+import { getUnreadCounts } from "@/lib/actions/chat";
 import { cn } from "@/lib/utils";
 
 interface Channel {
@@ -49,6 +51,8 @@ export function ChatLayout({
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileMembers, setShowMobileMembers] = useState(false);
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   // Update URL when channel changes
   useEffect(() => {
@@ -59,18 +63,47 @@ export function ChatLayout({
     }
   }, [activeChannelId, channelIdFromUrl, communitySlug, router]);
 
+  // Fetch unread counts on mount and periodically
+  useEffect(() => {
+    async function fetchUnreadCounts() {
+      const counts = await getUnreadCounts({ communityId });
+      setUnreadCounts(counts);
+    }
+
+    fetchUnreadCounts();
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCounts, 30000);
+    return () => clearInterval(interval);
+  }, [communityId]);
+
+  // Filter out unread count for the active channel (user is viewing it)
+  const effectiveUnreadCounts = useMemo(() => {
+    if (!activeChannelId) return unreadCounts;
+    const { [activeChannelId]: _, ...rest } = unreadCounts;
+    return rest;
+  }, [unreadCounts, activeChannelId]);
+
   // Get active channel details
   const activeChannel = channels.find((c) => c.id === activeChannelId);
 
   const handleChannelSelect = (channelId: string) => {
     setActiveChannelId(channelId);
     setShowMobileSidebar(false);
+    setOpenThreadId(null); // Close thread when switching channels
   };
 
   const handleChannelCreated = (channelId: string) => {
     setActiveChannelId(channelId);
     // Force refresh to get new channel list
     router.refresh();
+  };
+
+  const handleOpenThread = (threadRootId: string) => {
+    setOpenThreadId(threadRootId);
+  };
+
+  const handleCloseThread = () => {
+    setOpenThreadId(null);
   };
 
   return (
@@ -106,6 +139,7 @@ export function ChatLayout({
           onChannelSelect={handleChannelSelect}
           onCreateChannel={isOwner ? () => setShowCreateDialog(true) : undefined}
           isOwner={isOwner}
+          unreadCounts={effectiveUnreadCounts}
         />
       </div>
 
@@ -126,7 +160,9 @@ export function ChatLayout({
             channelDescription={activeChannel.description}
             communityId={communityId}
             currentUserId={currentUser.id}
+            currentUser={currentUser}
             isOwner={isOwner}
+            onOpenThread={handleOpenThread}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-neutral-500">
@@ -135,22 +171,39 @@ export function ChatLayout({
         )}
       </div>
 
-      {/* Online Members Sidebar - Hidden on mobile */}
-      <div className="hidden xl:block w-52 border-l border-neutral-200 bg-neutral-50 shrink-0">
-        <OnlineMembers currentUserId={currentUser.id} />
-      </div>
+      {/* Thread Panel */}
+      {openThreadId && activeChannel && (
+        <ThreadPanel
+          threadRootId={openThreadId}
+          channelId={activeChannel.id}
+          communityId={communityId}
+          currentUserId={currentUser.id}
+          currentUser={currentUser}
+          isOwner={isOwner}
+          onClose={handleCloseThread}
+        />
+      )}
+
+      {/* Online Members Sidebar - Hidden on mobile, hidden when thread panel is open */}
+      {!openThreadId && (
+        <div className="hidden xl:block w-52 border-l border-neutral-200 bg-neutral-50 shrink-0">
+          <OnlineMembers currentUserId={currentUser.id} />
+        </div>
+      )}
 
       {/* Members Toggle - Show on tablet (768px-1279px), hidden on mobile and xl+ */}
-      <button
-        onClick={() => setShowMobileMembers(!showMobileMembers)}
-        className="xl:hidden hidden md:block absolute top-4 right-4 z-50 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
-        title="Show members"
-      >
-        <Users className="h-5 w-5" />
-      </button>
+      {!openThreadId && (
+        <button
+          onClick={() => setShowMobileMembers(!showMobileMembers)}
+          className="xl:hidden hidden md:block absolute top-4 right-4 z-50 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
+          title="Show members"
+        >
+          <Users className="h-5 w-5" />
+        </button>
+      )}
 
       {/* Tablet Members Panel */}
-      {showMobileMembers && (
+      {showMobileMembers && !openThreadId && (
         <>
           <div
             className="xl:hidden fixed inset-0 bg-black/20 z-30"

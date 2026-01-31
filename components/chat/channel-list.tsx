@@ -21,6 +21,7 @@ interface ChannelListProps {
   onCreateChannel?: () => void;
   onEditChannel?: (channelId: string) => void;
   isOwner: boolean;
+  unreadCounts?: Record<string, number>;
 }
 
 export function ChannelList({
@@ -30,41 +31,64 @@ export function ChannelList({
   onCreateChannel,
   onEditChannel,
   isOwner,
+  unreadCounts = {},
 }: ChannelListProps) {
   // Separate regular channels from event channels
   const regularChannels = channels.filter((c) => !c.event);
   const eventChannels = channels.filter((c) => c.event);
 
-  const renderChannel = (channel: Channel, isEventChannel: boolean = false) => (
-    <button
-      key={channel.id}
-      onClick={() => onChannelSelect(channel.id)}
-      className={cn(
-        "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors group",
-        activeChannelId === channel.id
-          ? "bg-primary-50 text-primary-700"
-          : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
-      )}
-    >
-      {isEventChannel ? (
-        <Calendar className="h-4 w-4 shrink-0 text-primary-400" />
-      ) : (
-        <Hash className="h-4 w-4 shrink-0 text-neutral-400" />
-      )}
-      <span className="truncate">{channel.name}</span>
-      {isOwner && onEditChannel && !channel.isDefault && !isEventChannel && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditChannel(channel.id);
-          }}
-          className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-200 rounded"
-        >
-          <Settings className="h-3 w-3 text-neutral-500" />
-        </button>
-      )}
-    </button>
-  );
+  const renderChannel = (channel: Channel, isEventChannel: boolean = false) => {
+    const unreadCount = unreadCounts[channel.id] || 0;
+    const hasUnread = unreadCount > 0;
+
+    return (
+      <button
+        key={channel.id}
+        onClick={() => onChannelSelect(channel.id)}
+        className={cn(
+          "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors group",
+          activeChannelId === channel.id
+            ? "bg-primary-50 text-primary-700"
+            : hasUnread
+            ? "text-neutral-900 font-medium hover:bg-neutral-50"
+            : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+        )}
+      >
+        {isEventChannel ? (
+          <Calendar className="h-4 w-4 shrink-0 text-primary-400" />
+        ) : (
+          <Hash
+            className={cn(
+              "h-4 w-4 shrink-0",
+              hasUnread ? "text-neutral-600" : "text-neutral-400"
+            )}
+          />
+        )}
+        <span className={cn("truncate flex-1 text-left", hasUnread && "font-medium")}>
+          {channel.name}
+        </span>
+
+        {/* Unread count badge */}
+        {hasUnread && activeChannelId !== channel.id && (
+          <span className="shrink-0 min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full bg-primary-600 text-white text-xs font-medium">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+
+        {isOwner && onEditChannel && !channel.isDefault && !isEventChannel && !hasUnread && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditChannel(channel.id);
+            }}
+            className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-200 rounded"
+          >
+            <Settings className="h-3 w-3 text-neutral-500" />
+          </button>
+        )}
+      </button>
+    );
+  };
 
   return (
     <div className="flex flex-col h-full">

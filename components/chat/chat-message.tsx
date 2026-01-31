@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Trash2, Reply } from "lucide-react";
+import { Trash2, Reply, Pin, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReplyPreview } from "./reply-preview";
 import { MessageReactions } from "./message-reactions";
 import { EmojiPicker } from "./emoji-picker";
+import { ThreadPreview } from "./thread-preview";
 import { cn } from "@/lib/utils";
 import { RoleBadge } from "@/components/ui/role-badge";
 import { ProfileLink } from "@/components/ui/profile-link";
@@ -42,9 +43,20 @@ interface ChatMessageProps {
   onReply?: (messageId: string) => void;
   onScrollToMessage?: (messageId: string) => void;
   canReply?: boolean;
+  // Thread support
+  depth?: number;
+  replyCount?: number;
+  onViewThread?: (threadRootId: string) => void;
+  // Pinning support
+  canPin?: boolean;
+  isPinned?: boolean;
+  onPin?: (messageId: string, isPinned: boolean) => void;
   // Reaction support
   reactionCounts?: Record<string, number>;
   onToggleReaction?: (messageId: string, emoji: EmojiKey) => void;
+  // Pending message support
+  isPending?: boolean;
+  pendingStatus?: "queued" | "sending" | "failed";
 }
 
 export function ChatMessage({
@@ -56,13 +68,21 @@ export function ChatMessage({
   canDelete,
   onDelete,
   isDeleting,
-  replyToId,
+  replyToId: _replyToId,
   replyTo,
   onReply,
   onScrollToMessage,
   canReply = true,
+  depth = 0,
+  replyCount = 0,
+  onViewThread,
+  canPin = false,
+  isPinned = false,
+  onPin,
   reactionCounts = {},
   onToggleReaction,
+  isPending = false,
+  pendingStatus,
 }: ChatMessageProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -88,15 +108,20 @@ export function ChatMessage({
     onToggleReaction?.(id, emoji);
   };
 
-  // Don't allow reply to replies (single-level threading)
-  const showReplyButton = canReply && !replyToId;
+  // Show reply button if depth < 2 (allow 2 levels of nesting)
+  const showReplyButton = canReply && depth < 2;
+
+  // Show thread preview only on root messages (depth 0) with replies
+  const showThreadPreview = depth === 0 && replyCount > 0 && onViewThread;
 
   return (
     <div
       id={`message-${id}`}
       className={cn(
         "group relative flex gap-3 px-4 py-2 hover:bg-neutral-50 transition-colors",
-        isDeleting && "opacity-50"
+        isDeleting && "opacity-50",
+        isPending && "opacity-70",
+        isPinned && "bg-amber-50/50"
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
@@ -128,21 +153,48 @@ export function ChatMessage({
           />
           {author.role && <RoleBadge role={author.role} size="sm" />}
           <span className="text-xs text-neutral-400">{timeAgo}</span>
+          {/* Pending status indicator */}
+          {isPending && pendingStatus === "sending" && (
+            <span className="flex items-center gap-1 text-xs text-neutral-400">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Sending...
+            </span>
+          )}
+          {isPending && pendingStatus === "queued" && (
+            <span className="text-xs text-neutral-400">Queued</span>
+          )}
+          {/* Pin indicator */}
+          {isPinned && (
+            <span className="flex items-center gap-1 text-xs text-amber-600">
+              <Pin className="h-3 w-3" />
+              Pinned
+            </span>
+          )}
         </div>
         <p className="text-sm text-neutral-700 break-words whitespace-pre-wrap">
           {content}
         </p>
 
         {/* Reactions display */}
-        <MessageReactions
-          counts={reactionCounts}
-          onToggle={handleReaction}
-          disabled={isDeleting}
-        />
+        {!isPending && (
+          <MessageReactions
+            counts={reactionCounts}
+            onToggle={handleReaction}
+            disabled={isDeleting}
+          />
+        )}
+
+        {/* Thread preview */}
+        {showThreadPreview && (
+          <ThreadPreview
+            replyCount={replyCount}
+            onViewThread={() => onViewThread(id)}
+          />
+        )}
       </div>
 
       {/* Action buttons — floating toolbar */}
-      {showActions && (
+      {showActions && !isPending && (
         <div className="absolute -top-3 right-2 bg-white border border-neutral-200 rounded-lg shadow-sm px-1 flex items-center gap-0.5 z-10">
           {/* Emoji picker */}
           <EmojiPicker onSelect={handleReaction} disabled={isDeleting} />
@@ -156,6 +208,23 @@ export function ChatMessage({
               title="Reply"
             >
               <Reply className="h-4 w-4" />
+            </button>
+          )}
+
+          {/* Pin button */}
+          {canPin && onPin && (
+            <button
+              onClick={() => onPin(id, !isPinned)}
+              disabled={isDeleting}
+              className={cn(
+                "p-1.5 rounded transition-colors",
+                isPinned
+                  ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                  : "text-neutral-400 hover:text-amber-600 hover:bg-amber-50"
+              )}
+              title={isPinned ? "Unpin message" : "Pin message"}
+            >
+              <Pin className="h-4 w-4" />
             </button>
           )}
 

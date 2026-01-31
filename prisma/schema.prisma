@@ -73,6 +73,12 @@ model User {
   // Moderation logs (actions performed by this user)
   moderationLogs ModerationLog[]
 
+  // Pinned messages (messages pinned by this user)
+  pinnedMessages Message[] @relation("MessagePinnedBy")
+
+  // Unread tracking
+  channelReads UserChannelRead[]
+
   // Document relations
   documents            Document[]        @relation("DocumentAuthor")
   publishedDocuments   Document[]        @relation("DocumentPublisher")
@@ -326,6 +332,7 @@ model ChatChannel {
 
   community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   messages  Message[]
+  userReads UserChannelRead[]
 
   @@unique([communityId, name])
   @@index([communityId])
@@ -342,10 +349,32 @@ model Message {
   deletedAt   DateTime?
   deletedById String?
 
-  // Reply support (single-level threading)
+  // Client-generated ID for optimistic reconciliation
+  clientMessageId String? @unique
+
+  // Reply support (direct parent reference)
   replyToId String?
   replyTo   Message?  @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies   Message[] @relation("MessageReplies")
+
+  // Thread root tracking (for efficient thread queries)
+  // Set on ALL replies (level 1 and 2) - points to original message
+  threadRootId  String?
+  threadRoot    Message?  @relation("MessageThread", fields: [threadRootId], references: [id], onDelete: SetNull)
+  threadReplies Message[] @relation("MessageThread")
+
+  // Computed depth for race-safe enforcement (0=root, 1=reply, 2=reply-to-reply)
+  depth Int @default(0)
+
+  // Reply count cache for thread previews (maintained via actions)
+  replyCount Int @default(0)
+
+  // Pinning support
+  isPinnedInChannel Boolean   @default(false)
+  isPinnedInThread  Boolean   @default(false)
+  pinnedAt          DateTime?
+  pinnedById        String?
+  pinnedBy          User?     @relation("MessagePinnedBy", fields: [pinnedById], references: [id])
 
   channel   ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
   author    User        @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
@@ -358,6 +387,10 @@ model Message {
   @@index([authorId])
   @@index([replyToId])
   @@index([replyToId, deletedAt])
+  @@index([channelId, isPinnedInChannel])
+  @@index([threadRootId, isPinnedInThread])
+  @@index([threadRootId, createdAt])
+  @@index([clientMessageId])
 }
 
 // Message Reaction - emoji reactions on chat messages
@@ -373,6 +406,21 @@ model MessageReaction {
 
   @@unique([messageId, userId, emoji]) // One per emoji per user per message
   @@index([messageId])
+}
+
+// User Channel Read - tracks last read timestamp for unread indicators
+model UserChannelRead {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String
+  lastReadAt DateTime @default(now())
+
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  channel ChatChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, channelId])
+  @@index([userId])
+  @@index([channelId])
 }
 
 // ============ FORUM SYSTEM ============
@@ -474,6 +522,8 @@ enum NotificationType {
   EVENT_REMINDER   // Upcoming event reminder
   NEW_MEMBER       // Someone joined your community (owner only)
   COMMUNITY_INVITE // You've been invited to a community
+  CHAT_MENTION     // Someone mentioned you in a chat message
+  CHAT_REPLY       // Someone replied to your message in chat
 }
 
 model Notification {

@@ -192,7 +192,7 @@ export async function getUserMemberships(userId: string) {
 export async function logModerationAction(params: {
   communityId: string;
   moderatorId: string;
-  action: "DELETE_POST" | "DELETE_COMMENT" | "DELETE_MESSAGE" | "PIN_POST" | "UNPIN_POST" | "DELETE_DOCUMENT" | "ARCHIVE_DOCUMENT" | "PIN_DOCUMENT" | "UNPIN_DOCUMENT";
+  action: "DELETE_POST" | "DELETE_COMMENT" | "DELETE_MESSAGE" | "PIN_POST" | "UNPIN_POST" | "PIN_MESSAGE" | "UNPIN_MESSAGE" | "DELETE_DOCUMENT" | "ARCHIVE_DOCUMENT" | "PIN_DOCUMENT" | "UNPIN_DOCUMENT";
   targetType: "Post" | "Comment" | "Message" | "Document";
   targetId: string;
   targetTitle?: string;

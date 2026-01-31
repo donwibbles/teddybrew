@@ -1,12 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
-import { Hash, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { Hash, Loader2, AlertCircle, RotateCw } from "lucide-react";
 import { ChatMessage, ChatMessageSkeleton } from "./chat-message";
 import { ChatInput } from "./chat-input";
+import { PinnedBanner } from "./pinned-banner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAblyChannel, type AblyMessage } from "@/hooks/use-ably";
-import { sendChatMessage, deleteChatMessage, getChatMessages } from "@/lib/actions/chat";
+import {
+  sendChatMessage,
+  deleteChatMessage,
+  getChatMessages,
+  getPinnedChannelMessages,
+  pinMessage,
+  markChannelRead,
+} from "@/lib/actions/chat";
 import { toggleReaction } from "@/lib/actions/reaction";
 import { toast } from "sonner";
 import type { EmojiKey } from "@/lib/constants/emoji";
@@ -15,6 +23,9 @@ interface Author {
   id: string;
   name: string | null;
   image: string | null;
+  username?: string | null;
+  isPublic?: boolean | null;
+  role?: string | null;
 }
 
 interface ReplyTo {
@@ -32,13 +43,38 @@ interface Message {
   createdAt: string;
   replyToId?: string | null;
   replyTo?: ReplyTo | null;
+  threadRootId?: string | null;
+  depth?: number;
+  replyCount?: number;
+  isPinnedInChannel?: boolean;
   reactionCounts: Record<string, number>;
+  // Pending message fields
+  isPending?: boolean;
+  pendingStatus?: "queued" | "sending" | "failed";
+  clientMessageId?: string | null;
+}
+
+interface PinnedMessage {
+  id: string;
+  content: string;
+  author: Author;
+  pinnedAt: Date | string | null;
+}
+
+interface PendingMessage {
+  clientMessageId: string;
+  content: string;
+  replyToId?: string;
+  createdAt: string;
+  status: "queued" | "sending" | "failed";
+  retryCount: number;
 }
 
 interface ReplyingTo {
   id: string;
   authorName: string;
   content: string;
+  depth?: number;
 }
 
 interface ChatRoomProps {
@@ -47,7 +83,9 @@ interface ChatRoomProps {
   channelDescription?: string | null;
   communityId: string;
   currentUserId: string;
+  currentUser: { id: string; name: string | null; image: string | null };
   isOwner: boolean;
+  onOpenThread?: (threadRootId: string) => void;
 }
 
 export function ChatRoom({
@@ -56,19 +94,24 @@ export function ChatRoom({
   channelDescription,
   communityId,
   currentUserId,
+  currentUser,
   isOwner,
+  onOpenThread,
 }: ChatRoomProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [hasMore, setHasMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [replyingTo, setReplyingTo] = useState<ReplyingTo | null>(null);
+  const [pinnedMessages, setPinnedMessages] = useState<PinnedMessage[]>([]);
+  const [pendingMessages, setPendingMessages] = useState<PendingMessage[]>([]);
+  const pendingIdsRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const shouldScrollRef = useRef(true);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Check if user is near the bottom of the chat (within 100px)
   const isNearBottom = useCallback(() => {
@@ -87,6 +130,16 @@ export function ChatRoom({
     "message",
     useCallback((ablyMessage: AblyMessage) => {
       const messageData = ablyMessage.data as Message;
+
+      // Check if this is our optimistic message coming back
+      if (messageData.clientMessageId && pendingIdsRef.current.has(messageData.clientMessageId)) {
+        // Remove from pending - it's now confirmed
+        pendingIdsRef.current.delete(messageData.clientMessageId);
+        setPendingMessages((prev) =>
+          prev.filter((m) => m.clientMessageId !== messageData.clientMessageId)
+        );
+      }
+
       // Only scroll if user is near bottom when new message arrives
       const wasNearBottom = isNearBottom();
       setMessages((prev) => {
@@ -127,7 +180,45 @@ export function ChatRoom({
     }, [])
   );
 
-  // Load initial messages
+  // Listen for pin updates
+  useAblyChannel(
+    ablyChannelName,
+    "message-pinned",
+    useCallback((ablyMessage: AblyMessage) => {
+      const { messageId, pinType, isPinned } = ablyMessage.data as {
+        messageId: string;
+        pinType: "channel" | "thread";
+        isPinned: boolean;
+      };
+
+      if (pinType === "channel") {
+        if (isPinned) {
+          // Find the message and add to pinned list
+          setMessages((prev) => {
+            const msg = prev.find((m) => m.id === messageId);
+            if (msg) {
+              setPinnedMessages((pinned) => {
+                if (pinned.some((p) => p.id === messageId)) return pinned;
+                return [{ id: msg.id, content: msg.content, author: msg.author, pinnedAt: new Date().toISOString() }, ...pinned];
+              });
+            }
+            return prev.map((m) =>
+              m.id === messageId ? { ...m, isPinnedInChannel: true } : m
+            );
+          });
+        } else {
+          setPinnedMessages((prev) => prev.filter((p) => p.id !== messageId));
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId ? { ...m, isPinnedInChannel: false } : m
+            )
+          );
+        }
+      }
+    }, [])
+  );
+
+  // Load initial messages and pinned messages
   useEffect(() => {
     async function loadMessages() {
       setIsLoading(true);
@@ -135,14 +226,16 @@ export function ChatRoom({
       setNextCursor(undefined);
       setHasMore(false);
       setReplyingTo(null);
+      setPendingMessages([]);
+      pendingIdsRef.current.clear();
 
-      const result = await getChatMessages({
-        channelId,
-        limit: 50,
-      });
+      const [messagesResult, pinnedResult] = await Promise.all([
+        getChatMessages({ channelId, limit: 50 }),
+        getPinnedChannelMessages({ channelId }),
+      ]);
 
       setMessages(
-        result.messages.map((m) => ({
+        messagesResult.messages.map((m) => ({
           ...m,
           createdAt:
             m.createdAt instanceof Date
@@ -151,10 +244,16 @@ export function ChatRoom({
           reactionCounts: m.reactionCounts || {},
         })) as Message[]
       );
-      setNextCursor(result.nextCursor);
-      setHasMore(result.hasMore);
+      setNextCursor(messagesResult.nextCursor);
+      setHasMore(messagesResult.hasMore);
+      setPinnedMessages(pinnedResult as PinnedMessage[]);
       setIsLoading(false);
       shouldScrollRef.current = true;
+
+      // Mark channel as read
+      markChannelRead({ channelId }).catch(() => {
+        // Silently ignore errors
+      });
     }
 
     if (channelId) {
@@ -168,7 +267,46 @@ export function ChatRoom({
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
       shouldScrollRef.current = false;
     }
-  }, [messages]);
+  }, [messages, pendingMessages]);
+
+  // Send a pending message
+  const sendPendingMessage = useCallback(async (msg: PendingMessage) => {
+    setPendingMessages((prev) =>
+      prev.map((m) =>
+        m.clientMessageId === msg.clientMessageId ? { ...m, status: "sending" as const } : m
+      )
+    );
+
+    const result = await sendChatMessage({
+      channelId,
+      content: msg.content,
+      replyToId: msg.replyToId,
+      clientMessageId: msg.clientMessageId,
+    });
+
+    if (!result.success) {
+      setPendingMessages((prev) =>
+        prev.map((m) =>
+          m.clientMessageId === msg.clientMessageId
+            ? { ...m, status: "failed" as const, retryCount: m.retryCount + 1 }
+            : m
+        )
+      );
+      toast.error(result.error);
+    }
+    // On success, DON'T remove yet - wait for Ably echo with matching clientMessageId
+  }, [channelId]);
+
+  // Process queued messages on reconnect
+  useEffect(() => {
+    if (isConnected) {
+      const queued = pendingMessages.filter((m) => m.status === "queued");
+      queued.forEach((msg, i) => {
+        // Stagger to avoid rate limits
+        setTimeout(() => sendPendingMessage(msg), i * 100);
+      });
+    }
+  }, [isConnected, pendingMessages, sendPendingMessage]);
 
   // Load more messages
   const loadMore = async () => {
@@ -195,21 +333,37 @@ export function ChatRoom({
     setIsLoadingMore(false);
   };
 
-  // Send message (with optional reply)
+  // Send message with optimistic UI
   const handleSend = async (content: string, replyToId?: string) => {
-    // Check if near bottom BEFORE sending - only auto-scroll if user was already at bottom
     const wasNearBottom = isNearBottom();
+    const clientMessageId = crypto.randomUUID();
 
-    setIsSending(true);
-    const result = await sendChatMessage({ channelId, content, replyToId });
+    const tempMessage: PendingMessage = {
+      clientMessageId,
+      content,
+      replyToId,
+      createdAt: new Date().toISOString(),
+      status: "queued",
+      retryCount: 0,
+    };
 
-    if (!result.success) {
-      toast.error(result.error);
-    } else if (wasNearBottom) {
-      // Only scroll to bottom if user was already near bottom when sending
+    // Track for dedup
+    pendingIdsRef.current.add(clientMessageId);
+    setPendingMessages((prev) => [...prev, tempMessage]);
+
+    if (wasNearBottom) {
       shouldScrollRef.current = true;
     }
-    setIsSending(false);
+
+    await sendPendingMessage(tempMessage);
+  };
+
+  // Retry failed message
+  const handleRetry = (clientMessageId: string) => {
+    const msg = pendingMessages.find((m) => m.clientMessageId === clientMessageId);
+    if (msg) {
+      sendPendingMessage(msg);
+    }
   };
 
   // Delete message
@@ -239,6 +393,7 @@ export function ChatRoom({
         id: message.id,
         authorName: message.author.name || "Anonymous",
         content: message.content,
+        depth: message.depth,
       });
     }
   };
@@ -248,7 +403,6 @@ export function ChatRoom({
     const element = document.getElementById(`message-${messageId}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Highlight effect
       element.classList.add("bg-primary-50");
       setTimeout(() => {
         element.classList.remove("bg-primary-50");
@@ -256,15 +410,31 @@ export function ChatRoom({
     }
   };
 
+  // Handle jump to pinned message
+  const handleJumpToPinnedMessage = (messageId: string) => {
+    const exists = messages.some((m) => m.id === messageId);
+    if (exists) {
+      handleScrollToMessage(messageId);
+    } else {
+      // TODO: Load messages around this message ID
+      toast.info("Message not in current view");
+    }
+  };
+
+  // Handle pin/unpin message
+  const handlePinMessage = async (messageId: string, isPinned: boolean) => {
+    const result = await pinMessage({ messageId, pinType: "channel", isPinned });
+    if (!result.success) {
+      toast.error(result.error);
+    }
+  };
+
   // Toggle reaction on a message (optimistic update)
   const handleToggleReaction = async (messageId: string, emoji: EmojiKey) => {
-    // Optimistic update
     setMessages((prev) =>
       prev.map((m) => {
         if (m.id !== messageId) return m;
         const currentCount = m.reactionCounts[emoji] || 0;
-        // Toggle: if exists, remove; otherwise add 1
-        // This is a simple heuristic - server is source of truth
         const newCount = currentCount > 0 ? currentCount - 1 : currentCount + 1;
         return {
           ...m,
@@ -279,9 +449,29 @@ export function ChatRoom({
     const result = await toggleReaction({ messageId, emoji });
     if (!result.success) {
       toast.error(result.error);
-      // Revert on error - but Ably will sync correct state anyway
     }
   };
+
+  // Merge confirmed messages with pending messages for display
+  const displayMessages = useMemo(() => {
+    const pendingAsMessages: Message[] = pendingMessages.map((p) => ({
+      id: `pending-${p.clientMessageId}`,
+      content: p.content,
+      channelId,
+      authorId: currentUserId,
+      author: currentUser,
+      createdAt: p.createdAt,
+      replyToId: p.replyToId,
+      reactionCounts: {},
+      isPending: true,
+      pendingStatus: p.status,
+      clientMessageId: p.clientMessageId,
+    }));
+
+    return [...messages, ...pendingAsMessages].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [messages, pendingMessages, channelId, currentUserId, currentUser]);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -301,6 +491,16 @@ export function ChatRoom({
         )}
       </div>
 
+      {/* Pinned Messages Banner */}
+      {pinnedMessages.length > 0 && (
+        <PinnedBanner
+          pinnedMessages={pinnedMessages}
+          onJumpToMessage={handleJumpToPinnedMessage}
+          onUnpin={isOwner ? (id) => handlePinMessage(id, false) : undefined}
+          canModerate={isOwner}
+        />
+      )}
+
       {/* Messages */}
       <div
         ref={messagesContainerRef}
@@ -308,7 +508,7 @@ export function ChatRoom({
       >
         {isLoading ? (
           <ChatMessageSkeleton count={8} />
-        ) : messages.length === 0 ? (
+        ) : displayMessages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <EmptyState
               icon={Hash}
@@ -336,36 +536,59 @@ export function ChatRoom({
                 </button>
               </div>
             )}
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                id={message.id}
-                content={message.content}
-                author={message.author}
-                createdAt={message.createdAt}
-                isOwnMessage={message.authorId === currentUserId}
-                canDelete={
-                  message.authorId === currentUserId || isOwner
-                }
-                onDelete={handleDelete}
-                isDeleting={deletingIds.has(message.id)}
-                replyToId={message.replyToId}
-                replyTo={message.replyTo}
-                onReply={handleReply}
-                onScrollToMessage={handleScrollToMessage}
-                reactionCounts={message.reactionCounts}
-                onToggleReaction={handleToggleReaction}
-              />
+            {displayMessages.map((message) => (
+              <div key={message.id}>
+                <ChatMessage
+                  id={message.id}
+                  content={message.content}
+                  author={message.author}
+                  createdAt={message.createdAt}
+                  isOwnMessage={message.authorId === currentUserId}
+                  canDelete={!message.isPending && (message.authorId === currentUserId || isOwner)}
+                  onDelete={handleDelete}
+                  isDeleting={deletingIds.has(message.id)}
+                  replyToId={message.replyToId}
+                  replyTo={message.replyTo}
+                  onReply={handleReply}
+                  onScrollToMessage={handleScrollToMessage}
+                  reactionCounts={message.reactionCounts}
+                  onToggleReaction={handleToggleReaction}
+                  depth={message.depth}
+                  replyCount={message.replyCount}
+                  onViewThread={onOpenThread}
+                  canPin={isOwner && !message.isPending}
+                  isPinned={message.isPinnedInChannel}
+                  onPin={handlePinMessage}
+                  isPending={message.isPending}
+                  pendingStatus={message.pendingStatus}
+                />
+                {/* Retry UI for failed messages */}
+                {message.isPending && message.pendingStatus === "failed" && (
+                  <div className="flex items-center gap-2 text-error-600 text-xs px-4 pb-2 -mt-1">
+                    <AlertCircle className="h-3 w-3" />
+                    <span>Failed to send</span>
+                    <button
+                      onClick={() => handleRetry(message.clientMessageId!)}
+                      className="underline hover:text-error-700 inline-flex items-center gap-1"
+                    >
+                      <RotateCw className="h-3 w-3" />
+                      Retry
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
             <div ref={messagesEndRef} />
           </>
         )}
       </div>
 
-      {/* Input */}
+      {/* Input - no longer disabled based on connection */}
       <ChatInput
+        ref={inputRef}
         onSend={handleSend}
-        disabled={isSending || !isConnected}
+        disabled={false}
+        autoFocus={true}
         channelName={channelName}
         replyingTo={replyingTo}
         onCancelReply={() => setReplyingTo(null)}
