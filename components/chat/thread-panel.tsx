@@ -368,6 +368,8 @@ export function ThreadPanel({
                     onPin={handlePinMessage}
                     // No reply button in thread panel - replies go to thread root
                     canReply={false}
+                    // Hide reply preview in thread - original message shown at top
+                    hideReplyPreview={true}
                   />
                 )}
               </div>

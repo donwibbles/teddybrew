@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, MessageSquare, FileText, BookOpen } from "lucide-react";
+import { Calendar, MessageSquare, FileText, BookOpen, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface CommunityTabsProps {
   communitySlug: string;
   isMember: boolean;
+  canModerate?: boolean;
 }
 
-export function CommunityTabs({ communitySlug, isMember }: CommunityTabsProps) {
+export function CommunityTabs({ communitySlug, isMember, canModerate = false }: CommunityTabsProps) {
   const pathname = usePathname();
 
   const tabs = [
@@ -36,6 +37,12 @@ export function CommunityTabs({ communitySlug, isMember }: CommunityTabsProps) {
       href: `/communities/${communitySlug}/docs`,
       icon: BookOpen,
     },
+    {
+      name: "Members",
+      href: `/communities/${communitySlug}/members`,
+      icon: Users,
+      requiresModerate: true,
+    },
   ];
 
   const isActive = (href: string, exact?: boolean) => {
@@ -51,6 +58,11 @@ export function CommunityTabs({ communitySlug, isMember }: CommunityTabsProps) {
         {tabs.map((tab) => {
           // Hide chat tab for non-members
           if (tab.requiresMember && !isMember) {
+            return null;
+          }
+
+          // Hide members tab for non-moderators
+          if (tab.requiresModerate && !canModerate) {
             return null;
           }
 

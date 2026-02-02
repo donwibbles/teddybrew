@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { EditCommunityForm } from "@/components/community/edit-community-form";
@@ -47,16 +46,6 @@ export default async function CommunitySettingsPage({
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2">
-          <Link
-            href={`/communities/${community.slug}`}
-            className="hover:text-primary-600"
-          >
-            {community.name}
-          </Link>
-          <span>/</span>
-          <span>Settings</span>
-        </div>
         <h1 className="text-2xl font-semibold text-neutral-900">
           Community Settings
         </h1>
@@ -80,6 +69,7 @@ export default async function CommunitySettingsPage({
             city: community.city,
             state: community.state,
             isVirtual: community.isVirtual,
+            bannerImage: community.bannerImage,
           }}
         />
       </div>

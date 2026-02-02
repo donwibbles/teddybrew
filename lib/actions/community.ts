@@ -139,7 +139,7 @@ export async function updateCommunity(
       return { success: false, error: parsed.error.issues[0].message };
     }
 
-    const { communityId, name, description, type, city, state, isVirtual } = parsed.data;
+    const { communityId, name, description, type, city, state, isVirtual, bannerImage } = parsed.data;
 
     // Sanitize city if provided
     const sanitizedCity = city !== undefined ? (city ? sanitizeText(city) : null) : undefined;
@@ -184,6 +184,7 @@ export async function updateCommunity(
         ...(state !== undefined && {
           state: effectiveIsVirtual ? null : state,
         }),
+        ...(bannerImage !== undefined && { bannerImage }),
       },
     });
 

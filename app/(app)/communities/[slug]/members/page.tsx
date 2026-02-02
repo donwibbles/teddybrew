@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getCommunityMembers } from "@/lib/db/members";
 import { getMembershipStatus } from "@/lib/actions/membership";
@@ -46,16 +45,6 @@ export default async function MembersPage({ params }: MembersPageProps) {
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2 text-sm text-neutral-500 mb-2">
-          <Link
-            href={`/communities/${community.slug}`}
-            className="hover:text-primary-600"
-          >
-            {community.name}
-          </Link>
-          <span>/</span>
-          <span>Members</span>
-        </div>
         <h1 className="text-2xl font-semibold text-neutral-900">
           {membership.isOwner ? "Manage Members" : "Members"}
         </h1>

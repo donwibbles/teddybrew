@@ -57,6 +57,8 @@ interface ChatMessageProps {
   // Pending message support
   isPending?: boolean;
   pendingStatus?: "queued" | "sending" | "failed";
+  // Hide reply preview (useful in thread panel where context is clear)
+  hideReplyPreview?: boolean;
 }
 
 export function ChatMessage({
@@ -83,6 +85,7 @@ export function ChatMessage({
   onToggleReaction,
   isPending = false,
   pendingStatus,
+  hideReplyPreview = false,
 }: ChatMessageProps) {
   const [showActions, setShowActions] = useState(false);
 
@@ -135,7 +138,7 @@ export function ChatMessage({
 
       <div className="flex-1 min-w-0">
         {/* Reply preview if this is a reply */}
-        {replyTo && (
+        {replyTo && !hideReplyPreview && (
           <ReplyPreview
             authorName={replyTo.author.name || "Anonymous"}
             content={replyTo.content}

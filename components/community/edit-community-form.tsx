@@ -9,6 +9,7 @@ import { z } from "zod";
 import { updateCommunity } from "@/lib/actions/community";
 import { CommunityType } from "@prisma/client";
 import { StateSelect } from "@/components/ui/state-select";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { US_STATE_CODES } from "@/lib/constants/us-states";
 import type { USStateCode } from "@/lib/constants/us-states";
 
@@ -26,6 +27,7 @@ const editCommunitySchema = z
     city: z.string().max(100).optional().nullable(),
     state: z.enum(US_STATE_CODES).optional().nullable(),
     isVirtual: z.boolean().optional(),
+    bannerImage: z.string().url().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     // State is required for non-virtual communities
@@ -50,6 +52,7 @@ interface EditCommunityFormProps {
     city: string | null;
     state: string | null;
     isVirtual: boolean;
+    bannerImage: string | null;
   };
 }
 
@@ -74,6 +77,7 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
       city: community.city || "",
       state: (community.state as USStateCode) || null,
       isVirtual: community.isVirtual,
+      bannerImage: community.bannerImage || null,
     },
   });
 
@@ -93,6 +97,7 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
       city: data.isVirtual ? null : (data.city || null),
       state: data.isVirtual ? null : data.state,
       isVirtual: data.isVirtual,
+      bannerImage: data.bannerImage,
     });
 
     if (result.success) {
@@ -125,6 +130,32 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
           {successMessage}
         </div>
       )}
+
+      {/* Banner Image */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-700 mb-2">
+          Banner Image
+        </label>
+        <p className="text-sm text-neutral-500 mb-3">
+          This image will be displayed at the top of your community page. Recommended ratio is 4:1.
+        </p>
+        <Controller
+          name="bannerImage"
+          control={control}
+          render={({ field }) => (
+            <ImageUpload
+              type="community-banner"
+              entityId={community.id}
+              currentImage={field.value}
+              onUploadComplete={(url) => field.onChange(url)}
+              onRemove={() => field.onChange(null)}
+              aspectRatio={4}
+              disabled={isSubmitting}
+              previewClassName="max-h-48"
+            />
+          )}
+        />
+      </div>
 
       {/* Slug (read-only) */}
       <div>

@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { getDocuments, getFolders, getDocumentCounts } from "@/lib/db/documents";
@@ -85,19 +84,7 @@ export default async function DocsPage({ params, searchParams }: DocsPageProps) 
     : { ...counts, total: counts.published, drafts: 0, archived: 0 };
 
   return (
-    <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500">
-        <Link
-          href={`/communities/${slug}`}
-          className="hover:text-primary-600"
-        >
-          {community.name}
-        </Link>
-        <span>/</span>
-        <span>Docs</span>
-      </div>
-
+    <div>
       <DocumentList
         communityId={community.id}
         communitySlug={community.slug}

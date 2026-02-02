@@ -58,18 +58,6 @@ export default async function ForumPage({ params, searchParams }: ForumPageProps
 
   return (
     <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500">
-        <Link
-          href={`/communities/${slug}`}
-          className="hover:text-primary-600"
-        >
-          {community.name}
-        </Link>
-        <span>/</span>
-        <span>Forum</span>
-      </div>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-xl font-semibold text-neutral-900">

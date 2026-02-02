@@ -1,5 +1,4 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { getChannels } from "@/lib/db/channels";
@@ -62,19 +61,7 @@ export default async function ChatPage({ params, searchParams }: ChatPageProps) 
   };
 
   return (
-    <div className="space-y-4">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500">
-        <Link
-          href={`/communities/${community.slug}`}
-          className="hover:text-primary-600"
-        >
-          {community.name}
-        </Link>
-        <span>/</span>
-        <span>Chat</span>
-      </div>
-
+    <div>
       <ChatLayout
         communityId={community.id}
         communitySlug={community.slug}

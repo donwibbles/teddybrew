@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
-import { getCommunityBySlug } from "@/lib/db/communities";
+import { getCommunityWithDetails } from "@/lib/db/communities";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { getSession } from "@/lib/dal";
 import { CommunityPresenceWrapper } from "@/components/community/community-presence-wrapper";
+import { CommunityHeader } from "@/components/community/community-header";
 
 interface CommunityLayoutProps {
   children: React.ReactNode;
@@ -19,24 +20,46 @@ export default async function CommunityLayout({
   params,
 }: CommunityLayoutProps) {
   const { slug } = await params;
-  const community = await getCommunityBySlug(slug);
+  const community = await getCommunityWithDetails(slug);
 
   if (!community) {
     notFound();
   }
 
   const session = await getSession();
-
-  // If user is not authenticated, render without presence
-  if (!session?.user) {
-    return <>{children}</>;
-  }
-
   const membership = await getMembershipStatus(community.id);
 
-  // If user is not a member, render without presence
-  if (!membership.isMember) {
-    return <>{children}</>;
+  // Build header data
+  const headerCommunity = {
+    id: community.id,
+    slug: community.slug,
+    name: community.name,
+    description: community.description,
+    type: community.type,
+    bannerImage: community.bannerImage,
+    city: community.city,
+    state: community.state,
+    isVirtual: community.isVirtual,
+    _count: community._count,
+  };
+
+  const headerMembership = {
+    isMember: membership.isMember,
+    isOwner: membership.isOwner,
+    canModerate: membership.canModerate,
+  };
+
+  // Shared content with header
+  const content = (
+    <div className="space-y-6">
+      <CommunityHeader community={headerCommunity} membership={headerMembership} />
+      {children}
+    </div>
+  );
+
+  // If user is not authenticated or not a member, render without presence
+  if (!session?.user || !membership.isMember) {
+    return content;
   }
 
   // Authenticated member - wrap with presence provider
@@ -48,7 +71,7 @@ export default async function CommunityLayout({
 
   return (
     <CommunityPresenceWrapper communityId={community.id} currentUser={currentUser}>
-      {children}
+      {content}
     </CommunityPresenceWrapper>
   );
 }
