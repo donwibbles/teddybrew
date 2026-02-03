@@ -110,7 +110,7 @@ export function ChatRoom({
   const pendingIdsRef = useRef<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const shouldScrollRef = useRef(true);
+  const scrollModeRef = useRef<"none" | "instant" | "smooth">("instant");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Check if user is near the bottom of the chat (within 100px)
@@ -164,7 +164,7 @@ export function ChatRoom({
         return [...prev, { ...messageData, reactionCounts: messageData.reactionCounts || {} }];
       });
       if (wasNearBottom) {
-        shouldScrollRef.current = true;
+        scrollModeRef.current = "smooth";
       }
     }, [isNearBottom])
   );
@@ -264,7 +264,7 @@ export function ChatRoom({
       setHasMore(messagesResult.hasMore);
       setPinnedMessages(pinnedResult as PinnedMessage[]);
       setIsLoading(false);
-      shouldScrollRef.current = true;
+      scrollModeRef.current = "instant";
 
       // Mark channel as read
       markChannelRead({ channelId }).catch(() => {
@@ -279,9 +279,10 @@ export function ChatRoom({
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (shouldScrollRef.current && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      shouldScrollRef.current = false;
+    if (scrollModeRef.current !== "none" && messagesEndRef.current) {
+      const behavior = scrollModeRef.current === "instant" ? "instant" : "smooth";
+      messagesEndRef.current.scrollIntoView({ behavior });
+      scrollModeRef.current = "none";
     }
   }, [messages, pendingMessages]);
 
@@ -368,7 +369,7 @@ export function ChatRoom({
     setPendingMessages((prev) => [...prev, tempMessage]);
 
     if (wasNearBottom) {
-      shouldScrollRef.current = true;
+      scrollModeRef.current = "smooth";
     }
 
     await sendPendingMessage(tempMessage);

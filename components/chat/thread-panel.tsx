@@ -80,7 +80,7 @@ export function ThreadPanel({
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [pinnedInThread, setPinnedInThread] = useState<PinnedMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const shouldScrollRef = useRef(true);
+  const scrollModeRef = useRef<"none" | "instant" | "smooth">("instant");
 
   // Ably channel for real-time messages
   const ablyChannelName = `community:${communityId}:chat:${channelId}`;
@@ -103,7 +103,7 @@ export function ThreadPanel({
               { ...messageData, reactionCounts: messageData.reactionCounts || {} },
             ];
           });
-          shouldScrollRef.current = true;
+          scrollModeRef.current = "smooth";
         }
       },
       [threadRootId]
@@ -206,7 +206,7 @@ export function ThreadPanel({
       );
       setPinnedInThread(result.pinnedInThread as PinnedMessage[]);
       setIsLoading(false);
-      shouldScrollRef.current = true;
+      scrollModeRef.current = "instant";
     }
 
     loadThread();
@@ -214,9 +214,10 @@ export function ThreadPanel({
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (shouldScrollRef.current && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-      shouldScrollRef.current = false;
+    if (scrollModeRef.current !== "none" && messagesEndRef.current) {
+      const behavior = scrollModeRef.current === "instant" ? "instant" : "smooth";
+      messagesEndRef.current.scrollIntoView({ behavior });
+      scrollModeRef.current = "none";
     }
   }, [messages]);
 
@@ -238,7 +239,7 @@ export function ThreadPanel({
       toast.error(result.error);
     }
     setIsSending(false);
-    shouldScrollRef.current = true;
+    scrollModeRef.current = "smooth";
   };
 
   // Delete message
