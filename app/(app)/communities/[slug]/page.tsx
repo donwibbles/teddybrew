@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getCommunityWithDetails } from "@/lib/db/communities";
+import { getCommunityWithDetails, getSpotlightedEvents } from "@/lib/db/communities";
 import { getCommunityMembers } from "@/lib/db/members";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { MemberList } from "@/components/community/member-list";
 import { PrivateCommunityLock } from "@/components/community/private-community-lock";
+import { FeaturedEventsSection } from "@/components/community/featured-events-section";
 
 interface CommunityPageProps {
   params: Promise<{ slug: string }>;
@@ -35,16 +36,28 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
   const membership = await getMembershipStatus(community.id);
   const members = await getCommunityMembers(community.id, 10);
 
+  // Fetch spotlighted events
+  const spotlightedEvents = await getSpotlightedEvents(community.id);
+
   return (
-    <div>
-      {/* Content Grid - only show for public communities or members */}
+    <div className="space-y-6">
+      {/* Content - only show for public communities or members */}
       {community.type === "PRIVATE" && !membership.isMember ? (
         <PrivateCommunityLock
           communityId={community.id}
           communityName={community.name}
         />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-3">
+        <>
+          {/* Featured Events Section (full width) */}
+          <FeaturedEventsSection
+            events={spotlightedEvents}
+            communitySlug={community.slug}
+            canManage={membership.canModerate}
+          />
+
+          {/* Main Content Grid */}
+          <div className="grid gap-6 lg:grid-cols-3">
           {/* Events Section */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
@@ -135,6 +148,7 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
             />
           </div>
         </div>
+        </>
       )}
     </div>
   );

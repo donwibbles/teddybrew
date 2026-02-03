@@ -175,3 +175,83 @@ export async function isSlugAvailable(slug: string): Promise<boolean> {
   });
   return !existing;
 }
+
+/**
+ * Get spotlighted events for a community
+ * Only returns events with upcoming sessions
+ */
+export async function getSpotlightedEvents(communityId: string, limit: number = 3) {
+  return await prisma.event.findMany({
+    where: {
+      communityId,
+      isSpotlighted: true,
+      sessions: { some: { startTime: { gte: new Date() } } },
+    },
+    orderBy: { spotlightOrder: "asc" },
+    take: limit,
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      isVirtual: true,
+      timezone: true,
+      coverImage: true,
+      sessions: {
+        where: { startTime: { gte: new Date() } },
+        orderBy: { startTime: "asc" },
+        take: 1,
+        select: {
+          id: true,
+          startTime: true,
+          endTime: true,
+        },
+      },
+    },
+  });
+}
+
+/**
+ * Get count of spotlighted events for a community
+ */
+export async function getSpotlightedEventCount(communityId: string): Promise<number> {
+  return await prisma.event.count({
+    where: {
+      communityId,
+      isSpotlighted: true,
+    },
+  });
+}
+
+/**
+ * Get all events for spotlight management (with upcoming sessions)
+ */
+export async function getEventsForSpotlightManagement(communityId: string) {
+  return await prisma.event.findMany({
+    where: {
+      communityId,
+      sessions: { some: { startTime: { gte: new Date() } } },
+    },
+    orderBy: [
+      { isSpotlighted: "desc" },
+      { spotlightOrder: "asc" },
+      { createdAt: "desc" },
+    ],
+    select: {
+      id: true,
+      title: true,
+      location: true,
+      isVirtual: true,
+      isSpotlighted: true,
+      spotlightOrder: true,
+      sessions: {
+        where: { startTime: { gte: new Date() } },
+        orderBy: { startTime: "asc" },
+        take: 1,
+        select: {
+          id: true,
+          startTime: true,
+        },
+      },
+    },
+  });
+}

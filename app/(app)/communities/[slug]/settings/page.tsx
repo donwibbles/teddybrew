@@ -1,10 +1,13 @@
 import { notFound, redirect } from "next/navigation";
-import { getCommunityWithDetails } from "@/lib/db/communities";
+import { getCommunityWithDetails, getEventsForSpotlightManagement } from "@/lib/db/communities";
+import { getAllAnnouncements } from "@/lib/db/announcements";
 import { getMembershipStatus } from "@/lib/actions/membership";
 import { EditCommunityForm } from "@/components/community/edit-community-form";
 import { DeleteCommunityForm } from "@/components/community/delete-community-form";
 import { InvitationsSection } from "@/components/community/invitations-section";
-import { Mail } from "lucide-react";
+import { SpotlightManager } from "@/components/community/spotlight-manager";
+import { AnnouncementManager } from "@/components/community/announcement-manager";
+import { Mail, Star, Megaphone } from "lucide-react";
 
 interface SettingsPageProps {
   params: Promise<{ slug: string }>;
@@ -34,13 +37,19 @@ export default async function CommunitySettingsPage({
     notFound();
   }
 
-  // Check if user is owner
+  // Check if user can moderate (owner or moderator)
   const membership = await getMembershipStatus(community.id);
 
-  if (!membership.isOwner) {
-    // Redirect non-owners back to community page
+  if (!membership.canModerate) {
+    // Redirect non-moderators back to community page
     redirect(`/communities/${slug}`);
   }
+
+  // Fetch data for spotlight and announcement management
+  const [events, announcements] = await Promise.all([
+    getEventsForSpotlightManagement(community.id),
+    getAllAnnouncements(community.id),
+  ]);
 
   return (
     <div className="max-w-2xl mx-auto space-y-8">
@@ -54,28 +63,30 @@ export default async function CommunitySettingsPage({
         </p>
       </div>
 
-      {/* Edit Form */}
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
-        <h2 className="text-lg font-semibold text-neutral-900 mb-6">
-          General Settings
-        </h2>
-        <EditCommunityForm
-          community={{
-            id: community.id,
-            slug: community.slug,
-            name: community.name,
-            description: community.description,
-            type: community.type,
-            city: community.city,
-            state: community.state,
-            isVirtual: community.isVirtual,
-            bannerImage: community.bannerImage,
-          }}
-        />
-      </div>
+      {/* Edit Form - Owner only */}
+      {membership.isOwner && (
+        <div className="bg-white rounded-lg border border-neutral-200 p-6">
+          <h2 className="text-lg font-semibold text-neutral-900 mb-6">
+            General Settings
+          </h2>
+          <EditCommunityForm
+            community={{
+              id: community.id,
+              slug: community.slug,
+              name: community.name,
+              description: community.description,
+              type: community.type,
+              city: community.city,
+              state: community.state,
+              isVirtual: community.isVirtual,
+              bannerImage: community.bannerImage,
+            }}
+          />
+        </div>
+      )}
 
-      {/* Invitations Section - Only for private communities */}
-      {community.type === "PRIVATE" && (
+      {/* Invitations Section - Only for private communities and owners */}
+      {community.type === "PRIVATE" && membership.isOwner && (
         <div className="bg-white rounded-lg border border-neutral-200 p-6">
           <div className="flex items-center gap-2 mb-6">
             <Mail className="h-5 w-5 text-neutral-500" />
@@ -91,20 +102,44 @@ export default async function CommunitySettingsPage({
         </div>
       )}
 
-      {/* Danger Zone */}
-      <div className="bg-white rounded-lg border border-error-200 p-6">
-        <h2 className="text-lg font-semibold text-error-600 mb-2">
-          Danger Zone
-        </h2>
-        <p className="text-neutral-600 text-sm mb-6">
-          Deleting your community is permanent and cannot be undone. All events
-          and memberships will be deleted.
-        </p>
-        <DeleteCommunityForm
-          communityId={community.id}
-          communityName={community.name}
-        />
+      {/* Spotlight Events Section */}
+      <div id="spotlight" className="bg-white rounded-lg border border-neutral-200 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Star className="h-5 w-5 text-amber-500" />
+          <h2 className="text-lg font-semibold text-neutral-900">
+            Spotlight Events
+          </h2>
+        </div>
+        <SpotlightManager events={events} />
       </div>
+
+      {/* Announcements Section */}
+      <div id="announcements" className="bg-white rounded-lg border border-neutral-200 p-6">
+        <div className="flex items-center gap-2 mb-6">
+          <Megaphone className="h-5 w-5 text-amber-600" />
+          <h2 className="text-lg font-semibold text-neutral-900">
+            Announcements
+          </h2>
+        </div>
+        <AnnouncementManager announcements={announcements} communityId={community.id} />
+      </div>
+
+      {/* Danger Zone - Owner only */}
+      {membership.isOwner && (
+        <div className="bg-white rounded-lg border border-error-200 p-6">
+          <h2 className="text-lg font-semibold text-error-600 mb-2">
+            Danger Zone
+          </h2>
+          <p className="text-neutral-600 text-sm mb-6">
+            Deleting your community is permanent and cannot be undone. All events
+            and memberships will be deleted.
+          </p>
+          <DeleteCommunityForm
+            communityId={community.id}
+            communityName={community.name}
+          />
+        </div>
+      )}
     </div>
   );
 }

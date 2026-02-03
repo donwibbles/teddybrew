@@ -86,6 +86,10 @@ model User {
   deletedDocuments     Document[]        @relation("DocumentDeleter")
   documentVersions     DocumentVersion[] @relation("DocumentVersionAuthor")
 
+  // Spotlight & Announcement relations
+  spotlightedEvents    Event[]           @relation("EventSpotlightedBy")
+  createdAnnouncements Announcement[]    @relation("AnnouncementCreator")
+
   @@index([email])
   @@index([username])
 }
@@ -165,6 +169,7 @@ model Community {
   moderationLogs  ModerationLog[]
   documents       Document[]
   documentFolders DocumentFolder[]
+  announcements   Announcement[]
 
   @@index([slug])
   @@index([ownerId])
@@ -255,6 +260,13 @@ model Event {
   // Attendee visibility settings
   showAttendeeCount Boolean @default(true)
 
+  // Spotlight fields (featured events shown at top of community page)
+  isSpotlighted   Boolean   @default(false)
+  spotlightedAt   DateTime?
+  spotlightedById String?
+  spotlightedBy   User?     @relation("EventSpotlightedBy", fields: [spotlightedById], references: [id])
+  spotlightOrder  Int       @default(0)
+
   // Relations
   community    Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
   organizer    User           @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Cascade)
@@ -267,6 +279,7 @@ model Event {
   @@index([communityId, createdAt(sort: Desc)])
   @@index([state])
   @@index([communityId, state])
+  @@index([communityId, isSpotlighted, spotlightOrder])
 }
 
 // Event Session - Each event has one or more sessions
@@ -524,6 +537,8 @@ enum NotificationType {
   COMMUNITY_INVITE // You've been invited to a community
   CHAT_MENTION     // Someone mentioned you in a chat message
   CHAT_REPLY       // Someone replied to your message in chat
+  EVENT_SPOTLIGHT  // An event was spotlighted in a community you belong to
+  ANNOUNCEMENT     // A new announcement was posted in a community you belong to
 }
 
 model Notification {
@@ -540,6 +555,26 @@ model Notification {
 
   @@index([userId, isRead, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
+}
+
+// ============ ANNOUNCEMENTS ============
+
+// Community announcements shown as banners below header
+model Announcement {
+  id          String   @id @default(cuid())
+  communityId String
+  title       String   @db.VarChar(200)
+  content     String   @db.Text
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdById String
+
+  community Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  createdBy  User      @relation("AnnouncementCreator", fields: [createdById], references: [id])
+
+  @@index([communityId, isActive, sortOrder])
 }
 
 // ============ EMAIL TRACKING ============
