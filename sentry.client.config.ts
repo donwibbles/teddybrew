@@ -35,6 +35,7 @@ Sentry.init({
   },
 
   integrations: [
+    Sentry.browserTracingIntegration(),
     Sentry.replayIntegration({
       maskAllText: true,
       blockAllMedia: true,
