@@ -4,7 +4,7 @@ import Image from "next/image";
 import { MessageSquare, Video, ExternalLink } from "lucide-react";
 import { ProfileLink } from "@/components/ui/profile-link";
 import { getEventWithDetails } from "@/lib/db/events";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import { getMembershipStatus } from "@/lib/db/queries";
 import { SessionList } from "@/components/event/session-list";
 import { PrivateCommunityLock } from "@/components/community/private-community-lock";
 

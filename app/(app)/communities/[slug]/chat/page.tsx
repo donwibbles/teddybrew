@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCommunityWithDetails } from "@/lib/db/communities";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import { getCommunityWithDetails, getMembershipStatus } from "@/lib/db/queries";
 import { getChannels } from "@/lib/db/channels";
 import { getSession } from "@/lib/dal";
 import { ChatLayout } from "@/components/chat/chat-layout";

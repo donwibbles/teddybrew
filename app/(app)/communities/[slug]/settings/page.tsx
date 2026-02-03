@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
-import { getCommunityWithDetails, getEventsForSpotlightManagement } from "@/lib/db/communities";
+import { getCommunityWithDetails, getMembershipStatus } from "@/lib/db/queries";
+import { getEventsForSpotlightManagement } from "@/lib/db/communities";
 import { getAllAnnouncements } from "@/lib/db/announcements";
-import { getMembershipStatus } from "@/lib/actions/membership";
 import { EditCommunityForm } from "@/components/community/edit-community-form";
 import { DeleteCommunityForm } from "@/components/community/delete-community-form";
 import { InvitationsSection } from "@/components/community/invitations-section";

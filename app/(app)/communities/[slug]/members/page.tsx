@@ -1,7 +1,9 @@
 import { notFound, redirect } from "next/navigation";
-import { getCommunityWithDetails } from "@/lib/db/communities";
-import { getCommunityMembers } from "@/lib/db/members";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import {
+  getCommunityWithDetails,
+  getMembershipStatus,
+  getCommunityMembers,
+} from "@/lib/db/queries";
 import { MemberManagementList } from "@/components/community/member-management-list";
 import { ModerationLog } from "@/components/community/moderation-log";
 

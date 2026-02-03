@@ -1,8 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getCommunityWithDetails, getSpotlightedEvents } from "@/lib/db/communities";
-import { getCommunityMembers } from "@/lib/db/members";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import {
+  getCommunityWithDetails,
+  getMembershipStatus,
+  getCommunityMembers,
+  getSpotlightedEvents,
+} from "@/lib/db/queries";
 import { MemberList } from "@/components/community/member-list";
 import { PrivateCommunityLock } from "@/components/community/private-community-lock";
 import { FeaturedEventsSection } from "@/components/community/featured-events-section";
@@ -33,11 +36,12 @@ export default async function CommunityPage({ params }: CommunityPageProps) {
     notFound();
   }
 
-  const membership = await getMembershipStatus(community.id);
-  const members = await getCommunityMembers(community.id, 10);
-
-  // Fetch spotlighted events
-  const spotlightedEvents = await getSpotlightedEvents(community.id);
+  // Fetch membership, members, and spotlighted events in parallel
+  const [membership, members, spotlightedEvents] = await Promise.all([
+    getMembershipStatus(community.id),
+    getCommunityMembers(community.id, 10),
+    getSpotlightedEvents(community.id),
+  ]);
 
   return (
     <div className="space-y-6">

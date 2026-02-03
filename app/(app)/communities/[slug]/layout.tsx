@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
-import { getCommunityWithDetails } from "@/lib/db/communities";
-import { getActiveAnnouncements } from "@/lib/db/announcements";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import {
+  getCommunityWithDetails,
+  getMembershipStatus,
+  getActiveAnnouncements,
+} from "@/lib/db/queries";
 import { getSession } from "@/lib/dal";
 import { CommunityPresenceWrapper } from "@/components/community/community-presence-wrapper";
 import { CommunityHeader } from "@/components/community/community-header";

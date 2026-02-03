@@ -1,6 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getCommunityWithDetails } from "@/lib/db/communities";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import { getCommunityWithDetails, getMembershipStatus } from "@/lib/db/queries";
 import { getDocuments, getFolders, getDocumentCounts } from "@/lib/db/documents";
 import { DocumentList } from "@/components/documents";
 import { DocumentStatus } from "@prisma/client";

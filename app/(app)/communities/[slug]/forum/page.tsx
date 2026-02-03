@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { getCommunityWithDetails } from "@/lib/db/communities";
-import { getMembershipStatus } from "@/lib/actions/membership";
+import { getCommunityWithDetails, getMembershipStatus } from "@/lib/db/queries";
 import { getPosts } from "@/lib/db/posts";
 import { getCurrentUserId } from "@/lib/dal";
 import { Button } from "@/components/ui/button";

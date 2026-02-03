@@ -8,6 +8,7 @@ Sentry.init({
 
   // Performance monitoring
   tracesSampleRate: 0.1, // Capture 10% of transactions
+  profilesSampleRate: 0.1, // Profile 10% of transactions for performance scores
 
   // Set environment
   environment: process.env.NODE_ENV,
