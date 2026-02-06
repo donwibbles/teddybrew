@@ -60,6 +60,39 @@ export async function getActiveAnnouncementCount(communityId: string): Promise<n
 }
 
 /**
+ * Get active announcements across all communities the user belongs to (for dashboard)
+ */
+export async function getUserCommunityAnnouncements(userId: string, limit: number = 5) {
+  const memberships = await prisma.member.findMany({
+    where: { userId },
+    select: { communityId: true },
+  });
+
+  const communityIds = memberships.map((m) => m.communityId);
+
+  if (communityIds.length === 0) {
+    return [];
+  }
+
+  return await prisma.announcement.findMany({
+    where: {
+      communityId: { in: communityIds },
+      isActive: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    include: {
+      community: {
+        select: { id: true, slug: true, name: true },
+      },
+      createdBy: {
+        select: { id: true, name: true, image: true },
+      },
+    },
+  });
+}
+
+/**
  * Get a single announcement by ID
  */
 export async function getAnnouncementById(announcementId: string) {

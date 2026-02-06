@@ -568,3 +568,54 @@ export async function getUserPublicPastEvents(userId: string) {
     return bStart.getTime() - aStart.getTime();
   });
 }
+
+/**
+ * Lightweight sidebar query — next N events user is attending (RSVP=GOING, future sessions only)
+ */
+export async function getUserUpcomingEventsSidebar(userId: string, limit: number = 3) {
+  const now = new Date();
+  const events = await prisma.event.findMany({
+    where: {
+      sessions: {
+        some: {
+          startTime: { gte: now },
+          rsvps: { some: { userId, status: "GOING" } },
+        },
+      },
+    },
+    include: {
+      community: {
+        select: { slug: true, name: true },
+      },
+      sessions: {
+        where: {
+          startTime: { gte: now },
+          rsvps: { some: { userId, status: "GOING" } },
+        },
+        orderBy: { startTime: "asc" },
+        take: 1,
+        select: { startTime: true, endTime: true },
+      },
+    },
+    take: limit * 2,
+  });
+
+  const sorted = events
+    .filter((e) => e.sessions.length > 0)
+    .sort((a, b) => {
+      const aStart = a.sessions[0]!.startTime.getTime();
+      const bStart = b.sessions[0]!.startTime.getTime();
+      return aStart - bStart;
+    })
+    .slice(0, limit);
+
+  return sorted.map((e) => ({
+    id: e.id,
+    title: e.title,
+    communitySlug: e.community.slug,
+    communityName: e.community.name,
+    nextSessionStart: e.sessions[0]!.startTime,
+    nextSessionEnd: e.sessions[0]!.endTime,
+    timezone: e.timezone,
+  }));
+}

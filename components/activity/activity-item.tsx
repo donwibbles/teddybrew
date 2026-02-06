@@ -32,17 +32,17 @@ function EventActivityItem({
   return (
     <Link
       href={`/communities/${item.community.slug}/events/${data.id}`}
-      className="block bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors"
+      className="block bg-card rounded-lg border border-border p-4 hover:border-border transition-colors hover:bg-background-hover"
     >
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className="shrink-0 w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
+        <div className="shrink-0 w-10 h-10 rounded-lg bg-primary-subtle flex items-center justify-center">
           <Calendar className="h-5 w-5 text-primary-600" />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
+          <div className="flex items-center gap-2 text-xs text-foreground-muted mb-1">
             <span className="font-medium text-primary-600">{item.community.name}</span>
             <span>·</span>
             <span>New event</span>
@@ -50,13 +50,13 @@ function EventActivityItem({
             <span>{timeAgo}</span>
           </div>
 
-          <h3 className="font-medium text-neutral-900 line-clamp-1">{data.title}</h3>
+          <h3 className="font-medium text-foreground line-clamp-1">{data.title}</h3>
 
           {data.description && (
-            <p className="text-sm text-neutral-600 line-clamp-2 mt-1">{data.description}</p>
+            <p className="text-sm text-foreground-muted line-clamp-2 mt-1">{data.description}</p>
           )}
 
-          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+          <div className="flex items-center gap-4 mt-2 text-xs text-foreground-muted">
             {data.nextSessionDate && (
               <span className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
@@ -95,17 +95,17 @@ function PostActivityItem({
   return (
     <Link
       href={`/communities/${item.community.slug}/forum/${data.id}`}
-      className="block bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors"
+      className="block bg-card rounded-lg border border-border p-4 hover:border-border transition-colors hover:bg-background-hover"
     >
       <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className="shrink-0 w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center">
-          <MessageSquare className="h-5 w-5 text-neutral-600" />
+        <div className="shrink-0 w-10 h-10 rounded-lg bg-background-muted flex items-center justify-center">
+          <MessageSquare className="h-5 w-5 text-foreground-muted" />
         </div>
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1">
+          <div className="flex items-center gap-2 text-xs text-foreground-muted mb-1">
             <span className="font-medium text-primary-600">{item.community.name}</span>
             <span>·</span>
             <span>New post by {data.authorName || "Anonymous"}</span>
@@ -113,9 +113,9 @@ function PostActivityItem({
             <span>{timeAgo}</span>
           </div>
 
-          <h3 className="font-medium text-neutral-900 line-clamp-1">{data.title}</h3>
+          <h3 className="font-medium text-foreground line-clamp-1">{data.title}</h3>
 
-          <div className="flex items-center gap-4 mt-2 text-xs text-neutral-500">
+          <div className="flex items-center gap-4 mt-2 text-xs text-foreground-muted">
             <span className="flex items-center gap-1">
               <ArrowUp className="h-3.5 w-3.5" />
               {data.voteScore}
@@ -133,13 +133,13 @@ function PostActivityItem({
 
 export function ActivityItemSkeleton() {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4 animate-pulse">
+    <div className="bg-card rounded-lg border border-border p-4 animate-pulse">
       <div className="flex items-start gap-4">
-        <div className="w-10 h-10 rounded-lg bg-neutral-200" />
+        <div className="w-10 h-10 rounded-lg bg-background-muted" />
         <div className="flex-1">
-          <div className="h-3 w-48 bg-neutral-100 rounded mb-2" />
-          <div className="h-5 w-3/4 bg-neutral-200 rounded mb-2" />
-          <div className="h-3 w-32 bg-neutral-100 rounded" />
+          <div className="h-3 w-48 bg-background-muted rounded mb-2" />
+          <div className="h-5 w-3/4 bg-background-muted rounded mb-2" />
+          <div className="h-3 w-32 bg-background-muted rounded" />
         </div>
       </div>
     </div>

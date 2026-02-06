@@ -52,7 +52,7 @@ export function ActivityFeed({
 
   if (items.length === 0 && !isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200">
+      <div className="bg-card rounded-lg border border-border">
         <EmptyState
           icon={Activity}
           title="No recent activity"
@@ -71,13 +71,13 @@ export function ActivityFeed({
       {/* Loading indicator / scroll trigger */}
       <div ref={ref} className="py-4">
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 text-neutral-500">
+          <div className="flex items-center justify-center gap-2 text-foreground-muted">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Loading more activity...</span>
           </div>
         )}
         {!hasMore && items.length > 0 && (
-          <p className="text-center text-sm text-neutral-400">
+          <p className="text-center text-sm text-foreground-muted">
             No more activity to load
           </p>
         )}

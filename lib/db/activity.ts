@@ -1,3 +1,5 @@
+import "server-only";
+
 import { prisma } from "@/lib/prisma";
 
 export type ActivityType = "event" | "post";
@@ -184,5 +186,72 @@ export async function getUserCommunities(userId: string) {
     memberCount: m.community._count.members,
     role: m.role,
     joinedAt: m.joinedAt,
+  }));
+}
+
+/**
+ * Get unread chat message counts per community for the dashboard sidebar
+ */
+export async function getUserUnreadChatSummary(
+  userId: string
+): Promise<Array<{ communityId: string; totalUnread: number }>> {
+  const memberships = await prisma.member.findMany({
+    where: { userId },
+    select: { communityId: true },
+  });
+
+  const communityIds = memberships.map((m) => m.communityId);
+
+  if (communityIds.length === 0) {
+    return [];
+  }
+
+  // Get all channels across user's communities
+  const channels = await prisma.chatChannel.findMany({
+    where: { communityId: { in: communityIds } },
+    select: { id: true, communityId: true },
+  });
+
+  if (channels.length === 0) {
+    return [];
+  }
+
+  const channelIds = channels.map((c) => c.id);
+
+  // Get user's last-read timestamps for all channels
+  const userReads = await prisma.userChannelRead.findMany({
+    where: { userId, channelId: { in: channelIds } },
+    select: { channelId: true, lastReadAt: true },
+  });
+
+  const lastReadMap = new Map(userReads.map((r) => [r.channelId, r.lastReadAt]));
+
+  // Count unread messages per channel in parallel
+  const counts = await Promise.all(
+    channels.map(async (channel) => {
+      const lastReadAt = lastReadMap.get(channel.id);
+      const count = await prisma.message.count({
+        where: {
+          channelId: channel.id,
+          deletedAt: null,
+          authorId: { not: userId },
+          ...(lastReadAt ? { createdAt: { gt: lastReadAt } } : {}),
+        },
+      });
+      return { communityId: channel.communityId, count };
+    })
+  );
+
+  // Aggregate by community
+  const communityTotals = new Map<string, number>();
+  for (const { communityId, count } of counts) {
+    if (count > 0) {
+      communityTotals.set(communityId, (communityTotals.get(communityId) || 0) + count);
+    }
+  }
+
+  return Array.from(communityTotals, ([communityId, totalUnread]) => ({
+    communityId,
+    totalUnread,
   }));
 }
