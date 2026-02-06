@@ -28,6 +28,7 @@ const editCommunitySchema = z
     state: z.enum(US_STATE_CODES).optional().nullable(),
     isVirtual: z.boolean().optional(),
     bannerImage: z.string().url().optional().nullable(),
+    cardImage: z.string().url().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     // State is required for non-virtual communities
@@ -53,6 +54,7 @@ interface EditCommunityFormProps {
     state: string | null;
     isVirtual: boolean;
     bannerImage: string | null;
+    cardImage: string | null;
   };
 }
 
@@ -78,6 +80,7 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
       state: (community.state as USStateCode) || null,
       isVirtual: community.isVirtual,
       bannerImage: community.bannerImage || null,
+      cardImage: community.cardImage || null,
     },
   });
 
@@ -98,6 +101,7 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
       state: data.isVirtual ? null : data.state,
       isVirtual: data.isVirtual,
       bannerImage: data.bannerImage,
+      cardImage: data.cardImage,
     });
 
     if (result.success) {
@@ -150,6 +154,32 @@ export function EditCommunityForm({ community }: EditCommunityFormProps) {
               onUploadComplete={(url) => field.onChange(url)}
               onRemove={() => field.onChange(null)}
               aspectRatio={4}
+              disabled={isSubmitting}
+              previewClassName="max-h-48"
+            />
+          )}
+        />
+      </div>
+
+      {/* Card Image */}
+      <div>
+        <label className="block text-sm font-medium text-foreground mb-2">
+          Card Image
+        </label>
+        <p className="text-sm text-foreground-muted mb-3">
+          This image is shown on your community&apos;s card in the discovery page. Recommended ratio is 16:9.
+        </p>
+        <Controller
+          name="cardImage"
+          control={control}
+          render={({ field }) => (
+            <ImageUpload
+              type="community-card"
+              entityId={community.id}
+              currentImage={field.value}
+              onUploadComplete={(url) => field.onChange(url)}
+              onRemove={() => field.onChange(null)}
+              aspectRatio={16 / 9}
               disabled={isSubmitting}
               previewClassName="max-h-48"
             />

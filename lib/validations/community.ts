@@ -90,8 +90,9 @@ export const updateCommunitySchema = z
     city: citySchema,
     state: stateSchema,
     isVirtual: isVirtualSchema.optional(),
-    // Banner image
+    // Images
     bannerImage: z.string().url().optional().nullable(),
+    cardImage: z.string().url().optional().nullable(),
   })
   .superRefine((data, ctx) => {
     // State is required for non-virtual communities (only validate if isVirtual is explicitly false)

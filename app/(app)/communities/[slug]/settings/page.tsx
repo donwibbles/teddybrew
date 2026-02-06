@@ -80,6 +80,7 @@ export default async function CommunitySettingsPage({
               state: community.state,
               isVirtual: community.isVirtual,
               bannerImage: community.bannerImage,
+              cardImage: community.cardImage,
             }}
           />
         </div>

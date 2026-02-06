@@ -412,6 +412,7 @@ export function ChatRoom({
         content: message.content,
         depth: message.depth,
       });
+      onOpenThread?.(message.id);
     }
   };
 
