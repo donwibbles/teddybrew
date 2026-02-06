@@ -1,19 +1,18 @@
 import Ably from "ably";
+import { env } from "@/lib/env";
 
 // Server-side Ably client singleton
 const globalForAbly = globalThis as unknown as {
   ablyServer: Ably.Rest | undefined;
 };
 
-const ABLY_API_KEY = process.env.ABLY_API_KEY;
-
 export function getAblyServer(): Ably.Rest {
-  if (!ABLY_API_KEY) {
+  if (!env.ABLY_API_KEY) {
     throw new Error("ABLY_API_KEY environment variable is not set");
   }
 
   if (!globalForAbly.ablyServer) {
-    globalForAbly.ablyServer = new Ably.Rest({ key: ABLY_API_KEY });
+    globalForAbly.ablyServer = new Ably.Rest({ key: env.ABLY_API_KEY });
   }
 
   return globalForAbly.ablyServer;

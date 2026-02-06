@@ -50,8 +50,8 @@ export function Header({ userEmail, userName, userId, userImage, unreadNotificat
                   className={cn(
                     "px-3 py-2 text-sm font-medium rounded-md transition-colors",
                     isActive
-                      ? "text-primary-600 bg-primary-50"
-                      : "text-neutral-600 hover:text-primary-600 hover:bg-neutral-50"
+                      ? "text-primary-600 bg-primary-subtle"
+                      : "text-foreground-muted hover:text-primary-600 hover:bg-background-hover"
                   )}
                 >
                   {link.label}

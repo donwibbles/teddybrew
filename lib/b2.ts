@@ -1,4 +1,5 @@
 import { S3Client } from "@aws-sdk/client-s3";
+import { env } from "@/lib/env";
 
 /**
  * Backblaze B2 client setup using S3-compatible API
@@ -14,9 +15,9 @@ export function getB2Client(): S3Client {
     return globalForB2.b2Client;
   }
 
-  let endpoint = process.env.B2_ENDPOINT;
-  const accessKeyId = process.env.B2_ACCOUNT_ID;
-  const secretAccessKey = process.env.B2_APPLICATION_KEY;
+  let endpoint = env.B2_ENDPOINT;
+  const accessKeyId = env.B2_ACCOUNT_ID;
+  const secretAccessKey = env.B2_APPLICATION_KEY;
 
   if (!endpoint || !accessKeyId || !secretAccessKey) {
     throw new Error(
@@ -49,7 +50,7 @@ export function getB2Client(): S3Client {
  * Get the B2 bucket name
  */
 export function getB2BucketName(): string {
-  const bucketName = process.env.B2_BUCKET_NAME;
+  const bucketName = env.B2_BUCKET_NAME;
   if (!bucketName) {
     throw new Error("B2_BUCKET_NAME environment variable is not set");
   }
@@ -60,7 +61,7 @@ export function getB2BucketName(): string {
  * Get the public URL base for B2
  */
 export function getB2PublicUrl(): string {
-  const publicUrl = process.env.B2_PUBLIC_URL;
+  const publicUrl = env.B2_PUBLIC_URL;
   if (!publicUrl) {
     throw new Error("B2_PUBLIC_URL environment variable is not set");
   }
@@ -72,10 +73,10 @@ export function getB2PublicUrl(): string {
  */
 export function isB2Configured(): boolean {
   return !!(
-    process.env.B2_ENDPOINT &&
-    process.env.B2_ACCOUNT_ID &&
-    process.env.B2_APPLICATION_KEY &&
-    process.env.B2_BUCKET_NAME &&
-    process.env.B2_PUBLIC_URL
+    env.B2_ENDPOINT &&
+    env.B2_ACCOUNT_ID &&
+    env.B2_APPLICATION_KEY &&
+    env.B2_BUCKET_NAME &&
+    env.B2_PUBLIC_URL
   );
 }

@@ -29,6 +29,38 @@ const envSchema = z.object({
   SENTRY_AUTH_TOKEN: z.string().optional(),
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
+
+  // Backblaze B2 (optional — all-or-nothing)
+  B2_ENDPOINT: z.string().optional(),
+  B2_ACCOUNT_ID: z.string().optional(),
+  B2_APPLICATION_KEY: z.string().optional(),
+  B2_BUCKET_NAME: z.string().optional(),
+  B2_PUBLIC_URL: z.string().optional(),
+
+  // Ably (optional)
+  ABLY_API_KEY: z.string().optional(),
+}).superRefine((data, ctx) => {
+  // B2 vars: all-or-nothing validation
+  const b2Vars = [
+    data.B2_ENDPOINT,
+    data.B2_ACCOUNT_ID,
+    data.B2_APPLICATION_KEY,
+    data.B2_BUCKET_NAME,
+    data.B2_PUBLIC_URL,
+  ];
+  const b2Set = b2Vars.filter(Boolean).length;
+  if (b2Set > 0 && b2Set < b2Vars.length) {
+    const missing = (
+      ["B2_ENDPOINT", "B2_ACCOUNT_ID", "B2_APPLICATION_KEY", "B2_BUCKET_NAME", "B2_PUBLIC_URL"] as const
+    ).filter((key) => !data[key]);
+    for (const key of missing) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${key} is required when any B2 variable is set`,
+        path: [key],
+      });
+    }
+  }
 });
 
 // Validate environment variables

@@ -606,7 +606,8 @@ export async function getChatMessages(input: unknown) {
       nextCursor,
       hasMore,
     };
-  } catch {
+  } catch (error) {
+    captureServerError("chat.getChatMessages", error);
     return { messages: [], nextCursor: undefined, hasMore: false };
   }
 }
@@ -718,7 +719,8 @@ export async function getThreadMessages(input: unknown) {
     const pinnedInThread = transformedMessages.filter((m) => m.isPinnedInThread && !m.deletedAt);
 
     return { messages: transformedMessages, pinnedInThread };
-  } catch {
+  } catch (error) {
+    captureServerError("chat.getThreadMessages", error);
     return { messages: [], pinnedInThread: [] };
   }
 }
@@ -778,7 +780,8 @@ export async function getPinnedChannelMessages(input: unknown) {
       author: msg.author,
       pinnedAt: msg.pinnedAt,
     }));
-  } catch {
+  } catch (error) {
+    captureServerError("chat.getPinnedChannelMessages", error);
     return [];
   }
 }
@@ -979,7 +982,8 @@ export async function getUnreadCounts(input: unknown) {
     );
 
     return unreadCounts;
-  } catch {
+  } catch (error) {
+    captureServerError("chat.getUnreadCounts", error);
     return {};
   }
 }

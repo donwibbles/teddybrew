@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import { captureServerError } from "@/lib/sentry";
+import { env } from "@/lib/env";
 
 /**
  * Dev-only login endpoint that bypasses email verification
@@ -9,7 +10,7 @@ import { captureServerError } from "@/lib/sentry";
  */
 export async function POST(request: NextRequest) {
   // Hard fail in production - this is critical security
-  if (process.env.NODE_ENV !== "development") {
+  if (env.NODE_ENV !== "development") {
     console.error(
       "SECURITY ALERT: dev-login endpoint called in non-development environment"
     );

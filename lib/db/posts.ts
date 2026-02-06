@@ -53,17 +53,6 @@ export async function generateUniquePostSlug(
 }
 
 /**
- * Calculate "hot" score based on votes and age
- * Reddit-style algorithm
- */
-function getHotScore(voteScore: number, createdAt: Date): number {
-  const ageInHours =
-    (Date.now() - createdAt.getTime()) / (1000 * 60 * 60);
-  // Score decays with time, boosted by votes
-  return voteScore - ageInHours / 2;
-}
-
-/**
  * Get posts for a community with sorting and pagination
  */
 export async function getPosts(
@@ -73,31 +62,105 @@ export async function getPosts(
   cursor?: string,
   userId?: string
 ) {
-  // Build order by clause based on sort type
-  let orderBy: object[];
+  // For hot sort, use raw SQL to compute and sort by hot score in the database
+  if (sort === "hot") {
+    // Fetch sorted IDs using raw SQL with hot score formula
+    const hotIds = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `SELECT "id" FROM "Post"
+       WHERE "communityId" = $1 AND "deletedAt" IS NULL
+       ${cursor ? `AND ("voteScore" - EXTRACT(EPOCH FROM (NOW() - "createdAt")) / 7200) < (SELECT "voteScore" - EXTRACT(EPOCH FROM (NOW() - "createdAt")) / 7200 FROM "Post" WHERE "id" = $3)` : ""}
+       ORDER BY ("voteScore" - EXTRACT(EPOCH FROM (NOW() - "createdAt")) / 7200) DESC
+       LIMIT $2`,
+      ...(cursor
+        ? [communityId, limit + 1, cursor]
+        : [communityId, limit + 1])
+    );
 
-  switch (sort) {
-    case "new":
-      orderBy = [{ createdAt: "desc" as const }];
-      break;
-    case "top":
-      orderBy = [{ voteScore: "desc" as const }, { createdAt: "desc" as const }];
-      break;
-    case "hot":
-    default:
-      // For hot, we'll sort in memory after fetching
-      orderBy = [{ createdAt: "desc" as const }];
-      break;
+    if (hotIds.length === 0) {
+      return { posts: [], nextCursor: undefined, hasMore: false };
+    }
+
+    const orderedIds = hotIds.map((r) => r.id);
+
+    // Fetch full post data with relations
+    const posts = await prisma.post.findMany({
+      where: { id: { in: orderedIds } },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            username: true,
+            isPublic: true,
+            memberships: {
+              where: { communityId },
+              select: { role: true },
+            },
+          },
+        },
+        _count: {
+          select: { comments: true },
+        },
+        ...(userId
+          ? {
+              votes: {
+                where: { userId },
+                select: { value: true },
+              },
+            }
+          : {}),
+      },
+    });
+
+    // Restore the hot-score order from the raw query
+    const postsById = new Map(posts.map((p) => [p.id, p]));
+    const sortedPosts = orderedIds.map((id) => postsById.get(id)!).filter(Boolean);
+
+    // Separate pinned posts (always at top on first page)
+    const pinnedPosts = sortedPosts.filter((p) => p.isPinned);
+    const regularPosts = sortedPosts.filter((p) => !p.isPinned);
+    const finalPosts = !cursor
+      ? [...pinnedPosts, ...regularPosts]
+      : regularPosts;
+
+    const hasMore = finalPosts.length > limit;
+    const items = hasMore ? finalPosts.slice(0, -1) : finalPosts;
+    const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
+
+    return {
+      posts: items.map((post) => ({
+        ...post,
+        author: {
+          id: post.author.id,
+          name: post.author.name,
+          image: post.author.image,
+          username: post.author.username,
+          isPublic: post.author.isPublic,
+          role: post.author.memberships[0]?.role ?? null,
+        },
+        userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
+        commentCount: post.commentCount,
+      })),
+      nextCursor,
+      hasMore,
+    };
   }
+
+  // Build order by clause based on sort type
+  const orderBy: object[] =
+    sort === "top"
+      ? [{ voteScore: "desc" as const }, { createdAt: "desc" as const }]
+      : [{ createdAt: "desc" as const }];
 
   const posts = await prisma.post.findMany({
     where: {
       communityId,
       deletedAt: null,
     },
-    take: sort === "hot" ? 100 : limit + 1, // Fetch more for hot sorting
-    cursor: cursor && sort !== "hot" ? { id: cursor } : undefined,
-    skip: cursor && sort !== "hot" ? 1 : 0,
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0,
     orderBy,
     include: {
       author: {
@@ -127,26 +190,7 @@ export async function getPosts(
     },
   });
 
-  // Apply hot sorting in memory if needed
-  let sortedPosts = posts;
-  if (sort === "hot") {
-    sortedPosts = [...posts].sort((a, b) => {
-      const aScore = getHotScore(a.voteScore, a.createdAt);
-      const bScore = getHotScore(b.voteScore, b.createdAt);
-      return bScore - aScore;
-    });
-    // Apply pagination manually - use cursor position or start from beginning
-    let startIndex = 0;
-    if (cursor) {
-      const cursorIndex = sortedPosts.findIndex((p) => p.id === cursor);
-      // If cursor not found in hot sort window, fall back to "new" sort
-      if (cursorIndex === -1) {
-        return getPosts(communityId, "new", limit, cursor, userId);
-      }
-      startIndex = cursorIndex + 1;
-    }
-    sortedPosts = sortedPosts.slice(startIndex, startIndex + limit + 1);
-  }
+  const sortedPosts = posts;
 
   // Separate pinned posts (always at top for non-top sort)
   const pinnedPosts = sortedPosts.filter((p) => p.isPinned);
@@ -351,22 +395,129 @@ export async function getPublicPosts(
     userId = userIdArg;
   }
 
-  // Build order by clause based on sort type
-  let orderBy: object[];
+  // For hot sort, use raw SQL to compute and sort by hot score in the database
+  if (sort === "hot") {
+    // Build parameterized query for hot-sorted IDs
+    const params: unknown[] = [limit + 1];
+    let paramIdx = 2;
 
-  switch (sort) {
-    case "new":
-      orderBy = [{ createdAt: "desc" as const }];
-      break;
-    case "top":
-      orderBy = [{ voteScore: "desc" as const }, { createdAt: "desc" as const }];
-      break;
-    case "hot":
-    default:
-      // For hot, we'll sort in memory after fetching
-      orderBy = [{ createdAt: "desc" as const }];
-      break;
+    // Build WHERE clause for issue tag filters
+    let tagJoin = "";
+    if (issueTagSlugs?.length) {
+      for (const slug of issueTagSlugs) {
+        tagJoin += ` AND EXISTS (SELECT 1 FROM "_IssueTagToPost" itp JOIN "IssueTag" it ON it."id" = itp."A" WHERE itp."B" = p."id" AND it."slug" = $${paramIdx})`;
+        params.push(slug);
+        paramIdx++;
+      }
+    }
+
+    let cursorClause = "";
+    if (cursor) {
+      cursorClause = ` AND (p."voteScore" - EXTRACT(EPOCH FROM (NOW() - p."createdAt")) / 7200) < (SELECT "voteScore" - EXTRACT(EPOCH FROM (NOW() - "createdAt")) / 7200 FROM "Post" WHERE "id" = $${paramIdx})`;
+      params.push(cursor);
+      paramIdx++;
+    }
+
+    const hotIds = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `SELECT p."id" FROM "Post" p
+       JOIN "Community" c ON c."id" = p."communityId"
+       WHERE p."deletedAt" IS NULL AND c."type" = 'PUBLIC'${tagJoin}${cursorClause}
+       ORDER BY (p."voteScore" - EXTRACT(EPOCH FROM (NOW() - p."createdAt")) / 7200) DESC
+       LIMIT $1`,
+      ...params
+    );
+
+    if (hotIds.length === 0) {
+      return { posts: [], nextCursor: undefined, hasMore: false };
+    }
+
+    const orderedIds = hotIds.map((r) => r.id);
+
+    // Fetch full post data with relations
+    const posts = await prisma.post.findMany({
+      where: { id: { in: orderedIds } },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            username: true,
+            isPublic: true,
+          },
+        },
+        community: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
+        issueTags: {
+          select: {
+            slug: true,
+            name: true,
+          },
+          orderBy: { sortOrder: "asc" },
+        },
+        _count: {
+          select: { comments: true },
+        },
+        ...(userId
+          ? {
+              votes: {
+                where: { userId },
+                select: { value: true },
+              },
+            }
+          : {}),
+      },
+    });
+
+    // Restore hot-score order
+    const postsById = new Map(posts.map((p) => [p.id, p]));
+    const sortedPosts = orderedIds.map((id) => postsById.get(id)!).filter(Boolean);
+
+    const hasMore = sortedPosts.length > limit;
+    const items = hasMore ? sortedPosts.slice(0, -1) : sortedPosts;
+    const nextCursor = hasMore ? items[items.length - 1]?.id : undefined;
+
+    return {
+      posts: items.map((post) => ({
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        content: post.content,
+        contentJson: post.contentJson,
+        voteScore: post.voteScore,
+        isPinned: post.isPinned,
+        createdAt: post.createdAt,
+        author: {
+          id: post.author.id,
+          name: post.author.name,
+          image: post.author.image,
+          username: post.author.username,
+          isPublic: post.author.isPublic,
+        },
+        community: {
+          id: post.community.id,
+          slug: post.community.slug,
+          name: post.community.name,
+        },
+        issueTags: post.issueTags,
+        userVote: userId && "votes" in post ? post.votes[0]?.value ?? 0 : 0,
+        commentCount: post.commentCount,
+      })),
+      nextCursor,
+      hasMore,
+    };
   }
+
+  // Build order by clause for non-hot sorts
+  const orderBy: object[] =
+    sort === "top"
+      ? [{ voteScore: "desc" as const }, { createdAt: "desc" as const }]
+      : [{ createdAt: "desc" as const }];
 
   // Build where conditions
   const andConditions: Prisma.PostWhereInput[] = [
@@ -385,9 +536,9 @@ export async function getPublicPosts(
 
   const posts = await prisma.post.findMany({
     where: whereConditions,
-    take: sort === "hot" ? 100 : limit + 1,
-    cursor: cursor && sort !== "hot" ? { id: cursor } : undefined,
-    skip: cursor && sort !== "hot" ? 1 : 0,
+    take: limit + 1,
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0,
     orderBy,
     include: {
       author: {
@@ -427,26 +578,7 @@ export async function getPublicPosts(
     },
   });
 
-  // Apply hot sorting in memory if needed
-  let sortedPosts = posts;
-  if (sort === "hot") {
-    sortedPosts = [...posts].sort((a, b) => {
-      const aScore = getHotScore(a.voteScore, a.createdAt);
-      const bScore = getHotScore(b.voteScore, b.createdAt);
-      return bScore - aScore;
-    });
-    // Apply pagination manually
-    let startIndex = 0;
-    if (cursor) {
-      const cursorIndex = sortedPosts.findIndex((p) => p.id === cursor);
-      // If cursor not found in hot sort window, fall back to "new" sort
-      if (cursorIndex === -1) {
-        return getPublicPosts("new", limit, cursor, userId);
-      }
-      startIndex = cursorIndex + 1;
-    }
-    sortedPosts = sortedPosts.slice(startIndex, startIndex + limit + 1);
-  }
+  const sortedPosts = posts;
 
   const hasMore = sortedPosts.length > limit;
   const items = hasMore ? sortedPosts.slice(0, -1) : sortedPosts;
@@ -552,24 +684,25 @@ export async function getPostComments(
     return { comments: [], nextCursor: undefined, hasMore: false };
   }
 
-  // Step 2: Fetch replies level-by-level, bounded per level
-  const topLevelIds = paginatedTopLevel.map((c) => c.id);
-  let currentParentIds = topLevelIds;
-  const allReplies: typeof topLevelRaw = [];
+  // Step 2: Fetch ALL replies for this post in a single query
+  const topLevelIds = new Set(paginatedTopLevel.map((c) => c.id));
+  const allRepliesRaw = await prisma.comment.findMany({
+    where: { postId, parentId: { not: null }, deletedAt: null },
+    orderBy,
+    include: commentInclude,
+  });
 
-  for (let depth = 0; depth < 5 && currentParentIds.length > 0; depth++) {
-    const levelReplies = await prisma.comment.findMany({
-      where: {
-        postId,
-        parentId: { in: currentParentIds },
-        deletedAt: null,
-      },
-      orderBy,
-      take: Math.min(currentParentIds.length * 20, 1000),
-      include: commentInclude,
-    });
-    allReplies.push(...levelReplies);
-    currentParentIds = levelReplies.map((r) => r.id);
+  // Filter to only keep descendants of the paginated top-level comments
+  // Build a Set of valid ancestor IDs, then walk replies keeping those with a valid parent
+  const validIds = new Set<string>(topLevelIds);
+  // Sort by depth so we process parents before children
+  const sortedReplies = [...allRepliesRaw].sort((a, b) => a.depth - b.depth);
+  const allReplies: typeof topLevelRaw = [];
+  for (const reply of sortedReplies) {
+    if (reply.parentId && validIds.has(reply.parentId)) {
+      validIds.add(reply.id);
+      allReplies.push(reply);
+    }
   }
 
   // Step 3: Build nested tree structure

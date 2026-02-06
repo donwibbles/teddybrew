@@ -55,6 +55,9 @@
   --color-input: #ffffff;
   --color-input-border: var(--color-neutral-300);
   --color-ring: var(--color-primary-500);
+  --color-background-hover: var(--color-neutral-100);
+  --color-primary-subtle: var(--color-primary-50);
+  --color-primary-subtle-hover: var(--color-primary-100);
 
   /* Font Sizes with Line Heights */
   --font-size-xs: 0.75rem;       /* 12px - captions, badges */
@@ -117,6 +120,9 @@
   --color-card-foreground: var(--color-neutral-50);
   --color-input: var(--color-neutral-900);
   --color-input-border: var(--color-neutral-700);
+  --color-background-hover: var(--color-neutral-700);
+  --color-primary-subtle: color-mix(in srgb, var(--color-primary-500) 10%, transparent);
+  --color-primary-subtle-hover: color-mix(in srgb, var(--color-primary-500) 20%, transparent);
 }
 
 /* Base styles */

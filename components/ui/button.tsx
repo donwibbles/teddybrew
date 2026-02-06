@@ -15,7 +15,7 @@ const buttonVariants = cva(
         outline:
           "border border-input-border bg-card hover:bg-background-muted hover:text-foreground",
         secondary:
-          "bg-background-muted text-foreground hover:bg-neutral-200 dark:hover:bg-neutral-700",
+          "bg-background-muted text-foreground hover:bg-background-hover",
         ghost:
           "hover:bg-background-muted hover:text-foreground",
         link:
