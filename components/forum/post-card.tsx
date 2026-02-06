@@ -79,7 +79,7 @@ export function PostCard({
       .slice(0, 2) || "?";
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors">
+    <div className="bg-card rounded-lg border border-border p-4 hover:border-border transition-colors">
       <div className="flex gap-4">
         {/* Vote Column */}
         <div className="shrink-0">
@@ -101,7 +101,7 @@ export function PostCard({
             )}
             <Link
               href={`${basePath}/${communitySlug}/forum/${slug}`}
-              className="font-medium text-neutral-900 hover:text-primary-600 transition-colors line-clamp-2"
+              className="font-medium text-foreground hover:text-primary-600 transition-colors line-clamp-2"
             >
               {title}
             </Link>
@@ -125,12 +125,12 @@ export function PostCard({
           )}
 
           {/* Meta */}
-          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-neutral-500">
+          <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-3 text-sm text-foreground-muted">
             {showCommunity && community && (
               <>
                 <Link
                   href={`${basePath}/${community.slug}`}
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-50 text-primary-700 hover:bg-primary-100 transition-colors"
+                  className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary-subtle text-primary-700 hover:bg-primary-subtle-hover transition-colors"
                 >
                   {community.name}
                 </Link>
@@ -143,7 +143,7 @@ export function PostCard({
                   src={author.image || undefined}
                   alt={author.name || ""}
                 />
-                <AvatarFallback className="text-xs bg-neutral-100">
+                <AvatarFallback className="text-xs bg-background-muted">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -169,21 +169,21 @@ export function PostCard({
 
 export function PostCardSkeleton() {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4 animate-pulse">
+    <div className="bg-card rounded-lg border border-border p-4 animate-pulse">
       <div className="flex gap-4">
         <div className="shrink-0 flex flex-col items-center gap-1">
-          <div className="w-6 h-6 bg-neutral-200 rounded" />
-          <div className="w-6 h-4 bg-neutral-200 rounded" />
-          <div className="w-6 h-6 bg-neutral-200 rounded" />
+          <div className="w-6 h-6 bg-background-muted rounded" />
+          <div className="w-6 h-4 bg-background-muted rounded" />
+          <div className="w-6 h-6 bg-background-muted rounded" />
         </div>
         <div className="flex-1">
-          <div className="h-5 bg-neutral-200 rounded w-3/4 mb-2" />
-          <div className="h-4 bg-neutral-100 rounded w-full mb-1" />
-          <div className="h-4 bg-neutral-100 rounded w-2/3 mb-3" />
+          <div className="h-5 bg-background-muted rounded w-3/4 mb-2" />
+          <div className="h-4 bg-background-muted rounded w-full mb-1" />
+          <div className="h-4 bg-background-muted rounded w-2/3 mb-3" />
           <div className="flex items-center gap-3">
-            <div className="h-5 w-5 bg-neutral-200 rounded-full" />
-            <div className="h-4 w-20 bg-neutral-100 rounded" />
-            <div className="h-4 w-16 bg-neutral-100 rounded" />
+            <div className="h-5 w-5 bg-background-muted rounded-full" />
+            <div className="h-4 w-20 bg-background-muted rounded" />
+            <div className="h-4 w-16 bg-background-muted rounded" />
           </div>
         </div>
       </div>

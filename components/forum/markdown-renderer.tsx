@@ -231,6 +231,6 @@ export function MarkdownPreview({ content, maxLength = 200 }: MarkdownPreviewPro
   }, [content, maxLength]);
 
   return (
-    <p className="text-sm text-neutral-600 line-clamp-2">{preview}</p>
+    <p className="text-sm text-foreground-muted line-clamp-2">{preview}</p>
   );
 }

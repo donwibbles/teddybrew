@@ -35,8 +35,8 @@ export default async function SettingsPage({
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Settings</h1>
-        <p className="text-neutral-600 mt-1">Manage your account and preferences</p>
+        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+        <p className="text-foreground-muted mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Profile Picture Section */}
@@ -100,15 +100,15 @@ export default async function SettingsPage({
         <CardContent>
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-neutral-700">Email Address</p>
-              <p className="text-neutral-900">{user.email}</p>
-              <p className="text-xs text-neutral-500 mt-1">
+              <p className="text-sm font-medium text-foreground">Email Address</p>
+              <p className="text-foreground">{user.email}</p>
+              <p className="text-xs text-foreground-muted mt-1">
                 Used for signing in with magic links
               </p>
             </div>
             <div>
-              <p className="text-sm font-medium text-neutral-700">Account Created</p>
-              <p className="text-neutral-900">
+              <p className="text-sm font-medium text-foreground">Account Created</p>
+              <p className="text-foreground">
                 {new Date(user.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",
@@ -128,10 +128,10 @@ export default async function SettingsPage({
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-sm text-neutral-600">
+            <p className="text-sm text-foreground-muted">
               Sign out of your current session. You will need to sign in again with a magic link.
             </p>
-            <SignOutButton className="inline-flex items-center px-4 py-2 text-sm font-medium text-neutral-700 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors" />
+            <SignOutButton className="inline-flex items-center px-4 py-2 text-sm font-medium text-foreground border border-border rounded-lg hover:bg-background-hover transition-colors" />
           </div>
         </CardContent>
       </Card>
@@ -145,8 +145,8 @@ export default async function SettingsPage({
         <CardContent>
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-neutral-700">Delete Account</p>
-              <p className="text-sm text-neutral-500 mt-1">
+              <p className="text-sm font-medium text-foreground">Delete Account</p>
+              <p className="text-sm text-foreground-muted mt-1">
                 Permanently delete your account and all associated data. This action cannot be undone.
               </p>
             </div>

@@ -59,7 +59,7 @@ export default async function ExploreFeedPage({ searchParams }: ExploreFeedPageP
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Sign in banner */}
-      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div className="bg-primary-subtle border border-primary-200 rounded-lg p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="font-medium text-primary-900">
@@ -71,7 +71,7 @@ export default async function ExploreFeedPage({ searchParams }: ExploreFeedPageP
           </div>
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
+            className="inline-flex items-center justify-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        transition-colors whitespace-nowrap"
           >
@@ -82,8 +82,8 @@ export default async function ExploreFeedPage({ searchParams }: ExploreFeedPageP
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Feed</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Feed</h1>
+        <p className="text-foreground-muted mt-1">
           Discover discussions from communities across Hive
         </p>
       </div>

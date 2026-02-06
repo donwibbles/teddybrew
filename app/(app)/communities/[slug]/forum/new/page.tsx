@@ -52,15 +52,15 @@ export default async function NewPostPage({ params }: NewPostPageProps) {
       {/* Back link */}
       <Link
         href={`/communities/${slug}/forum`}
-        className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-foreground-muted hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to Forum
       </Link>
 
       {/* Form Card */}
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
-        <h1 className="text-xl font-semibold text-neutral-900 mb-6">
+      <div className="bg-card rounded-lg border border-border p-6">
+        <h1 className="text-xl font-semibold text-foreground mb-6">
           Create a new post
         </h1>
         <CreatePostForm

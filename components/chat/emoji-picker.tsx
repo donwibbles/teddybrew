@@ -58,9 +58,9 @@ export function EmojiPicker({ onSelect, disabled }: EmojiPickerProps) {
         onClick={handleToggle}
         disabled={disabled}
         className={cn(
-          "p-1.5 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded transition-colors",
+          "p-1.5 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded transition-colors",
           "disabled:opacity-50 disabled:cursor-not-allowed",
-          isOpen && "bg-neutral-100 text-neutral-600"
+          isOpen && "bg-background-hover text-foreground"
         )}
         title="Add reaction"
       >
@@ -70,7 +70,7 @@ export function EmojiPicker({ onSelect, disabled }: EmojiPickerProps) {
       {isOpen && (
         <div
           className={cn(
-            "absolute right-0 p-1.5 bg-white rounded-lg shadow-lg border border-neutral-200 z-50",
+            "absolute right-0 p-1.5 bg-card rounded-lg shadow-lg border border-border z-50",
             openAbove ? "bottom-full mb-1" : "top-full mt-1"
           )}
         >
@@ -79,7 +79,7 @@ export function EmojiPicker({ onSelect, disabled }: EmojiPickerProps) {
               <button
                 key={emoji.key}
                 onClick={() => handleSelect(emoji.key)}
-                className="p-1.5 hover:bg-neutral-100 rounded transition-colors text-lg"
+                className="p-1.5 hover:bg-background-hover rounded transition-colors text-lg"
                 title={emoji.label}
               >
                 {emoji.emoji}

@@ -38,7 +38,7 @@ export function AttendeeList({ attendees, maxDisplay = 20 }: AttendeeListProps) 
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-neutral-900">
+      <h3 className="font-medium text-foreground">
         Attending ({goingAttendees.length})
       </h3>
 
@@ -46,7 +46,7 @@ export function AttendeeList({ attendees, maxDisplay = 20 }: AttendeeListProps) 
         {displayedAttendees.map((attendee) => (
           <div
             key={attendee.id}
-            className="flex items-center gap-2 p-2 rounded-lg bg-neutral-50"
+            className="flex items-center gap-2 p-2 rounded-lg bg-background-muted"
           >
             {attendee.user.image ? (
               <img
@@ -55,13 +55,13 @@ export function AttendeeList({ attendees, maxDisplay = 20 }: AttendeeListProps) 
                 className="w-8 h-8 rounded-full flex-shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-primary-subtle-hover flex items-center justify-center flex-shrink-0">
                 <span className="text-primary-700 font-medium text-xs">
                   {(attendee.user.name || "?").charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <span className="text-sm text-neutral-700 truncate">
+            <span className="text-sm text-foreground truncate">
               {attendee.user.name || "Anonymous"}
             </span>
           </div>
@@ -69,7 +69,7 @@ export function AttendeeList({ attendees, maxDisplay = 20 }: AttendeeListProps) 
       </div>
 
       {remainingCount > 0 && (
-        <p className="text-sm text-neutral-500 text-center">
+        <p className="text-sm text-foreground-muted text-center">
           +{remainingCount} more attending
         </p>
       )}

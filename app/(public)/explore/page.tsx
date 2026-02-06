@@ -38,7 +38,7 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   return (
     <div className="space-y-6">
       {/* Sign in prompt banner */}
-      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div className="bg-primary-subtle border border-primary-200 rounded-lg p-4">
         <div>
           <p className="font-medium text-primary-900">
             Join Hive to stay connected!
@@ -51,10 +51,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Explore Communities
         </h1>
-        <p className="text-neutral-600 mt-1">
+        <p className="text-foreground-muted mt-1">
           Discover public communities and connect with others
         </p>
       </div>
@@ -91,7 +91,7 @@ async function PublicCommunityList({
 
   if (communities.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200">
+      <div className="bg-card rounded-lg border border-border">
         <EmptyState
           icon={Users}
           title="No communities found"
@@ -104,7 +104,7 @@ async function PublicCommunityList({
             !query ? (
               <Link
                 href="/sign-in"
-                className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
               >
                 Sign in to Create
               </Link>
@@ -146,21 +146,21 @@ function PublicCommunityCard({
   return (
     <Link
       href={`/explore/${community.slug}`}
-      className="block bg-white rounded-lg border border-neutral-200 p-6 hover:border-primary-300 hover:shadow-md transition-all"
+      className="block bg-card rounded-lg border border-border p-6 hover:border-primary-300 hover:shadow-md transition-all"
     >
       <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="text-lg font-semibold text-neutral-900 line-clamp-1">
+        <h3 className="text-lg font-semibold text-foreground line-clamp-1">
           {community.name}
         </h3>
       </div>
 
       {community.description && (
-        <p className="text-neutral-600 text-sm mb-4 line-clamp-2">
+        <p className="text-foreground-muted text-sm mb-4 line-clamp-2">
           {community.description}
         </p>
       )}
 
-      <div className="flex items-center justify-between text-sm text-neutral-500">
+      <div className="flex items-center justify-between text-sm text-foreground-muted">
         <div className="flex items-center gap-4">
           <span className="flex items-center gap-1">
             <svg
@@ -197,7 +197,7 @@ function PublicCommunityCard({
             {community._count.events === 1 ? "event" : "events"}
           </span>
         </div>
-        <span className="text-neutral-400">
+        <span className="text-foreground-muted">
           by {community.owner.name || "Unknown"}
         </span>
       </div>
@@ -211,11 +211,11 @@ function CommunityListSkeleton() {
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
-          className="bg-white rounded-lg border border-neutral-200 p-6 animate-pulse"
+          className="bg-card rounded-lg border border-border p-6 animate-pulse"
         >
-          <div className="h-6 bg-neutral-200 rounded w-3/4 mb-2" />
-          <div className="h-4 bg-neutral-200 rounded w-full mb-4" />
-          <div className="h-4 bg-neutral-200 rounded w-1/2" />
+          <div className="h-6 bg-background-muted rounded w-3/4 mb-2" />
+          <div className="h-4 bg-background-muted rounded w-full mb-4" />
+          <div className="h-4 bg-background-muted rounded w-1/2" />
         </div>
       ))}
     </div>

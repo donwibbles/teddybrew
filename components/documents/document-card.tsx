@@ -69,8 +69,8 @@ export function DocumentCard({
   return (
     <div
       className={cn(
-        "group relative rounded-lg border border-neutral-200 bg-white p-4 transition-shadow hover:shadow-md",
-        document.isPinned && "border-primary-200 bg-primary-50/30"
+        "group relative rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-md",
+        document.isPinned && "border-primary-200 bg-primary-subtle/30"
       )}
     >
       {/* Pinned indicator */}
@@ -83,7 +83,7 @@ export function DocumentCard({
       {/* Header with title and actions */}
       <div className="flex items-start justify-between gap-2">
         <Link href={href} className="flex-1">
-          <h3 className="font-semibold text-neutral-900 hover:text-primary-600">
+          <h3 className="font-semibold text-foreground hover:text-primary-600">
             {document.title}
           </h3>
         </Link>
@@ -149,7 +149,7 @@ export function DocumentCard({
       </div>
 
       {/* Metadata */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-neutral-500">
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-foreground-muted">
         <DocumentStatusBadge status={document.status} />
 
         {document.folder && (
@@ -159,7 +159,7 @@ export function DocumentCard({
           </span>
         )}
 
-        <span className="text-neutral-300">|</span>
+        <span className="text-foreground-muted">|</span>
 
         <span>
           Updated {formatDistanceToNow(new Date(document.updatedAt), { addSuffix: true })}
@@ -177,7 +177,7 @@ export function DocumentCard({
           </Avatar>
           <ProfileLink
             user={document.author}
-            className="text-sm text-neutral-600 hover:text-primary-600"
+            className="text-sm text-foreground-muted hover:text-primary-600"
           >
             {document.author.name || "Unknown"}
           </ProfileLink>
@@ -220,8 +220,8 @@ export function CompactDocumentCard({
       className={cn(
         "block rounded-md px-3 py-2 text-sm transition-colors",
         isActive
-          ? "bg-primary-50 text-primary-700"
-          : "text-neutral-700 hover:bg-neutral-100"
+          ? "bg-primary-subtle text-primary-700"
+          : "text-foreground hover:bg-background-hover"
       )}
     >
       <div className="flex items-center gap-2">

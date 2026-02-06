@@ -59,7 +59,7 @@ export default async function ForumPage({ params, searchParams }: ForumPageProps
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-xl font-semibold text-neutral-900">
+        <h1 className="text-xl font-semibold text-foreground">
           Forum
         </h1>
         {membership.isMember && (

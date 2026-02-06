@@ -90,7 +90,7 @@ export function PublicCommunitySearch({
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           {isPending ? (
             <svg
-              className="animate-spin h-5 w-5 text-neutral-400"
+              className="animate-spin h-5 w-5 text-foreground-muted"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -111,7 +111,7 @@ export function PublicCommunitySearch({
             </svg>
           ) : (
             <svg
-              className="h-5 w-5 text-neutral-400"
+              className="h-5 w-5 text-foreground-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -130,14 +130,14 @@ export function PublicCommunitySearch({
           value={query}
           onChange={handleQueryChange}
           placeholder="Search communities..."
-          className="block w-full pl-10 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+          className="block w-full pl-10 pr-10 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
         {query && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center text-foreground-muted hover:text-foreground-muted"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -157,7 +157,7 @@ export function PublicCommunitySearch({
         <select
           value={sizeFilter}
           onChange={handleSizeChange}
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+          className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="all">All Sizes</option>
@@ -170,7 +170,7 @@ export function PublicCommunitySearch({
         <select
           value={sortBy}
           onChange={handleSortChange}
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+          className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="recent">Recently Created</option>

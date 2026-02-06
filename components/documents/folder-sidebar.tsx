@@ -80,20 +80,20 @@ export function FolderSidebar({
         className={cn(
           "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
           !currentFolder && !currentStatus
-            ? "bg-primary-50 text-primary-700 font-medium"
-            : "text-neutral-700 hover:bg-neutral-100"
+            ? "bg-primary-subtle text-primary-700 font-medium"
+            : "text-foreground hover:bg-background-hover"
         )}
       >
         <span className="flex items-center gap-2">
           <FileText className="h-4 w-4" />
           All Documents
         </span>
-        <span className="text-xs text-neutral-500">{counts.total}</span>
+        <span className="text-xs text-foreground-muted">{counts.total}</span>
       </Link>
 
       {/* Status Filters */}
       <div className="space-y-1 pt-2">
-        <p className="px-3 text-xs font-medium uppercase tracking-wider text-neutral-500">
+        <p className="px-3 text-xs font-medium uppercase tracking-wider text-foreground-muted">
           Status
         </p>
 
@@ -103,12 +103,12 @@ export function FolderSidebar({
             className={cn(
               "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
               currentStatus === "DRAFT"
-                ? "bg-amber-50 text-amber-700 font-medium"
-                : "text-neutral-700 hover:bg-neutral-100"
+                ? "bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 font-medium"
+                : "text-foreground hover:bg-background-hover"
             )}
           >
             <span>Drafts</span>
-            <span className="text-xs text-neutral-500">{counts.drafts}</span>
+            <span className="text-xs text-foreground-muted">{counts.drafts}</span>
           </Link>
         )}
 
@@ -118,11 +118,11 @@ export function FolderSidebar({
             "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
             currentStatus === "PUBLISHED"
               ? "bg-green-50 text-green-700 font-medium"
-              : "text-neutral-700 hover:bg-neutral-100"
+              : "text-foreground hover:bg-background-hover"
           )}
         >
           <span>Published</span>
-          <span className="text-xs text-neutral-500">{counts.published}</span>
+          <span className="text-xs text-foreground-muted">{counts.published}</span>
         </Link>
 
         {canEdit && (
@@ -131,15 +131,15 @@ export function FolderSidebar({
             className={cn(
               "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
               currentStatus === "ARCHIVED"
-                ? "bg-neutral-200 text-neutral-700 font-medium"
-                : "text-neutral-700 hover:bg-neutral-100"
+                ? "bg-background-muted text-foreground font-medium"
+                : "text-foreground hover:bg-background-hover"
             )}
           >
             <span className="flex items-center gap-2">
               <Archive className="h-4 w-4" />
               Archived
             </span>
-            <span className="text-xs text-neutral-500">{counts.archived}</span>
+            <span className="text-xs text-foreground-muted">{counts.archived}</span>
           </Link>
         )}
       </div>
@@ -147,7 +147,7 @@ export function FolderSidebar({
       {/* Folders */}
       <div className="space-y-1 pt-4">
         <div className="flex items-center justify-between px-3">
-          <p className="text-xs font-medium uppercase tracking-wider text-neutral-500">
+          <p className="text-xs font-medium uppercase tracking-wider text-foreground-muted">
             Folders
           </p>
           {canEdit && onCreateFolder && (
@@ -164,7 +164,7 @@ export function FolderSidebar({
         </div>
 
         {folders.length === 0 ? (
-          <p className="px-3 py-2 text-sm text-neutral-500">
+          <p className="px-3 py-2 text-sm text-foreground-muted">
             No folders yet
           </p>
         ) : (
@@ -213,8 +213,8 @@ function FolderItem({
         className={cn(
           "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
           isActive
-            ? "bg-primary-50 text-primary-700 font-medium"
-            : "text-neutral-700 hover:bg-neutral-100"
+            ? "bg-primary-subtle text-primary-700 font-medium"
+            : "text-foreground hover:bg-background-hover"
         )}
       >
         <Link
@@ -230,7 +230,7 @@ function FolderItem({
         </Link>
 
         <div className="flex items-center gap-1">
-          <span className="text-xs text-neutral-500">{folder.documentCount}</span>
+          <span className="text-xs text-foreground-muted">{folder.documentCount}</span>
 
           {canEdit && (onEdit || onDelete) && (
             <DropdownMenu>

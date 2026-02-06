@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -11,7 +11,7 @@ export default function MembersLoading() {
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Skeleton className="h-4 w-32" />
-          <span className="text-neutral-300">/</span>
+          <span className="text-foreground-muted">/</span>
           <Skeleton className="h-4 w-16" />
         </div>
         <Skeleton className="h-8 w-48 mb-1" />
@@ -19,7 +19,7 @@ export default function MembersLoading() {
       </div>
 
       {/* Member List Skeleton */}
-      <div className="bg-white rounded-lg border border-neutral-200 divide-y divide-neutral-200">
+      <div className="bg-card rounded-lg border border-border divide-y divide-border">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div key={i} className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">

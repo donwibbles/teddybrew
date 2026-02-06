@@ -45,8 +45,8 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
   if (community.type === "PRIVATE") {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg border border-neutral-200 p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 text-neutral-500 mb-4">
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-background-muted text-foreground-muted mb-4">
             <svg
               className="w-8 h-8"
               fill="none"
@@ -61,15 +61,15 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-neutral-900 mb-2">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
             Private Community
           </h1>
-          <p className="text-neutral-600 mb-6">
+          <p className="text-foreground-muted mb-6">
             This community&apos;s forum is private. Sign in to request access or view if you&apos;re already a member.
           </p>
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center px-6 py-3 bg-primary-500 text-white font-medium rounded-lg
+            className="inline-flex items-center justify-center px-6 py-3 bg-primary-subtle0 text-white font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        transition-colors"
           >
@@ -93,7 +93,7 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
   return (
     <div className="space-y-4">
       {/* Sign in banner */}
-      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div className="bg-primary-subtle border border-primary-200 rounded-lg p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="font-medium text-primary-900">
@@ -105,7 +105,7 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
           </div>
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
+            className="inline-flex items-center justify-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        transition-colors whitespace-nowrap"
           >
@@ -115,7 +115,7 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
       </div>
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500">
+      <div className="flex items-center gap-2 text-sm text-foreground-muted">
         <Link
           href={`/explore/${slug}`}
           className="hover:text-primary-600"
@@ -128,7 +128,7 @@ export default async function PublicForumPage({ params, searchParams }: PublicFo
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-xl font-semibold text-neutral-900">
+        <h1 className="text-xl font-semibold text-foreground">
           Forum
         </h1>
       </div>

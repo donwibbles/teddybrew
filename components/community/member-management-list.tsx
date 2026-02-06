@@ -108,14 +108,14 @@ export function MemberManagementList({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200">
+    <div className="bg-card rounded-lg border border-border">
       {error && (
         <div className="p-4 bg-error-50 border-b border-error-200 text-error-600 text-sm">
           {error}
         </div>
       )}
 
-      <ul className="divide-y divide-neutral-100">
+      <ul className="divide-y divide-border">
         {members.map((member) => (
           <li
             key={member.id}
@@ -133,7 +133,7 @@ export function MemberManagementList({
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-primary-subtle-hover flex items-center justify-center">
                     <span className="text-primary-700 font-medium text-sm">
                       {(member.user.name || "Anonymous")
                         .charAt(0)
@@ -148,11 +148,11 @@ export function MemberManagementList({
                 <div className="flex items-center gap-2">
                   <ProfileLink
                     user={member.user}
-                    className="text-sm font-medium text-neutral-900 truncate hover:text-primary-600"
+                    className="text-sm font-medium text-foreground truncate hover:text-primary-600"
                   />
                   <RoleBadge role={member.role} />
                 </div>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-foreground-muted">
                   Joined{" "}
                   {new Date(member.joinedAt).toLocaleDateString("en-US", {
                     month: "short",
@@ -174,7 +174,7 @@ export function MemberManagementList({
                       handlePromote(member.id, member.user.name || "Anonymous")
                     }
                     disabled={actionInProgress === member.id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-subtle
                                rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Promote to Moderator"
                   >
@@ -188,7 +188,7 @@ export function MemberManagementList({
                       handleDemote(member.id, member.user.name || "Anonymous")
                     }
                     disabled={actionInProgress === member.id}
-                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-neutral-600 hover:text-neutral-700 hover:bg-neutral-50
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover
                                rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Demote to Member"
                   >

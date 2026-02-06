@@ -6,7 +6,7 @@ export default function DocsLoading() {
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
         <Skeleton className="h-4 w-32" />
-        <span className="text-neutral-300">/</span>
+        <span className="text-foreground-muted">/</span>
         <Skeleton className="h-4 w-12" />
       </div>
 
@@ -28,7 +28,7 @@ export default function DocsLoading() {
         {[1, 2, 3, 4].map((i) => (
           <div
             key={i}
-            className="bg-white rounded-lg border border-neutral-200 p-4"
+            className="bg-card rounded-lg border border-border p-4"
           >
             <div className="flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded" />
@@ -42,7 +42,7 @@ export default function DocsLoading() {
       </div>
 
       {/* Document list */}
-      <div className="bg-white rounded-lg border border-neutral-200 divide-y divide-neutral-200">
+      <div className="bg-card rounded-lg border border-border divide-y divide-border">
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="p-4">
             <div className="flex items-start justify-between">

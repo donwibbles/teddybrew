@@ -80,16 +80,16 @@ export function IssueTagSelect({
           "min-h-[42px] w-full px-3 py-2 border rounded-lg cursor-text",
           "flex flex-wrap gap-1.5 items-center",
           disabled
-            ? "bg-neutral-100 cursor-not-allowed"
-            : "bg-white hover:border-neutral-400",
-          error ? "border-error-500" : "border-neutral-300",
+            ? "bg-background-muted cursor-not-allowed"
+            : "bg-card hover:border-border",
+          error ? "border-error-500" : "border-border",
           isOpen && "ring-2 ring-primary-500 border-primary-500"
         )}
       >
         {selectedTags.map((tag) => (
           <span
             key={tag.id}
-            className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-sm rounded-md"
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-subtle-hover text-primary-700 text-sm rounded-md"
           >
             {tag.name}
             {!disabled && (
@@ -117,13 +117,13 @@ export function IssueTagSelect({
           disabled={disabled}
           className={cn(
             "flex-1 min-w-[120px] outline-none bg-transparent text-sm",
-            "placeholder:text-neutral-400",
+            "placeholder:text-foreground-muted",
             disabled && "cursor-not-allowed"
           )}
         />
         <ChevronDown
           className={cn(
-            "w-4 h-4 text-neutral-400 transition-transform",
+            "w-4 h-4 text-foreground-muted transition-transform",
             isOpen && "rotate-180"
           )}
         />
@@ -131,9 +131,9 @@ export function IssueTagSelect({
 
       {/* Dropdown */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 mt-1 w-full bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-50 mt-1 w-full bg-card border border-border rounded-lg shadow-lg max-h-60 overflow-auto">
           {filteredTags.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-neutral-500">No tags found</div>
+            <div className="px-3 py-2 text-sm text-foreground-muted">No tags found</div>
           ) : (
             filteredTags.map((tag) => {
               const isSelected = selectedTagIds.includes(tag.id);
@@ -147,8 +147,8 @@ export function IssueTagSelect({
                   disabled={isMaxReached}
                   className={cn(
                     "w-full px-3 py-2 text-left text-sm flex items-center justify-between",
-                    "hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none",
-                    isSelected && "bg-primary-50 text-primary-700",
+                    "hover:bg-background-hover focus:bg-background-muted focus:outline-none",
+                    isSelected && "bg-primary-subtle text-primary-700",
                     isMaxReached && "opacity-50 cursor-not-allowed"
                   )}
                 >
@@ -159,7 +159,7 @@ export function IssueTagSelect({
             })
           )}
           {selectedTagIds.length >= maxTags && (
-            <div className="px-3 py-2 text-xs text-neutral-500 border-t border-neutral-100">
+            <div className="px-3 py-2 text-xs text-foreground-muted border-t border-border">
               Maximum {maxTags} tags allowed
             </div>
           )}
@@ -171,7 +171,7 @@ export function IssueTagSelect({
 
       {/* Helper text */}
       {selectedTagIds.length > 0 && (
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-foreground-muted">
           {selectedTagIds.length} of {maxTags} tags selected
         </p>
       )}

@@ -78,16 +78,16 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
   if (!profile.isPublic && !isOwnProfile) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="p-4 bg-neutral-100 rounded-full mb-4">
-          <Lock className="h-12 w-12 text-neutral-400" />
+        <div className="p-4 bg-background-muted rounded-full mb-4">
+          <Lock className="h-12 w-12 text-foreground-muted" />
         </div>
-        <h1 className="text-2xl font-bold text-neutral-900 mb-2">This profile is private</h1>
-        <p className="text-neutral-600 max-w-md">
+        <h1 className="text-2xl font-bold text-foreground mb-2">This profile is private</h1>
+        <p className="text-foreground-muted max-w-md">
           @{profile.username} has chosen to keep their profile private.
         </p>
         <Link
           href="/"
-          className="mt-6 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+          className="mt-6 px-4 py-2 bg-primary-subtle0 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           Go Home
         </Link>
@@ -139,25 +139,25 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <Avatar className="h-24 w-24">
               <AvatarImage src={profile.image ?? undefined} alt={profile.name ?? "User"} />
-              <AvatarFallback className="text-2xl bg-primary-100 text-primary-700">
+              <AvatarFallback className="text-2xl bg-primary-subtle-hover text-primary-700">
                 {getInitials(profile.name)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 text-center sm:text-left">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
-                  <h1 className="text-2xl font-bold text-neutral-900">
+                  <h1 className="text-2xl font-bold text-foreground">
                     {profile.name || "Anonymous User"}
                   </h1>
                   {profile.username && (
-                    <p className="text-neutral-600">@{profile.username}</p>
+                    <p className="text-foreground-muted">@{profile.username}</p>
                   )}
                 </div>
                 {isOwnProfile && (
                   <Link
                     href="/settings"
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-700 border border-neutral-300 rounded-lg
-                               hover:bg-neutral-50 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground border border-border rounded-lg
+                               hover:bg-background-hover transition-colors"
                   >
                     <Settings className="h-4 w-4" />
                     Edit Profile
@@ -166,10 +166,10 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
               </div>
 
               {profile.bio && (
-                <p className="mt-3 text-neutral-700">{profile.bio}</p>
+                <p className="mt-3 text-foreground">{profile.bio}</p>
               )}
 
-              <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-neutral-500">
+              <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-foreground-muted">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
                   Member since {formatDate(profile.createdAt)}
@@ -184,22 +184,22 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
 
               {/* Stats for owner */}
               {isOwnProfile && stats && (
-                <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-neutral-500">
+                <div className="flex flex-wrap justify-center sm:justify-start gap-4 mt-4 text-sm text-foreground-muted">
                   <span>
-                    <strong className="text-neutral-900">{stats.communitiesOwned + stats.communitiesJoined}</strong> communities
+                    <strong className="text-foreground">{stats.communitiesOwned + stats.communitiesJoined}</strong> communities
                   </span>
                   <span>
-                    <strong className="text-neutral-900">{stats.eventsOrganized}</strong> events organized
+                    <strong className="text-foreground">{stats.eventsOrganized}</strong> events organized
                   </span>
                   <span>
-                    <strong className="text-neutral-900">{stats.upcomingRsvps}</strong> upcoming RSVPs
+                    <strong className="text-foreground">{stats.upcomingRsvps}</strong> upcoming RSVPs
                   </span>
                 </div>
               )}
 
               {/* Privacy indicator for owner */}
               {isOwnProfile && !profile.isPublic && (
-                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-neutral-100 rounded-full text-sm text-neutral-600">
+                <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-background-muted rounded-full text-sm text-foreground-muted">
                   <Lock className="h-3.5 w-3.5" />
                   Your profile is private
                 </div>
@@ -221,7 +221,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-neutral-700 whitespace-pre-wrap">{profile.interests}</p>
+                <p className="text-foreground whitespace-pre-wrap">{profile.interests}</p>
               </CardContent>
             </Card>
           )}
@@ -234,7 +234,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-neutral-700 whitespace-pre-wrap">{profile.communityHope}</p>
+                <p className="text-foreground whitespace-pre-wrap">{profile.communityHope}</p>
               </CardContent>
             </Card>
           )}
@@ -264,11 +264,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                     <Link
                       key={community.id}
                       href={`/communities/${community.slug}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">{community.name}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{community.name}</p>
+                        <p className="text-sm text-foreground-muted">
                           {community._count.members} members &middot; {community._count.events} events
                         </p>
                       </div>
@@ -300,11 +300,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                     <Link
                       key={community.id}
                       href={`/communities/${community.slug}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">{community.name}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{community.name}</p>
+                        <p className="text-sm text-foreground-muted">
                           {community._count.members} members &middot; {community._count.events} events
                         </p>
                       </div>
@@ -341,11 +341,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                     <Link
                       key={event.id}
                       href={`/communities/${event.community.slug}/events/${event.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">{event.title}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{event.title}</p>
+                        <p className="text-sm text-foreground-muted">
                           {event.sessions[0]?.startTime
                             ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                                 weekday: "short",
@@ -365,11 +365,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                       <Link
                         key={event.id}
                         href={`/communities/${event.community.slug}/events/${event.id}`}
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                        className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                       >
                         <div>
-                          <p className="font-medium text-neutral-900">{event.title}</p>
-                          <p className="text-sm text-neutral-500">
+                          <p className="font-medium text-foreground">{event.title}</p>
+                          <p className="text-sm text-foreground-muted">
                             {event.sessions[0]?.startTime
                               ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                                   weekday: "short",
@@ -408,11 +408,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                     <Link
                       key={event.id}
                       href={`/communities/${event.community.slug}/events/${event.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">{event.title}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{event.title}</p>
+                        <p className="text-sm text-foreground-muted">
                           {event.sessions[0]?.startTime
                             ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                                 weekday: "short",
@@ -424,7 +424,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                             : "No sessions"}
                         </p>
                       </div>
-                      <span className="text-neutral-400">&rarr;</span>
+                      <span className="text-foreground-muted">&rarr;</span>
                     </Link>
                   ))}
                 </div>
@@ -439,7 +439,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-neutral-500" />
+              <Users className="h-5 w-5 text-foreground-muted" />
               Communities
             </CardTitle>
           </CardHeader>
@@ -449,12 +449,12 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                 <Link
                   key={community.id}
                   href={`/communities/${community.slug}`}
-                  className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-background-hover hover:border-border transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="font-medium text-neutral-900 truncate">{community.name}</p>
+                    <p className="font-medium text-foreground truncate">{community.name}</p>
                     {community.description && (
-                      <p className="text-sm text-neutral-500 truncate">{community.description}</p>
+                      <p className="text-sm text-foreground-muted truncate">{community.description}</p>
                     )}
                   </div>
                   <Badge variant="secondary" className="ml-2 shrink-0">
@@ -475,7 +475,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-neutral-500" />
+                  <Calendar className="h-5 w-5 text-foreground-muted" />
                   Upcoming Events
                 </CardTitle>
               </CardHeader>
@@ -485,11 +485,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                     <Link
                       key={event.id}
                       href={`/communities/${event.community.slug}/events/${event.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-background-hover hover:border-border transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">{event.title}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{event.title}</p>
+                        <p className="text-sm text-foreground-muted">
                           {event.sessions[0]?.startTime
                             ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                                 weekday: "short",
@@ -501,7 +501,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                           {" "}· {event.community.name}
                         </p>
                       </div>
-                      <span className="text-neutral-400">&rarr;</span>
+                      <span className="text-foreground-muted">&rarr;</span>
                     </Link>
                   ))}
                 </div>
@@ -514,7 +514,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-neutral-500" />
+                  <Calendar className="h-5 w-5 text-foreground-muted" />
                   Past Events
                 </CardTitle>
               </CardHeader>
@@ -524,11 +524,11 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                     <Link
                       key={event.id}
                       href={`/communities/${event.community.slug}/events/${event.id}`}
-                      className="flex items-center justify-between p-3 rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+                      className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-background-hover hover:border-border transition-colors"
                     >
                       <div>
-                        <p className="font-medium text-neutral-900">{event.title}</p>
-                        <p className="text-sm text-neutral-500">
+                        <p className="font-medium text-foreground">{event.title}</p>
+                        <p className="text-sm text-foreground-muted">
                           {event.sessions[0]?.startTime
                             ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                                 weekday: "short",
@@ -541,7 +541,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
                           {" "}· {event.community.name}
                         </p>
                       </div>
-                      <span className="text-neutral-400">&rarr;</span>
+                      <span className="text-foreground-muted">&rarr;</span>
                     </Link>
                   ))}
                 </div>
@@ -555,7 +555,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
       {!isOwnProfile && !showCommunities && !profile.showUpcomingEvents && !profile.showPastEvents && !profile.interests && !profile.communityHope && (
         <Card>
           <CardContent className="py-8">
-            <div className="text-center text-neutral-500">
+            <div className="text-center text-foreground-muted">
               <p>@{profile.username} hasn&apos;t shared any public information yet.</p>
             </div>
           </CardContent>

@@ -263,9 +263,9 @@ export function ThreadPanel({
     const element = document.getElementById(`thread-message-${messageId}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.classList.add("bg-primary-50");
+      element.classList.add("bg-primary-subtle");
       setTimeout(() => {
-        element.classList.remove("bg-primary-50");
+        element.classList.remove("bg-primary-subtle");
       }, 2000);
     }
   };
@@ -302,21 +302,21 @@ export function ThreadPanel({
   const rootMessage = messages.find((m) => m.id === threadRootId);
 
   return (
-    <div className="w-80 lg:w-96 border-l border-neutral-200 flex flex-col h-full bg-white">
+    <div className="w-80 lg:w-96 border-l border-border flex flex-col h-full bg-card">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Hash className="h-4 w-4 text-neutral-400" />
-          <h3 className="font-semibold text-neutral-900">Thread</h3>
+          <Hash className="h-4 w-4 text-foreground-muted" />
+          <h3 className="font-semibold text-foreground">Thread</h3>
           {rootMessage && (
-            <span className="text-xs text-neutral-500">
+            <span className="text-xs text-foreground-muted">
               {messages.length - 1} {messages.length - 1 === 1 ? "reply" : "replies"}
             </span>
           )}
         </div>
         <button
           onClick={onClose}
-          className="p-1 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 rounded transition-colors"
+          className="p-1 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
@@ -341,7 +341,7 @@ export function ThreadPanel({
             {messages.map((message) => (
               <div key={message.id} id={`thread-message-${message.id}`}>
                 {message.deletedAt ? (
-                  <div className="px-4 py-2 text-neutral-400 italic text-sm">
+                  <div className="px-4 py-2 text-foreground-muted italic text-sm">
                     [Message deleted]
                   </div>
                 ) : (

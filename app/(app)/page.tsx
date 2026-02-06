@@ -41,10 +41,10 @@ export default async function DashboardPage() {
     <div className="space-y-8">
       {/* Welcome Section */}
       <div>
-        <h1 className="text-2xl font-bold text-neutral-900">
+        <h1 className="text-2xl font-bold text-foreground">
           Welcome back{session.user.name ? `, ${session.user.name}` : ""}!
         </h1>
-        <p className="text-neutral-600 mt-1">
+        <p className="text-foreground-muted mt-1">
           Here&apos;s what&apos;s happening in your communities.
         </p>
       </div>
@@ -102,7 +102,7 @@ export default async function DashboardPage() {
           <CardContent>
             {allCommunities.length === 0 ? (
               <div className="text-center py-6">
-                <p className="text-neutral-600 mb-4">You haven&apos;t joined any communities yet.</p>
+                <p className="text-foreground-muted mb-4">You haven&apos;t joined any communities yet.</p>
                 <Link href="/communities">
                   <Button>Discover Communities</Button>
                 </Link>
@@ -113,18 +113,18 @@ export default async function DashboardPage() {
                   <Link
                     key={community.id}
                     href={`/communities/${community.slug}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-neutral-900">{community.name}</p>
-                      <p className="text-sm text-neutral-500">
+                      <p className="font-medium text-foreground">{community.name}</p>
+                      <p className="text-sm text-foreground-muted">
                         {community._count.members} members
                         {community.isOwner && (
                           <span className="ml-2 text-primary-600 font-medium">Owner</span>
                         )}
                       </p>
                     </div>
-                    <span className="text-neutral-400">&rarr;</span>
+                    <span className="text-foreground-muted">&rarr;</span>
                   </Link>
                 ))}
               </div>
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
           <CardContent>
             {upcomingEvents.length === 0 ? (
               <div className="text-center py-6">
-                <p className="text-neutral-600 mb-4">No upcoming events.</p>
+                <p className="text-foreground-muted mb-4">No upcoming events.</p>
                 <Link href="/events">
                   <Button>Discover Events</Button>
                 </Link>
@@ -158,11 +158,11 @@ export default async function DashboardPage() {
                   <Link
                     key={event.id}
                     href={`/communities/${event.community.slug}/events/${event.id}`}
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-background-hover transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-neutral-900">{event.title}</p>
-                      <p className="text-sm text-neutral-500">
+                      <p className="font-medium text-foreground">{event.title}</p>
+                      <p className="text-sm text-foreground-muted">
                         {event.sessions[0]?.startTime
                           ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                               weekday: "short",
@@ -174,9 +174,9 @@ export default async function DashboardPage() {
                             })
                           : "No sessions"}
                       </p>
-                      <p className="text-sm text-neutral-400">{event.community.name}</p>
+                      <p className="text-sm text-foreground-muted">{event.community.name}</p>
                     </div>
-                    <span className="text-neutral-400">&rarr;</span>
+                    <span className="text-foreground-muted">&rarr;</span>
                   </Link>
                 ))}
               </div>

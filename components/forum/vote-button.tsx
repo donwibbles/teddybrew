@@ -76,10 +76,10 @@ export function VoteButton({
           buttonPadding,
           "rounded transition-colors",
           disabled
-            ? "text-neutral-300 cursor-default"
+            ? "text-foreground-muted cursor-default"
             : optimisticVote === 1
-              ? "text-primary-600 bg-primary-50"
-              : "text-neutral-400 hover:text-primary-600 hover:bg-primary-50",
+              ? "text-primary-600 bg-primary-subtle"
+              : "text-foreground-muted hover:text-primary-600 hover:bg-primary-subtle",
           isPending && "opacity-50 cursor-not-allowed"
         )}
         aria-label="Upvote"
@@ -93,7 +93,7 @@ export function VoteButton({
           size === "sm" ? "text-sm" : "text-base",
           optimisticScore > 0 && "text-primary-600",
           optimisticScore < 0 && "text-error-500",
-          optimisticScore === 0 && "text-neutral-500"
+          optimisticScore === 0 && "text-foreground-muted"
         )}
       >
         {optimisticScore}
@@ -106,10 +106,10 @@ export function VoteButton({
           buttonPadding,
           "rounded transition-colors",
           disabled
-            ? "text-neutral-300 cursor-default"
+            ? "text-foreground-muted cursor-default"
             : optimisticVote === -1
               ? "text-error-500 bg-error-50"
-              : "text-neutral-400 hover:text-error-500 hover:bg-error-50",
+              : "text-foreground-muted hover:text-error-500 hover:bg-error-50",
           isPending && "opacity-50 cursor-not-allowed"
         )}
         aria-label="Downvote"

@@ -48,10 +48,10 @@ export function ChannelList({
         className={cn(
           "w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors group",
           activeChannelId === channel.id
-            ? "bg-primary-50 text-primary-700"
+            ? "bg-primary-subtle text-primary-700"
             : hasUnread
-            ? "text-neutral-900 font-medium hover:bg-neutral-50"
-            : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+            ? "text-foreground font-medium hover:bg-background-hover"
+            : "text-foreground-muted hover:bg-background-hover hover:text-foreground"
         )}
       >
         {isEventChannel ? (
@@ -60,7 +60,7 @@ export function ChannelList({
           <Hash
             className={cn(
               "h-4 w-4 shrink-0",
-              hasUnread ? "text-neutral-600" : "text-neutral-400"
+              hasUnread ? "text-foreground-muted" : "text-foreground-muted"
             )}
           />
         )}
@@ -81,9 +81,9 @@ export function ChannelList({
               e.stopPropagation();
               onEditChannel(channel.id);
             }}
-            className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-200 rounded"
+            className="ml-auto opacity-0 group-hover:opacity-100 p-1 hover:bg-background-hover rounded"
           >
-            <Settings className="h-3 w-3 text-neutral-500" />
+            <Settings className="h-3 w-3 text-foreground-muted" />
           </button>
         )}
       </button>
@@ -92,8 +92,8 @@ export function ChannelList({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-3 border-b border-neutral-200">
-        <h3 className="text-sm font-semibold text-neutral-900 uppercase tracking-wide">
+      <div className="p-3 border-b border-border">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
           Channels
         </h3>
       </div>
@@ -106,7 +106,7 @@ export function ChannelList({
         {eventChannels.length > 0 && (
           <>
             <div className="px-3 pt-4 pb-2">
-              <h4 className="text-xs font-medium text-neutral-500 uppercase tracking-wide">
+              <h4 className="text-xs font-medium text-foreground-muted uppercase tracking-wide">
                 Event Channels
               </h4>
             </div>
@@ -116,11 +116,11 @@ export function ChannelList({
       </div>
 
       {isOwner && onCreateChannel && (
-        <div className="p-3 border-t border-neutral-200">
+        <div className="p-3 border-t border-border">
           <button
             onClick={onCreateChannel}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-neutral-600
-                       hover:bg-neutral-50 hover:text-neutral-900 rounded-md transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-foreground-muted
+                       hover:bg-background-hover hover:text-foreground rounded-md transition-colors"
           >
             <Plus className="h-4 w-4" />
             Add Channel

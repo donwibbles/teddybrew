@@ -81,7 +81,7 @@ export function CoOrganizerManager({
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium text-neutral-900">Co-Organizers</h3>
+      <h3 className="font-medium text-foreground">Co-Organizers</h3>
 
       {error && (
         <div className="p-3 bg-error-50 border border-error-200 rounded-lg text-error-600 text-sm">
@@ -91,7 +91,7 @@ export function CoOrganizerManager({
 
       {/* Current co-organizers list */}
       {coOrganizers.length > 0 ? (
-        <ul className="divide-y divide-neutral-100 border border-neutral-200 rounded-lg">
+        <ul className="divide-y divide-border border border-border rounded-lg">
           {coOrganizers.map((co) => (
             <li
               key={co.id}
@@ -105,14 +105,14 @@ export function CoOrganizerManager({
                     className="w-8 h-8 rounded-full"
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-primary-subtle-hover flex items-center justify-center">
                     <span className="text-primary-700 font-medium text-xs">
                       {(co.name || "Unknown").charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-neutral-900 truncate">
+                  <p className="text-sm font-medium text-foreground truncate">
                     {co.name || "Unknown"}
                   </p>
                 </div>
@@ -129,7 +129,7 @@ export function CoOrganizerManager({
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-neutral-500 py-4 text-center border border-neutral-200 rounded-lg">
+        <p className="text-sm text-foreground-muted py-4 text-center border border-border rounded-lg">
           No co-organizers yet
         </p>
       )}
@@ -141,9 +141,9 @@ export function CoOrganizerManager({
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
             disabled={isAdding}
-            className="flex-1 px-3 py-2 border border-neutral-300 rounded-lg text-sm text-neutral-900 bg-white
+            className="flex-1 px-3 py-2 border border-border rounded-lg text-sm text-foreground bg-card
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
+                       disabled:bg-background-muted disabled:text-foreground-muted"
           >
             <option value="">Select a member...</option>
             {availableMembers.map((member) => (
@@ -156,7 +156,7 @@ export function CoOrganizerManager({
             type="button"
             onClick={handleAdd}
             disabled={!selectedUserId || isAdding}
-            className="px-4 py-2 bg-primary-500 text-white text-sm font-medium rounded-lg
+            className="px-4 py-2 bg-primary-subtle0 text-white text-sm font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -166,7 +166,7 @@ export function CoOrganizerManager({
       )}
 
       {availableMembers.length === 0 && coOrganizers.length > 0 && (
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-foreground-muted">
           All community members are already organizers
         </p>
       )}

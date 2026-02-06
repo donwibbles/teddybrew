@@ -52,11 +52,11 @@ export function AddSessionForm({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-neutral-700">
+        <label className="block text-sm font-medium text-foreground">
           Sessions <span className="text-error-500">*</span>
         </label>
         {sessions.length > 1 && (
-          <span className="text-xs text-neutral-500">
+          <span className="text-xs text-foreground-muted">
             {sessions.length} sessions
           </span>
         )}
@@ -66,10 +66,10 @@ export function AddSessionForm({
         {sessions.map((session, index) => (
           <div
             key={index}
-            className="p-4 border border-neutral-200 rounded-lg bg-neutral-50 space-y-4 overflow-hidden"
+            className="p-4 border border-border rounded-lg bg-background-muted space-y-4 overflow-hidden"
           >
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-neutral-700">
+              <span className="text-sm font-medium text-foreground">
                 {sessions.length > 1 ? `Session ${index + 1}` : "Session Details"}
               </span>
               {sessions.length > 1 && (
@@ -77,7 +77,7 @@ export function AddSessionForm({
                   type="button"
                   onClick={() => removeSession(index)}
                   disabled={disabled}
-                  className="p-1 text-neutral-400 hover:text-error-500 disabled:opacity-50"
+                  className="p-1 text-foreground-muted hover:text-error-500 disabled:opacity-50"
                   title="Remove session"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -88,7 +88,7 @@ export function AddSessionForm({
             {/* Session Title (optional) */}
             {sessions.length > 1 && (
               <div>
-                <label className="block text-xs text-neutral-600 mb-1">
+                <label className="block text-xs text-foreground-muted mb-1">
                   Session Title (optional)
                 </label>
                 <input
@@ -99,9 +99,9 @@ export function AddSessionForm({
                   }
                   placeholder="e.g., Day 1, Morning Session"
                   disabled={disabled}
-                  className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           disabled:bg-neutral-100 disabled:text-neutral-500"
+                           disabled:bg-background-muted disabled:text-foreground-muted"
                 />
               </div>
             )}
@@ -109,7 +109,7 @@ export function AddSessionForm({
             {/* Date/Time */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="min-w-0">
-                <label className="block text-xs text-neutral-600 mb-1">
+                <label className="block text-xs text-foreground-muted mb-1">
                   Start <span className="text-error-500">*</span>
                 </label>
                 <input
@@ -121,13 +121,13 @@ export function AddSessionForm({
                   min={minDateTime}
                   disabled={disabled}
                   required
-                  className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           disabled:bg-neutral-100 disabled:text-neutral-500"
+                           disabled:bg-background-muted disabled:text-foreground-muted"
                 />
               </div>
               <div className="min-w-0">
-                <label className="block text-xs text-neutral-600 mb-1">
+                <label className="block text-xs text-foreground-muted mb-1">
                   End (optional)
                 </label>
                 <input
@@ -138,9 +138,9 @@ export function AddSessionForm({
                   }
                   min={session.startTime || minDateTime}
                   disabled={disabled}
-                  className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           disabled:bg-neutral-100 disabled:text-neutral-500"
+                           disabled:bg-background-muted disabled:text-foreground-muted"
                 />
               </div>
             </div>
@@ -148,7 +148,7 @@ export function AddSessionForm({
             {/* Session-specific location (optional override) */}
             {sessions.length > 1 && (
               <div>
-                <label className="block text-xs text-neutral-600 mb-1">
+                <label className="block text-xs text-foreground-muted mb-1">
                   Location Override (optional)
                 </label>
                 <input
@@ -159,9 +159,9 @@ export function AddSessionForm({
                   }
                   placeholder="Leave empty to use event location"
                   disabled={disabled}
-                  className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           disabled:bg-neutral-100 disabled:text-neutral-500"
+                           disabled:bg-background-muted disabled:text-foreground-muted"
                 />
               </div>
             )}
@@ -169,7 +169,7 @@ export function AddSessionForm({
             {/* Session-specific capacity (optional override) */}
             {sessions.length > 1 && (
               <div>
-                <label className="block text-xs text-neutral-600 mb-1">
+                <label className="block text-xs text-foreground-muted mb-1">
                   Capacity Override (optional)
                 </label>
                 <input
@@ -186,9 +186,9 @@ export function AddSessionForm({
                   min={1}
                   max={10000}
                   disabled={disabled}
-                  className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg
                            focus:outline-none focus:ring-2 focus:ring-primary-500
-                           disabled:bg-neutral-100 disabled:text-neutral-500"
+                           disabled:bg-background-muted disabled:text-foreground-muted"
                 />
               </div>
             )}
@@ -201,8 +201,8 @@ export function AddSessionForm({
         type="button"
         onClick={addSession}
         disabled={disabled || sessions.length >= 50}
-        className="w-full py-2 border border-dashed border-neutral-300 rounded-lg
-                   text-sm text-neutral-600 hover:bg-neutral-50 hover:border-neutral-400
+        className="w-full py-2 border border-dashed border-border rounded-lg
+                   text-sm text-foreground-muted hover:bg-background-hover hover:border-border
                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors
                    flex items-center justify-center gap-2"
       >
@@ -210,7 +210,7 @@ export function AddSessionForm({
         Add Another Session
       </button>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-foreground-muted">
         Add multiple sessions for multi-day events or events with different time
         slots. Attendees can RSVP to individual sessions.
       </p>

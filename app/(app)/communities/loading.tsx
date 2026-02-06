@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -27,7 +27,7 @@ export default function CommunitiesLoading() {
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-lg border border-neutral-200 p-6"
+            className="bg-card rounded-lg border border-border p-6"
           >
             <Skeleton className="h-6 w-3/4 mb-2" />
             <Skeleton className="h-4 w-full mb-4" />

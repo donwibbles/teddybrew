@@ -14,7 +14,7 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
   const { title, description } = getErrorDetails(params.error);
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8 text-center">
+    <div className="bg-card rounded-lg shadow-sm border border-border p-8 text-center">
       {/* Error icon */}
       <div className="mb-6">
         <div className="inline-flex items-center justify-center w-16 h-16 bg-error-50 rounded-full">
@@ -35,14 +35,14 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
         </div>
       </div>
 
-      <h1 className="text-2xl font-semibold text-neutral-900 mb-2">{title}</h1>
+      <h1 className="text-2xl font-semibold text-foreground mb-2">{title}</h1>
 
-      <p className="text-neutral-600 mb-6">{description}</p>
+      <p className="text-foreground-muted mb-6">{description}</p>
 
       <div className="flex flex-col gap-3">
         <Link
           href="/sign-in"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      transition-colors"
         >
@@ -51,7 +51,7 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
 
         <Link
           href="/"
-          className="inline-flex items-center justify-center text-sm text-neutral-600 hover:text-primary-600"
+          className="inline-flex items-center justify-center text-sm text-foreground-muted hover:text-primary-600"
         >
           Go to home page
         </Link>

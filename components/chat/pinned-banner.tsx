@@ -34,10 +34,10 @@ export function PinnedBanner({
   if (pinnedMessages.length === 0) return null;
 
   return (
-    <div className="border-b border-amber-200 bg-amber-50">
+    <div className="border-b border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/50">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-2 flex items-center gap-2 text-amber-800 hover:bg-amber-100 transition-colors"
+        className="w-full px-4 py-2 flex items-center gap-2 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
       >
         <Pin className="h-4 w-4" />
         <span className="text-sm font-medium">
@@ -60,12 +60,12 @@ export function PinnedBanner({
             >
               <button
                 onClick={() => onJumpToMessage(msg.id)}
-                className="text-left hover:bg-amber-100 rounded px-2 py-1 -mx-2 flex-1 min-w-0"
+                className="text-left hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded px-2 py-1 -mx-2 flex-1 min-w-0"
               >
-                <span className="font-medium text-amber-900">
+                <span className="font-medium text-amber-900 dark:text-amber-200">
                   {msg.author.name || "Anonymous"}:
                 </span>{" "}
-                <span className="text-amber-700">
+                <span className="text-amber-700 dark:text-amber-300">
                   {msg.content.slice(0, 100)}
                   {msg.content.length > 100 ? "..." : ""}
                 </span>
@@ -76,7 +76,7 @@ export function PinnedBanner({
                     e.stopPropagation();
                     onUnpin(msg.id);
                   }}
-                  className="p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-100 rounded shrink-0"
+                  className="p-1 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 rounded shrink-0"
                   title="Unpin message"
                 >
                   <X className="h-4 w-4" />

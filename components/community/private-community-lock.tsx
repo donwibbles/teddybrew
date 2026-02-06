@@ -11,10 +11,10 @@ export function PrivateCommunityLock({
   communityName,
 }: PrivateCommunityLockProps) {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-8 text-center">
-      <div className="w-16 h-16 mx-auto mb-4 bg-neutral-100 rounded-full flex items-center justify-center">
+    <div className="bg-card rounded-lg border border-border p-8 text-center">
+      <div className="w-16 h-16 mx-auto mb-4 bg-background-muted rounded-full flex items-center justify-center">
         <svg
-          className="w-8 h-8 text-neutral-500"
+          className="w-8 h-8 text-foreground-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -27,10 +27,10 @@ export function PrivateCommunityLock({
           />
         </svg>
       </div>
-      <h2 className="text-lg font-semibold text-neutral-900 mb-2">
+      <h2 className="text-lg font-semibold text-foreground mb-2">
         This is a private community
       </h2>
-      <p className="text-neutral-600 mb-6">
+      <p className="text-foreground-muted mb-6">
         Only members can view events and content in {communityName}.
       </p>
       <div className="max-w-xs mx-auto">

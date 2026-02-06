@@ -142,7 +142,7 @@ export function CollaboratorPresence({
           {viewers.length > 3 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-neutral-200 text-xs font-medium text-neutral-600 ring-2 ring-primary-100">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-background-muted text-xs font-medium text-foreground-muted ring-2 ring-primary-100">
                   +{viewers.length - 3}
                 </div>
               </TooltipTrigger>
@@ -157,7 +157,7 @@ export function CollaboratorPresence({
             </Tooltip>
           )}
         </div>
-        <span className="text-sm text-neutral-500">
+        <span className="text-sm text-foreground-muted">
           {viewers.length} {viewers.length === 1 ? "viewer" : "viewers"}
         </span>
       </div>

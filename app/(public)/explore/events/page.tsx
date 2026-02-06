@@ -84,7 +84,7 @@ export default async function ExploreEventsPage({ searchParams }: ExploreEventsP
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Sign in banner */}
-      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div className="bg-primary-subtle border border-primary-200 rounded-lg p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="font-medium text-primary-900">
@@ -96,7 +96,7 @@ export default async function ExploreEventsPage({ searchParams }: ExploreEventsP
           </div>
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
+            className="inline-flex items-center justify-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        transition-colors whitespace-nowrap"
           >
@@ -107,14 +107,14 @@ export default async function ExploreEventsPage({ searchParams }: ExploreEventsP
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Events</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Events</h1>
+        <p className="text-foreground-muted mt-1">
           Discover upcoming events in public communities
         </p>
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-12 bg-neutral-100 rounded animate-pulse" />}>
+      <Suspense fallback={<div className="h-12 bg-background-muted rounded animate-pulse" />}>
         <EventFilters communities={communities} basePath="/explore/events" />
       </Suspense>
 
@@ -125,7 +125,7 @@ export default async function ExploreEventsPage({ searchParams }: ExploreEventsP
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="h-48 bg-neutral-100 rounded-lg animate-pulse"
+                className="h-48 bg-background-muted rounded-lg animate-pulse"
               />
             ))}
           </div>

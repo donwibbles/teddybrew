@@ -33,7 +33,7 @@ export function ForumSortTabs({ currentSort, basePath }: ForumSortTabsProps) {
   };
 
   return (
-    <div className="flex items-center gap-1 bg-neutral-100 rounded-lg p-1">
+    <div className="flex items-center gap-1 bg-background-muted rounded-lg p-1">
       {sortOptions.map(({ value, label, icon: Icon }) => (
         <button
           key={value}
@@ -41,8 +41,8 @@ export function ForumSortTabs({ currentSort, basePath }: ForumSortTabsProps) {
           className={cn(
             "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
             currentSort === value
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-500 hover:text-neutral-700"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-foreground-muted hover:text-foreground"
           )}
         >
           <Icon className="h-4 w-4" />

@@ -20,7 +20,7 @@ export function MemberItemSkeleton() {
 
 export function MemberListSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 divide-y divide-neutral-200">
+    <div className="bg-card rounded-lg border border-border divide-y divide-border">
       {Array.from({ length: count }).map((_, i) => (
         <MemberItemSkeleton key={i} />
       ))}

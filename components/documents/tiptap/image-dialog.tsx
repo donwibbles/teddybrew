@@ -180,13 +180,13 @@ export function ImageDialog({
         </DialogHeader>
 
         {/* Tabs */}
-        <div className="flex border-b border-neutral-200">
+        <div className="flex border-b border-border">
           <button
             type="button"
             className={`flex-1 px-4 py-2 text-sm font-medium ${
               activeTab === "upload"
                 ? "border-b-2 border-primary-500 text-primary-600"
-                : "text-neutral-600 hover:text-neutral-900"
+                : "text-foreground-muted hover:text-foreground"
             }`}
             onClick={() => setActiveTab("upload")}
           >
@@ -198,7 +198,7 @@ export function ImageDialog({
             className={`flex-1 px-4 py-2 text-sm font-medium ${
               activeTab === "url"
                 ? "border-b-2 border-primary-500 text-primary-600"
-                : "text-neutral-600 hover:text-neutral-900"
+                : "text-foreground-muted hover:text-foreground"
             }`}
             onClick={() => setActiveTab("url")}
           >
@@ -248,13 +248,13 @@ export function ImageDialog({
                   }}
                   onDrop={handleDrop}
                   onDragOver={handleDragOver}
-                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-10 transition-colors hover:border-primary-400 hover:bg-neutral-100"
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background-muted px-6 py-10 transition-colors hover:border-primary-400 hover:bg-background-hover"
                 >
-                  <Upload className="h-10 w-10 text-neutral-400" />
-                  <p className="mt-3 text-sm font-medium text-neutral-700">
+                  <Upload className="h-10 w-10 text-foreground-muted" />
+                  <p className="mt-3 text-sm font-medium text-foreground">
                     Click to upload or drag and drop
                   </p>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-foreground-muted">
                     PNG, JPG, GIF, or WebP up to {config.maxSizeMB}MB
                   </p>
                 </div>
@@ -281,7 +281,7 @@ export function ImageDialog({
               </div>
 
               {url && url.match(/^https?:\/\/.+/) && (
-                <div className="overflow-hidden rounded-lg border border-neutral-200">
+                <div className="overflow-hidden rounded-lg border border-border">
                   <img
                     src={url}
                     alt="Preview"

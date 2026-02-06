@@ -47,10 +47,10 @@ export default async function MembersPage({ params }: MembersPageProps) {
     <div className="max-w-3xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           {membership.isOwner ? "Manage Members" : "Members"}
         </h1>
-        <p className="text-neutral-600 mt-1">
+        <p className="text-foreground-muted mt-1">
           {community._count.members}{" "}
           {community._count.members === 1 ? "member" : "members"} in this
           community
@@ -59,7 +59,7 @@ export default async function MembersPage({ params }: MembersPageProps) {
 
       {/* Member List */}
       <section>
-        <h2 className="text-lg font-medium text-neutral-900 mb-4">
+        <h2 className="text-lg font-medium text-foreground mb-4">
           Member List
         </h2>
         <MemberManagementList
@@ -71,10 +71,10 @@ export default async function MembersPage({ params }: MembersPageProps) {
 
       {/* Moderation Log */}
       <section>
-        <h2 className="text-lg font-medium text-neutral-900 mb-4">
+        <h2 className="text-lg font-medium text-foreground mb-4">
           Moderation Log
         </h2>
-        <div className="bg-white rounded-lg border border-neutral-200 p-4">
+        <div className="bg-card rounded-lg border border-border p-4">
           <ModerationLog communityId={community.id} />
         </div>
       </section>

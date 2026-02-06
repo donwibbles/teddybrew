@@ -40,10 +40,10 @@ export function AnnouncementManager({
     <div className="space-y-4">
       {/* Header with count and create button */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-foreground-muted">
           Create announcements that appear as banners for all community members.
         </p>
-        <span className="text-sm font-medium text-neutral-700">
+        <span className="text-sm font-medium text-foreground">
           {activeCount}/{MAX_ACTIVE} active
         </span>
       </div>
@@ -52,7 +52,7 @@ export function AnnouncementManager({
       <button
         onClick={() => setShowForm(true)}
         disabled={activeCount >= MAX_ACTIVE}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-neutral-300 rounded-lg text-neutral-600 hover:border-primary-400 hover:text-primary-600 hover:bg-primary-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-neutral-300 disabled:hover:text-neutral-600 disabled:hover:bg-transparent"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-lg text-foreground-muted hover:border-primary-400 hover:text-primary-600 hover:bg-primary-subtle transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-border disabled:hover:text-foreground-muted disabled:hover:bg-transparent"
       >
         <Plus className="w-5 h-5" />
         <span className="font-medium">Create Announcement</span>
@@ -60,7 +60,7 @@ export function AnnouncementManager({
 
       {/* Announcements List */}
       {announcements.length === 0 ? (
-        <div className="text-center py-8 text-neutral-500">
+        <div className="text-center py-8 text-foreground-muted">
           <Megaphone className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>No announcements yet.</p>
         </div>
@@ -135,34 +135,34 @@ function AnnouncementItem({
     <div
       className={`border rounded-lg p-4 transition-colors ${
         announcement.isActive
-          ? "border-amber-300 bg-amber-50"
-          : "border-neutral-200 bg-neutral-50"
+          ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50"
+          : "border-border bg-background-muted"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
         {/* Announcement Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-medium text-neutral-900 truncate">
+            <h4 className="font-medium text-foreground truncate">
               {announcement.title}
             </h4>
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                 announcement.isActive
-                  ? "bg-amber-200 text-amber-800"
-                  : "bg-neutral-200 text-neutral-600"
+                  ? "bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200"
+                  : "bg-background-muted text-foreground-muted"
               }`}
             >
               {announcement.isActive ? "Active" : "Inactive"}
             </span>
           </div>
 
-          <p className="text-sm text-neutral-600 line-clamp-2 mb-2">
+          <p className="text-sm text-foreground-muted line-clamp-2 mb-2">
             {announcement.content}
           </p>
 
           {/* Footer */}
-          <div className="flex items-center gap-2 text-xs text-neutral-500">
+          <div className="flex items-center gap-2 text-xs text-foreground-muted">
             {announcement.createdBy.image && (
               <Image
                 src={announcement.createdBy.image}
@@ -190,12 +190,12 @@ function AnnouncementItem({
             onClick={handleToggleActive}
             disabled={isPending || (!canActivate && !announcement.isActive)}
             title={announcement.isActive ? "Deactivate" : "Activate"}
-            className="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : announcement.isActive ? (
-              <ToggleRight className="w-5 h-5 text-amber-600" />
+              <ToggleRight className="w-5 h-5 text-amber-600 dark:text-amber-400" />
             ) : (
               <ToggleLeft className="w-5 h-5" />
             )}
@@ -206,7 +206,7 @@ function AnnouncementItem({
             onClick={onEdit}
             disabled={isPending}
             title="Edit"
-            className="p-2 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded-lg disabled:opacity-50"
+            className="p-2 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg disabled:opacity-50"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -216,7 +216,7 @@ function AnnouncementItem({
             onClick={() => setShowDeleteConfirm(true)}
             disabled={isPending}
             title="Delete"
-            className="p-2 text-neutral-500 hover:text-error-600 hover:bg-error-50 rounded-lg disabled:opacity-50"
+            className="p-2 text-foreground-muted hover:text-error-600 hover:bg-error-50 rounded-lg disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -230,8 +230,8 @@ function AnnouncementItem({
 
       {/* Delete Confirmation */}
       {showDeleteConfirm && (
-        <div className="mt-3 pt-3 border-t border-neutral-200">
-          <p className="text-sm text-neutral-700 mb-2">
+        <div className="mt-3 pt-3 border-t border-border">
+          <p className="text-sm text-foreground mb-2">
             Are you sure you want to delete this announcement?
           </p>
           <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ function AnnouncementItem({
             <button
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isPending}
-              className="px-3 py-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-800"
+              className="px-3 py-1.5 text-sm font-medium text-foreground-muted hover:text-foreground"
             >
               Cancel
             </button>

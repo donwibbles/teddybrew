@@ -235,7 +235,7 @@ export function EditEventForm({
       <div>
         <label
           htmlFor="title"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Event Title <span className="text-error-500">*</span>
         </label>
@@ -248,9 +248,9 @@ export function EditEventForm({
           required
           minLength={3}
           maxLength={200}
-          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+          className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-50 disabled:text-neutral-500"
+                     disabled:bg-background-muted disabled:text-foreground-muted"
         />
       </div>
 
@@ -258,7 +258,7 @@ export function EditEventForm({
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Description
         </label>
@@ -269,15 +269,15 @@ export function EditEventForm({
           rows={4}
           disabled={isSubmitting || isDeleting}
           maxLength={5000}
-          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+          className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+                     disabled:bg-background-muted disabled:text-foreground-muted resize-none"
         />
       </div>
 
       {/* Cover Image */}
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           Cover Image
         </label>
         <ImageUpload
@@ -293,7 +293,7 @@ export function EditEventForm({
 
       {/* Timezone selector */}
       {timezone && (
-        <div className="p-3 bg-primary-50 border border-primary-100 rounded-lg space-y-2">
+        <div className="p-3 bg-primary-subtle border border-primary-100 rounded-lg space-y-2">
           <p className="text-sm text-primary-700">
             Enter times in the selected timezone
           </p>
@@ -301,9 +301,9 @@ export function EditEventForm({
             value={timezone}
             onChange={(e) => setTimezone(e.target.value)}
             disabled={isSubmitting || isDeleting}
-            className="w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-neutral-900 bg-white
+            className="w-full px-3 py-2 border border-primary-200 rounded-lg text-sm text-foreground bg-card
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
+                       disabled:bg-background-muted disabled:text-foreground-muted"
           >
             {/* Show current timezone first if not in common list */}
             {!COMMON_TIMEZONES.some((tz) => tz.value === timezone) && (
@@ -330,7 +330,7 @@ export function EditEventForm({
       <div>
         <label
           htmlFor="location"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Default Location
         </label>
@@ -341,12 +341,12 @@ export function EditEventForm({
           onChange={(e) => setLocation(e.target.value)}
           disabled={isSubmitting || isDeleting}
           maxLength={500}
-          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+          className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-50 disabled:text-neutral-500"
+                     disabled:bg-background-muted disabled:text-foreground-muted"
         />
         {sessions.length > 1 && (
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-foreground-muted">
             This location applies to all sessions unless overridden.
           </p>
         )}
@@ -356,7 +356,7 @@ export function EditEventForm({
       <div>
         <label
           htmlFor="capacity"
-          className="block text-sm font-medium text-neutral-700 mb-1"
+          className="block text-sm font-medium text-foreground mb-1"
         >
           Default Capacity Limit
         </label>
@@ -371,18 +371,18 @@ export function EditEventForm({
           min={1}
           max={10000}
           disabled={isSubmitting || isDeleting}
-          className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+          className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-50 disabled:text-neutral-500"
+                     disabled:bg-background-muted disabled:text-foreground-muted"
         />
-        <p className="mt-1 text-xs text-neutral-500">
+        <p className="mt-1 text-xs text-foreground-muted">
           Maximum attendees per session. Leave empty for no limit.
         </p>
       </div>
 
       {/* Event Type (required) */}
       <div>
-        <label className="block text-sm font-medium text-neutral-700 mb-1">
+        <label className="block text-sm font-medium text-foreground mb-1">
           Event Type <span className="text-error-500">*</span>
         </label>
         <EventTypeSelect
@@ -400,19 +400,19 @@ export function EditEventForm({
       </div>
 
       {/* Show Attendee Count Toggle */}
-      <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+      <div className="p-4 bg-background-muted rounded-lg border border-border">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={showAttendeeCount}
             onChange={(e) => setShowAttendeeCount(e.target.checked)}
             disabled={isSubmitting || isDeleting}
-            className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500
+            className="w-5 h-5 rounded border-border text-primary-600 focus:ring-primary-500
                        disabled:opacity-50"
           />
           <div>
-            <span className="font-medium text-neutral-900">Show Attendee Count</span>
-            <p className="text-sm text-neutral-500">
+            <span className="font-medium text-foreground">Show Attendee Count</span>
+            <p className="text-sm text-foreground-muted">
               Display the number of attendees publicly on the event page
             </p>
           </div>
@@ -422,15 +422,15 @@ export function EditEventForm({
       {/* City/State Location (not virtual) */}
       {!isVirtual && (
         <div>
-          <label className="block text-sm font-medium text-neutral-700 mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             Event Location (City/State) <span className="text-error-500">*</span>
           </label>
-          <p className="text-sm text-neutral-500 mb-2">
+          <p className="text-sm text-foreground-muted mb-2">
             Where is this event taking place? (for search/filtering)
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs text-neutral-500 mb-1">City</label>
+              <label className="block text-xs text-foreground-muted mb-1">City</label>
               <input
                 id="city"
                 type="text"
@@ -439,13 +439,13 @@ export function EditEventForm({
                 placeholder="e.g., San Francisco"
                 disabled={isSubmitting || isDeleting}
                 maxLength={100}
-                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+                className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                            focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                           disabled:bg-neutral-50 disabled:text-neutral-500"
+                           disabled:bg-background-muted disabled:text-foreground-muted"
               />
             </div>
             <div>
-              <label className="block text-xs text-neutral-500 mb-1">State <span className="text-error-500">*</span></label>
+              <label className="block text-xs text-foreground-muted mb-1">State <span className="text-error-500">*</span></label>
               <StateSelect
                 value={state}
                 onChange={(val) => {
@@ -461,19 +461,19 @@ export function EditEventForm({
       )}
 
       {/* Virtual Event Toggle */}
-      <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+      <div className="p-4 bg-background-muted rounded-lg border border-border">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
             type="checkbox"
             checked={isVirtual}
             onChange={(e) => setIsVirtual(e.target.checked)}
             disabled={isSubmitting || isDeleting}
-            className="w-5 h-5 rounded border-neutral-300 text-primary-600 focus:ring-primary-500
+            className="w-5 h-5 rounded border-border text-primary-600 focus:ring-primary-500
                        disabled:opacity-50"
           />
           <div>
-            <span className="font-medium text-neutral-900">Virtual Event</span>
-            <p className="text-sm text-neutral-500">
+            <span className="font-medium text-foreground">Virtual Event</span>
+            <p className="text-sm text-foreground-muted">
               Enable a dedicated chat channel for event attendees
             </p>
           </div>
@@ -484,7 +484,7 @@ export function EditEventForm({
           <div className="mt-4">
             <label
               htmlFor="meetingUrl"
-              className="block text-sm font-medium text-neutral-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Meeting URL
             </label>
@@ -495,11 +495,11 @@ export function EditEventForm({
               onChange={(e) => setMeetingUrl(e.target.value)}
               placeholder="https://zoom.us/j/... or https://meet.google.com/..."
               disabled={isSubmitting || isDeleting}
-              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+              className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                         disabled:bg-neutral-50 disabled:text-neutral-500"
+                         disabled:bg-background-muted disabled:text-foreground-muted"
             />
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-foreground-muted">
               Optional: Provide a link to your video call or virtual meeting
             </p>
           </div>
@@ -512,8 +512,8 @@ export function EditEventForm({
           type="button"
           onClick={() => router.back()}
           disabled={isSubmitting || isDeleting}
-          className="px-6 py-2.5 border border-neutral-300 text-neutral-700 font-medium rounded-lg
-                     hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500
+          className="px-6 py-2.5 border border-border text-foreground font-medium rounded-lg
+                     hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-border
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Cancel
@@ -526,7 +526,7 @@ export function EditEventForm({
             !title.trim() ||
             sessions.some((s) => !s.startTime)
           }
-          className="flex-1 px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+          className="flex-1 px-6 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
@@ -536,11 +536,11 @@ export function EditEventForm({
 
       {/* Delete Section - Only for creator */}
       {isCreator && (
-        <div className="pt-6 mt-6 border-t border-neutral-200">
+        <div className="pt-6 mt-6 border-t border-border">
           <h3 className="text-sm font-medium text-error-600 mb-2">
             Danger Zone
           </h3>
-          <p className="text-sm text-neutral-600 mb-4">
+          <p className="text-sm text-foreground-muted mb-4">
             Deleting this event will remove all sessions and RSVPs. This action
             cannot be undone.
           </p>

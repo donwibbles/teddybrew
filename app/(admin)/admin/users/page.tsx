@@ -14,28 +14,28 @@ export default async function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Users</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Users</h1>
+        <p className="text-foreground-muted mt-1">
           View all users ({users.length} total)
         </p>
       </div>
 
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-neutral-200 bg-neutral-50">
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
+            <tr className="border-b border-border bg-background-muted">
+              <th className="px-4 py-3 text-left text-xs font-medium text-foreground-muted uppercase">
                 User
               </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase">
+              <th className="px-4 py-3 text-center text-xs font-medium text-foreground-muted uppercase">
                 Activity
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
+              <th className="px-4 py-3 text-left text-xs font-medium text-foreground-muted uppercase">
                 Joined
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-100">
+          <tbody className="divide-y divide-border">
             {users.map((user) => {
               const timestamp =
                 user.createdAt instanceof Date
@@ -62,13 +62,13 @@ export default async function AdminUsersPage() {
                           src={user.image || undefined}
                           alt={user.name || ""}
                         />
-                        <AvatarFallback className="text-xs bg-neutral-100">
+                        <AvatarFallback className="text-xs bg-background-muted">
                           {initials}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-medium text-neutral-900">
+                          <p className="font-medium text-foreground">
                             {user.name || "No name"}
                           </p>
                           {user.isAdmin && (
@@ -81,12 +81,12 @@ export default async function AdminUsersPage() {
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-neutral-500">{user.email}</p>
+                        <p className="text-xs text-foreground-muted">{user.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
+                    <div className="flex items-center justify-center gap-4 text-xs text-foreground-muted">
                       <span className="flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" />
                         {user._count.memberships}
@@ -101,7 +101,7 @@ export default async function AdminUsersPage() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-neutral-500">
+                  <td className="px-4 py-3 text-sm text-foreground-muted">
                     {timeAgo}
                   </td>
                 </tr>
@@ -111,7 +111,7 @@ export default async function AdminUsersPage() {
         </table>
 
         {users.length === 0 && (
-          <div className="p-8 text-center text-neutral-500">No users found</div>
+          <div className="p-8 text-center text-foreground-muted">No users found</div>
         )}
       </div>
     </div>

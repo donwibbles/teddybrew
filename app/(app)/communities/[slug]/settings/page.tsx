@@ -55,18 +55,18 @@ export default async function CommunitySettingsPage({
     <div className="max-w-2xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Community Settings
         </h1>
-        <p className="text-neutral-600 mt-1">
+        <p className="text-foreground-muted mt-1">
           Manage your community settings and preferences
         </p>
       </div>
 
       {/* Edit Form - Owner only */}
       {membership.isOwner && (
-        <div className="bg-white rounded-lg border border-neutral-200 p-6">
-          <h2 className="text-lg font-semibold text-neutral-900 mb-6">
+        <div className="bg-card rounded-lg border border-border p-6">
+          <h2 className="text-lg font-semibold text-foreground mb-6">
             General Settings
           </h2>
           <EditCommunityForm
@@ -87,14 +87,14 @@ export default async function CommunitySettingsPage({
 
       {/* Invitations Section - Only for private communities and owners */}
       {community.type === "PRIVATE" && membership.isOwner && (
-        <div className="bg-white rounded-lg border border-neutral-200 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <div className="flex items-center gap-2 mb-6">
-            <Mail className="h-5 w-5 text-neutral-500" />
-            <h2 className="text-lg font-semibold text-neutral-900">
+            <Mail className="h-5 w-5 text-foreground-muted" />
+            <h2 className="text-lg font-semibold text-foreground">
               Invitations
             </h2>
           </div>
-          <p className="text-neutral-600 text-sm mb-6">
+          <p className="text-foreground-muted text-sm mb-6">
             Invite people to join your private community. They&apos;ll receive an email
             with a link to accept the invitation.
           </p>
@@ -103,10 +103,10 @@ export default async function CommunitySettingsPage({
       )}
 
       {/* Spotlight Events Section */}
-      <div id="spotlight" className="bg-white rounded-lg border border-neutral-200 p-6">
+      <div id="spotlight" className="bg-card rounded-lg border border-border p-6">
         <div className="flex items-center gap-2 mb-6">
           <Star className="h-5 w-5 text-amber-500" />
-          <h2 className="text-lg font-semibold text-neutral-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Spotlight Events
           </h2>
         </div>
@@ -114,10 +114,10 @@ export default async function CommunitySettingsPage({
       </div>
 
       {/* Announcements Section */}
-      <div id="announcements" className="bg-white rounded-lg border border-neutral-200 p-6">
+      <div id="announcements" className="bg-card rounded-lg border border-border p-6">
         <div className="flex items-center gap-2 mb-6">
           <Megaphone className="h-5 w-5 text-amber-600" />
-          <h2 className="text-lg font-semibold text-neutral-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Announcements
           </h2>
         </div>
@@ -126,11 +126,11 @@ export default async function CommunitySettingsPage({
 
       {/* Danger Zone - Owner only */}
       {membership.isOwner && (
-        <div className="bg-white rounded-lg border border-error-200 p-6">
+        <div className="bg-card rounded-lg border border-error-200 p-6">
           <h2 className="text-lg font-semibold text-error-600 mb-2">
             Danger Zone
           </h2>
-          <p className="text-neutral-600 text-sm mb-6">
+          <p className="text-foreground-muted text-sm mb-6">
             Deleting your community is permanent and cannot be undone. All events
             and memberships will be deleted.
           </p>

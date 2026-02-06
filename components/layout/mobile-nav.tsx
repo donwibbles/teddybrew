@@ -136,7 +136,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
       <button
         ref={openButtonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-neutral-600 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+        className="p-2 text-foreground-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
         aria-label={isOpen ? "Close menu" : "Open menu"}
         aria-expanded={isOpen}
         aria-controls="mobile-nav-drawer"
@@ -202,7 +202,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
             <button
               ref={closeButtonRef}
               onClick={() => setIsOpen(false)}
-              className="p-2 text-neutral-600 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+              className="p-2 text-foreground-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
               aria-label="Close menu"
             >
               <svg
@@ -229,7 +229,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
               <div className="mb-4">
                 <button
                   onClick={() => setChannelsExpanded(!channelsExpanded)}
-                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-semibold text-neutral-500 uppercase tracking-wider"
+                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-semibold text-foreground-muted uppercase tracking-wider"
                 >
                   <span>Channels</span>
                   {channelsExpanded ? (
@@ -241,11 +241,11 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
                 {channelsExpanded && (
                   <ul className="space-y-1">
                     {isLoadingChannels ? (
-                      <li className="px-4 py-2 text-sm text-neutral-400">
+                      <li className="px-4 py-2 text-sm text-foreground-muted">
                         Loading channels...
                       </li>
                     ) : channels.length === 0 ? (
-                      <li className="px-4 py-2 text-sm text-neutral-400">
+                      <li className="px-4 py-2 text-sm text-foreground-muted">
                         No channels available
                       </li>
                     ) : (
@@ -256,8 +256,8 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
                             className={cn(
                               "flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
                               currentChannelId === channel.id
-                                ? "bg-primary-50 text-primary-600"
-                                : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
+                                ? "bg-primary-subtle text-primary-600"
+                                : "text-foreground hover:bg-background-hover hover:text-foreground"
                             )}
                           >
                             <Hash className="h-4 w-4 flex-shrink-0" />
@@ -285,8 +285,8 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
                       className={cn(
                         "block px-4 py-3 rounded-lg text-base font-medium transition-colors",
                         isActive
-                          ? "bg-primary-50 text-primary-600"
-                          : "text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
+                          ? "bg-primary-subtle text-primary-600"
+                          : "text-foreground hover:bg-background-hover hover:text-foreground"
                       )}
                     >
                       {link.label}
@@ -300,12 +300,12 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
           {/* User info & sign out */}
           <div className="p-4 border-t border-border">
             <div className="mb-3">
-              <p className="text-sm font-medium text-neutral-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {userName || "User"}
               </p>
-              <p className="text-xs text-neutral-500 truncate">{userEmail}</p>
+              <p className="text-xs text-foreground-muted truncate">{userEmail}</p>
             </div>
-            <SignOutButton className="w-full px-4 py-2.5 text-sm font-medium text-neutral-700 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors" />
+            <SignOutButton className="w-full px-4 py-2.5 text-sm font-medium text-foreground border border-border rounded-lg hover:bg-background-hover transition-colors" />
           </div>
         </div>
       </div>

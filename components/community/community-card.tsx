@@ -36,7 +36,7 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
   return (
     <Link
       href={`/communities/${community.slug}`}
-      className="block bg-white rounded-lg border border-neutral-200 hover:border-primary-300 hover:shadow-md transition-all overflow-hidden"
+      className="block bg-card rounded-lg border border-border hover:border-primary-300 hover:shadow-md transition-all overflow-hidden"
     >
       {/* Card Image Section */}
       <div className="relative aspect-[16/9] w-full">
@@ -56,7 +56,7 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
         <div className="absolute inset-x-0 bottom-0 p-3 flex items-end justify-end">
           <div className="flex items-center gap-1.5">
             {community.type === "PRIVATE" && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/90 backdrop-blur-sm text-neutral-700 shadow-sm">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-card/90 backdrop-blur-sm text-foreground shadow-sm">
                 <svg
                   className="w-3 h-3 mr-1"
                   fill="none"
@@ -74,7 +74,7 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
               </span>
             )}
             {community.isVirtual && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/90 backdrop-blur-sm text-blue-700 shadow-sm">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-card/90 backdrop-blur-sm text-blue-700 shadow-sm">
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                 </svg>
@@ -89,12 +89,12 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
       <div className="p-4">
         {/* Title and membership badge */}
         <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="text-lg font-semibold text-neutral-900 line-clamp-1">
+          <h3 className="text-lg font-semibold text-foreground line-clamp-1">
             {community.name}
           </h3>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {membership.isOwner && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-subtle-hover text-primary-700">
                 Owner
               </span>
             )}
@@ -108,13 +108,13 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
 
         {/* Description */}
         {community.description && (
-          <p className="text-neutral-600 text-sm mb-3 line-clamp-2">
+          <p className="text-foreground-muted text-sm mb-3 line-clamp-2">
             {community.description}
           </p>
         )}
 
         {/* Stats row */}
-        <div className="flex items-center gap-3 text-sm text-neutral-500">
+        <div className="flex items-center gap-3 text-sm text-foreground-muted">
           {/* Location */}
           {community.isVirtual ? (
             <span className="flex items-center gap-1">
@@ -148,7 +148,7 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
             </span>
           )}
 
-          <span className="text-neutral-300">·</span>
+          <span className="text-foreground-muted">·</span>
 
           {/* Members */}
           <span className="flex items-center gap-1">
@@ -168,7 +168,7 @@ export function CommunityCard({ community, membership }: CommunityCardProps) {
             {community._count.members}
           </span>
 
-          <span className="text-neutral-300">·</span>
+          <span className="text-foreground-muted">·</span>
 
           {/* Events */}
           <span className="flex items-center gap-1">

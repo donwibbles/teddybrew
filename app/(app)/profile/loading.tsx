@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 

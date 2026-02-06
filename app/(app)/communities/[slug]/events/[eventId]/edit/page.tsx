@@ -49,7 +49,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
   return (
     <div className="max-w-2xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+      <div className="flex items-center gap-2 text-sm text-foreground-muted mb-6">
         <Link
           href={`/communities/${event.community.slug}`}
           className="hover:text-primary-600"
@@ -69,15 +69,15 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-neutral-900">Edit Event</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Edit Event</h1>
+        <p className="text-foreground-muted mt-1">
           Update event details{isCreator ? " and manage co-organizers" : ""}
         </p>
       </div>
 
       <div className="space-y-8">
         {/* Edit Form */}
-        <div className="bg-white rounded-lg border border-neutral-200 p-6">
+        <div className="bg-card rounded-lg border border-border p-6">
           <EditEventForm
             event={{
               id: event.id,
@@ -101,7 +101,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
 
         {/* Co-organizer Management - Only for creator */}
         {isCreator && (
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
+          <div className="bg-card rounded-lg border border-border p-6">
             <CoOrganizerManager
               eventId={event.id}
               coOrganizers={event.coOrganizers}

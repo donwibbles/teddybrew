@@ -14,7 +14,7 @@ export default async function PublicProfileLayout({ children }: { children: Reac
     : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen bg-background-muted flex flex-col">
       {session?.user ? (
         <Header
           userEmail={session.user.email}

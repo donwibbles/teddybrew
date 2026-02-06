@@ -73,8 +73,8 @@ export function JoinLeaveButton({
         <button
           onClick={handleLeave}
           disabled={isPending}
-          className="w-full px-4 py-2 border border-neutral-300 text-neutral-700 font-medium rounded-lg
-                     hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500
+          className="w-full px-4 py-2 border border-border text-foreground font-medium rounded-lg
+                     hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-border
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isPending ? "Leaving..." : "Leave Community"}
@@ -90,7 +90,7 @@ export function JoinLeaveButton({
       <div className="text-center">
         <button
           disabled
-          className="w-full px-4 py-2 bg-neutral-100 text-neutral-500 font-medium rounded-lg cursor-not-allowed"
+          className="w-full px-4 py-2 bg-background-muted text-foreground-muted font-medium rounded-lg cursor-not-allowed"
         >
           <svg
             className="w-4 h-4 inline mr-2"
@@ -107,7 +107,7 @@ export function JoinLeaveButton({
           </svg>
           Invite Only
         </button>
-        <p className="text-xs text-neutral-500 mt-2">
+        <p className="text-xs text-foreground-muted mt-2">
           This is a private community
         </p>
       </div>
@@ -119,7 +119,7 @@ export function JoinLeaveButton({
       <button
         onClick={handleJoin}
         disabled={isPending}
-        className="w-full px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
+        className="w-full px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg
                    hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >

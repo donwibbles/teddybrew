@@ -61,15 +61,15 @@ export function AnnouncementForm({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-card rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-neutral-200">
-          <h3 className="text-lg font-semibold text-neutral-900">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+          <h3 className="text-lg font-semibold text-foreground">
             {isEditing ? "Edit Announcement" : "Create Announcement"}
           </h3>
           <button
             onClick={onClose}
-            className="p-1 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded"
+            className="p-1 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded"
           >
             <X className="w-5 h-5" />
           </button>
@@ -81,7 +81,7 @@ export function AnnouncementForm({
           <div>
             <label
               htmlFor="title"
-              className="block text-sm font-medium text-neutral-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Title
             </label>
@@ -93,9 +93,9 @@ export function AnnouncementForm({
               placeholder="Announcement title"
               maxLength={200}
               required
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-foreground-muted">
               {title.length}/200 characters
             </p>
           </div>
@@ -104,7 +104,7 @@ export function AnnouncementForm({
           <div>
             <label
               htmlFor="content"
-              className="block text-sm font-medium text-neutral-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Content
             </label>
@@ -116,16 +116,16 @@ export function AnnouncementForm({
               maxLength={5000}
               required
               rows={6}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-y"
             />
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-foreground-muted">
               {content.length}/5000 characters. Supports **bold**, *italic*, and [links](url).
             </p>
           </div>
 
           {/* Info for new announcements */}
           {!isEditing && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
               All community members will be notified when this announcement is posted.
             </div>
           )}
@@ -143,14 +143,14 @@ export function AnnouncementForm({
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium text-foreground hover:text-foreground disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isPending || !title.trim() || !content.trim()}
-              className="px-4 py-2 text-sm font-medium bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium bg-primary-subtle0 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isPending && <Loader2 className="w-4 h-4 animate-spin" />}
               {isEditing ? "Save Changes" : "Post Announcement"}

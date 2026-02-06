@@ -32,10 +32,10 @@ export function FeaturedEventsSection({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-6">
+    <div className="bg-card rounded-lg border border-border p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-neutral-900">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
           Featured Events
         </h2>
@@ -75,16 +75,16 @@ function FeaturedEventCard({
   return (
     <Link
       href={`/communities/${communitySlug}/events/${event.id}`}
-      className="block bg-neutral-50 rounded-lg border border-neutral-200 p-4 hover:border-primary-300 hover:bg-neutral-100 transition-colors"
+      className="block bg-background-muted rounded-lg border border-border p-4 hover:border-primary-300 hover:bg-background-hover transition-colors"
     >
       {/* Event Title */}
-      <h3 className="font-medium text-neutral-900 mb-2 line-clamp-2">
+      <h3 className="font-medium text-foreground mb-2 line-clamp-2">
         {event.title}
       </h3>
 
       {/* Date/Time */}
       {firstSession && (
-        <div className="flex items-center gap-1.5 text-sm text-neutral-600 mb-1.5">
+        <div className="flex items-center gap-1.5 text-sm text-foreground-muted mb-1.5">
           <Calendar className="w-4 h-4 flex-shrink-0" />
           <span>
             {new Date(firstSession.startTime).toLocaleDateString("en-US", {
@@ -100,7 +100,7 @@ function FeaturedEventCard({
       )}
 
       {/* Location */}
-      <div className="flex items-center gap-1.5 text-sm text-neutral-500">
+      <div className="flex items-center gap-1.5 text-sm text-foreground-muted">
         {event.isVirtual ? (
           <>
             <Video className="w-4 h-4 flex-shrink-0" />

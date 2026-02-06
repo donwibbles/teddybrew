@@ -180,13 +180,13 @@ export function ProfileEditForm({
 
       {/* Private Information Section */}
       <div className="space-y-4">
-        <div className="flex items-center gap-2 pb-2 border-b border-neutral-200">
-          <Lock className="h-4 w-4 text-neutral-400" />
-          <h3 className="text-sm font-medium text-neutral-600 uppercase tracking-wide">
+        <div className="flex items-center gap-2 pb-2 border-b border-border">
+          <Lock className="h-4 w-4 text-foreground-muted" />
+          <h3 className="text-sm font-medium text-foreground-muted uppercase tracking-wide">
             Private Information
           </h3>
         </div>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-foreground-muted">
           Your name is only visible to you and community administrators. It won&apos;t be shown publicly.
         </p>
 
@@ -195,7 +195,7 @@ export function ProfileEditForm({
           <div>
             <label
               htmlFor="firstName"
-              className="block text-sm font-medium text-neutral-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               First Name <span className="text-error-500">*</span>
             </label>
@@ -205,9 +205,9 @@ export function ProfileEditForm({
               {...register("firstName")}
               placeholder="Your first name"
               disabled={isSubmitting}
-              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+              className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                         disabled:bg-neutral-50 disabled:text-neutral-500"
+                         disabled:bg-background-muted disabled:text-foreground-muted"
             />
             {errors.firstName && (
               <p className="mt-1 text-sm text-error-600">{errors.firstName.message}</p>
@@ -218,7 +218,7 @@ export function ProfileEditForm({
           <div>
             <label
               htmlFor="lastName"
-              className="block text-sm font-medium text-neutral-700 mb-1"
+              className="block text-sm font-medium text-foreground mb-1"
             >
               Last Name <span className="text-error-500">*</span>
             </label>
@@ -228,9 +228,9 @@ export function ProfileEditForm({
               {...register("lastName")}
               placeholder="Your last name"
               disabled={isSubmitting}
-              className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+              className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                         disabled:bg-neutral-50 disabled:text-neutral-500"
+                         disabled:bg-background-muted disabled:text-foreground-muted"
             />
             {errors.lastName && (
               <p className="mt-1 text-sm text-error-600">{errors.lastName.message}</p>
@@ -241,12 +241,12 @@ export function ProfileEditForm({
 
       {/* Public Profile Section */}
       <div className="space-y-4">
-        <div className="pb-2 border-b border-neutral-200">
-          <h3 className="text-sm font-medium text-neutral-600 uppercase tracking-wide">
+        <div className="pb-2 border-b border-border">
+          <h3 className="text-sm font-medium text-foreground-muted uppercase tracking-wide">
             Public Profile
           </h3>
         </div>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-foreground-muted">
           This information is visible to other users on your public profile and in communities.
         </p>
 
@@ -254,7 +254,7 @@ export function ProfileEditForm({
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-neutral-700 mb-1"
+            className="block text-sm font-medium text-foreground mb-1"
           >
             Display Name <span className="text-error-500">*</span>
           </label>
@@ -266,14 +266,14 @@ export function ProfileEditForm({
             })}
             placeholder="How others will see you"
             disabled={isSubmitting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+            className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500"
+                       disabled:bg-background-muted disabled:text-foreground-muted"
           />
           {errors.name && (
             <p className="mt-1 text-sm text-error-600">{errors.name.message}</p>
           )}
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-foreground-muted">
             This is how other users will see you in chat and communities
           </p>
         </div>
@@ -282,26 +282,26 @@ export function ProfileEditForm({
         <div>
           <label
             htmlFor="username"
-            className="block text-sm font-medium text-neutral-700 mb-1"
+            className="block text-sm font-medium text-foreground mb-1"
           >
             Username <span className="text-error-500">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400">@</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-foreground-muted">@</span>
             <input
               id="username"
               type="text"
               {...register("username")}
               placeholder="username"
               disabled={isSubmitting}
-              className="w-full pl-8 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+              className="w-full pl-8 pr-10 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                         disabled:bg-neutral-50 disabled:text-neutral-500"
+                         disabled:bg-background-muted disabled:text-foreground-muted"
             />
             {usernameStatus !== "idle" && (
               <span className="absolute right-4 top-1/2 -translate-y-1/2">
                 {usernameStatus === "checking" && (
-                  <LoadingSpinner className="h-4 w-4 text-neutral-400" />
+                  <LoadingSpinner className="h-4 w-4 text-foreground-muted" />
                 )}
                 {usernameStatus === "available" && (
                   <svg className="h-4 w-4 text-success-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -325,7 +325,7 @@ export function ProfileEditForm({
           {usernameStatus === "available" && !errors.username && (
             <p className="mt-1 text-sm text-success-600">Username is available</p>
           )}
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-foreground-muted">
             Used for @mentions and your profile URL. 3-20 characters, letters, numbers, and underscores only.
           </p>
         </div>
@@ -334,7 +334,7 @@ export function ProfileEditForm({
         <div>
           <label
             htmlFor="bio"
-            className="block text-sm font-medium text-neutral-700 mb-1"
+            className="block text-sm font-medium text-foreground mb-1"
           >
             About You
           </label>
@@ -344,21 +344,21 @@ export function ProfileEditForm({
             rows={3}
             placeholder="Tell others a bit about yourself..."
             disabled={isSubmitting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+            className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+                       disabled:bg-background-muted disabled:text-foreground-muted resize-none"
           />
           {errors.bio && (
             <p className="mt-1 text-sm text-error-600">{errors.bio.message}</p>
           )}
-          <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
+          <p className="mt-1 text-xs text-foreground-muted">Max 500 characters</p>
         </div>
 
         {/* Interests field */}
         <div>
           <label
             htmlFor="interests"
-            className="block text-sm font-medium text-neutral-700 mb-1"
+            className="block text-sm font-medium text-foreground mb-1"
           >
             What issues matter most to you?
           </label>
@@ -368,21 +368,21 @@ export function ProfileEditForm({
             rows={3}
             placeholder="Share what causes or topics you care about..."
             disabled={isSubmitting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+            className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+                       disabled:bg-background-muted disabled:text-foreground-muted resize-none"
           />
           {errors.interests && (
             <p className="mt-1 text-sm text-error-600">{errors.interests.message}</p>
           )}
-          <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
+          <p className="mt-1 text-xs text-foreground-muted">Max 500 characters</p>
         </div>
 
         {/* Community Hope field */}
         <div>
           <label
             htmlFor="communityHope"
-            className="block text-sm font-medium text-neutral-700 mb-1"
+            className="block text-sm font-medium text-foreground mb-1"
           >
             What gives you hope about building community?
           </label>
@@ -392,107 +392,107 @@ export function ProfileEditForm({
             rows={3}
             placeholder="Share what inspires you about connecting with others..."
             disabled={isSubmitting}
-            className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+            className="w-full px-4 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                       disabled:bg-neutral-50 disabled:text-neutral-500 resize-none"
+                       disabled:bg-background-muted disabled:text-foreground-muted resize-none"
           />
           {errors.communityHope && (
             <p className="mt-1 text-sm text-error-600">{errors.communityHope.message}</p>
           )}
-          <p className="mt-1 text-xs text-neutral-500">Max 500 characters</p>
+          <p className="mt-1 text-xs text-foreground-muted">Max 500 characters</p>
         </div>
 
         {/* Privacy Settings */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-neutral-700">Privacy Settings</h4>
+          <h4 className="text-sm font-medium text-foreground">Privacy Settings</h4>
 
           {/* Public profile toggle */}
-          <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-lg">
+          <div className="flex items-start gap-3 p-4 bg-background-muted rounded-lg">
             <input
               type="checkbox"
               id="isPublic"
               {...register("isPublic")}
               disabled={isSubmitting}
-              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+              className="mt-1 h-4 w-4 text-primary-600 border-border rounded
                          focus:ring-primary-500 disabled:opacity-50"
             />
             <div>
               <label
                 htmlFor="isPublic"
-                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+                className="block text-sm font-medium text-foreground cursor-pointer"
               >
                 Allow others to view your profile
               </label>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-foreground-muted mt-0.5">
                 When enabled, other users can view your profile at /u/{watch("username") || "username"}
               </p>
             </div>
           </div>
 
           {/* Show communities toggle */}
-          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+          <div className="flex items-start gap-3 p-3 border border-border rounded-lg">
             <input
               type="checkbox"
               id="showCommunities"
               {...register("showCommunities")}
               disabled={isSubmitting}
-              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+              className="mt-1 h-4 w-4 text-primary-600 border-border rounded
                          focus:ring-primary-500 disabled:opacity-50"
             />
             <div>
               <label
                 htmlFor="showCommunities"
-                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+                className="block text-sm font-medium text-foreground cursor-pointer"
               >
                 Show my communities on profile
               </label>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-foreground-muted mt-0.5">
                 Display the public communities you&apos;ve joined
               </p>
             </div>
           </div>
 
           {/* Show upcoming events toggle */}
-          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+          <div className="flex items-start gap-3 p-3 border border-border rounded-lg">
             <input
               type="checkbox"
               id="showUpcomingEvents"
               {...register("showUpcomingEvents")}
               disabled={isSubmitting}
-              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+              className="mt-1 h-4 w-4 text-primary-600 border-border rounded
                          focus:ring-primary-500 disabled:opacity-50"
             />
             <div>
               <label
                 htmlFor="showUpcomingEvents"
-                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+                className="block text-sm font-medium text-foreground cursor-pointer"
               >
                 Show my upcoming events
               </label>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-foreground-muted mt-0.5">
                 Display events you&apos;re organizing or attending
               </p>
             </div>
           </div>
 
           {/* Show past events toggle */}
-          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+          <div className="flex items-start gap-3 p-3 border border-border rounded-lg">
             <input
               type="checkbox"
               id="showPastEvents"
               {...register("showPastEvents")}
               disabled={isSubmitting}
-              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+              className="mt-1 h-4 w-4 text-primary-600 border-border rounded
                          focus:ring-primary-500 disabled:opacity-50"
             />
             <div>
               <label
                 htmlFor="showPastEvents"
-                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+                className="block text-sm font-medium text-foreground cursor-pointer"
               >
                 Show my past events
               </label>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-foreground-muted mt-0.5">
                 Display your event history on your profile
               </p>
             </div>
@@ -501,25 +501,25 @@ export function ProfileEditForm({
 
         {/* Email Preferences */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-neutral-700">Email Preferences</h4>
+          <h4 className="text-sm font-medium text-foreground">Email Preferences</h4>
 
-          <div className="flex items-start gap-3 p-3 border border-neutral-200 rounded-lg">
+          <div className="flex items-start gap-3 p-3 border border-border rounded-lg">
             <input
               type="checkbox"
               id="emailEventReminders"
               {...register("emailEventReminders")}
               disabled={isSubmitting}
-              className="mt-1 h-4 w-4 text-primary-600 border-neutral-300 rounded
+              className="mt-1 h-4 w-4 text-primary-600 border-border rounded
                          focus:ring-primary-500 disabled:opacity-50"
             />
             <div>
               <label
                 htmlFor="emailEventReminders"
-                className="block text-sm font-medium text-neutral-900 cursor-pointer"
+                className="block text-sm font-medium text-foreground cursor-pointer"
               >
                 Event reminder emails
               </label>
-              <p className="text-xs text-neutral-500 mt-0.5">
+              <p className="text-xs text-foreground-muted mt-0.5">
                 Receive email reminders about upcoming events you&apos;re attending
               </p>
             </div>
@@ -534,8 +534,8 @@ export function ProfileEditForm({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-6 py-2.5 border border-neutral-300 text-neutral-700 font-medium rounded-lg
-                       hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500
+            className="px-6 py-2.5 border border-border text-foreground font-medium rounded-lg
+                       hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-border
                        disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Cancel
@@ -544,7 +544,7 @@ export function ProfileEditForm({
         <button
           type="submit"
           disabled={isSubmitting || usernameStatus === "taken" || usernameStatus === "checking" || (!isDirty && !isOnboarding)}
-          className="flex-1 px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+          className="flex-1 px-6 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >

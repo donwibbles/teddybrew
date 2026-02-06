@@ -115,40 +115,40 @@ export function ModerationLog({ communityId }: ModerationLogProps) {
         return (
           <div
             key={log.id}
-            className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg"
+            className="flex items-start gap-3 p-3 bg-background-muted rounded-lg"
           >
             <Avatar className="h-8 w-8 shrink-0">
               <AvatarImage
                 src={log.moderator.image || undefined}
                 alt={log.moderator.name || ""}
               />
-              <AvatarFallback className="text-xs bg-neutral-200">
+              <AvatarFallback className="text-xs bg-background-muted">
                 {initials}
               </AvatarFallback>
             </Avatar>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium text-neutral-900">
+                <span className="font-medium text-foreground">
                   {log.moderator.name || "Anonymous"}
                 </span>
-                <span className="text-neutral-500">
+                <span className="text-foreground-muted">
                   {actionLabels[log.action] || log.action.toLowerCase()}
                 </span>
               </div>
 
               {log.targetTitle && (
-                <div className="flex items-center gap-1.5 mt-1 text-xs text-neutral-500">
+                <div className="flex items-center gap-1.5 mt-1 text-xs text-foreground-muted">
                   <TargetIcon className="h-3.5 w-3.5" />
                   <span className="truncate">{log.targetTitle}</span>
                 </div>
               )}
 
-              <div className="text-xs text-neutral-400 mt-1">{timeAgo}</div>
+              <div className="text-xs text-foreground-muted mt-1">{timeAgo}</div>
             </div>
 
             <div className="shrink-0">
-              <ActionIcon className="h-4 w-4 text-neutral-400" />
+              <ActionIcon className="h-4 w-4 text-foreground-muted" />
             </div>
           </div>
         );
@@ -159,12 +159,12 @@ export function ModerationLog({ communityId }: ModerationLogProps) {
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="flex items-start gap-3 p-3 bg-neutral-50 rounded-lg animate-pulse"
+              className="flex items-start gap-3 p-3 bg-background-muted rounded-lg animate-pulse"
             >
-              <div className="h-8 w-8 rounded-full bg-neutral-200" />
+              <div className="h-8 w-8 rounded-full bg-background-muted" />
               <div className="flex-1">
-                <div className="h-4 w-32 bg-neutral-200 rounded mb-2" />
-                <div className="h-3 w-48 bg-neutral-100 rounded" />
+                <div className="h-4 w-32 bg-background-muted rounded mb-2" />
+                <div className="h-3 w-48 bg-background-muted rounded" />
               </div>
             </div>
           ))}
@@ -174,7 +174,7 @@ export function ModerationLog({ communityId }: ModerationLogProps) {
       {hasMore && !isLoading && (
         <button
           onClick={loadMore}
-          className="w-full py-2 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+          className="w-full py-2 text-sm text-primary-600 hover:text-primary-700 hover:bg-primary-subtle rounded-lg transition-colors"
         >
           Load more
         </button>

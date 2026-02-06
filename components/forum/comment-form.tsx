@@ -76,8 +76,8 @@ export function CommentForm({
           disabled={isSubmitting}
           autoFocus={autoFocus}
           rows={3}
-          className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm
-                     placeholder:text-neutral-400
+          className="w-full rounded-lg border border-input-border px-3 py-2 text-sm
+                     bg-input text-foreground placeholder:text-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                      disabled:opacity-50 disabled:cursor-not-allowed
                      resize-y min-h-[80px]"
@@ -86,7 +86,7 @@ export function CommentForm({
           <button
             type="button"
             onClick={onCancel}
-            className="absolute top-2 right-2 p-1 text-neutral-400 hover:text-neutral-600 rounded"
+            className="absolute top-2 right-2 p-1 text-foreground-muted hover:text-foreground rounded"
             aria-label="Cancel reply"
           >
             <X className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function CommentForm({
         <p className="text-sm text-error-500">{errors.content.message}</p>
       )}
       <div className="flex items-center justify-between">
-        <p className="text-xs text-neutral-500">Markdown supported</p>
+        <p className="text-xs text-foreground-muted">Markdown supported</p>
         <div className="flex items-center gap-2">
           {onCancel && (
             <Button

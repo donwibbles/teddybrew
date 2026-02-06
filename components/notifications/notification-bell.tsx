@@ -157,7 +157,7 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
       <button
         ref={buttonRef}
         onClick={handleToggle}
-        className="relative p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+        className="relative p-2 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg transition-colors"
         aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
         aria-expanded={isOpen}
         aria-haspopup="true"
@@ -166,7 +166,7 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
         <Bell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span
-            className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-500 text-[10px] font-medium text-white"
+            className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-subtle0 text-[10px] font-medium text-white"
             aria-hidden="true"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -181,11 +181,11 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
           id="notification-dropdown"
           role="menu"
           aria-label="Notifications"
-          className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden bg-white rounded-lg border border-neutral-200 shadow-lg z-50"
+          className="absolute right-0 mt-2 w-80 max-h-96 overflow-hidden bg-card rounded-lg border border-border shadow-lg z-50"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100">
-            <h3 id="notification-dropdown-title" className="font-semibold text-neutral-900">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <h3 id="notification-dropdown-title" className="font-semibold text-foreground">
               Notifications
             </h3>
             {unreadCount > 0 && (
@@ -203,13 +203,13 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
           {/* Notification List */}
           <div className="max-h-72 overflow-y-auto">
             {isLoading ? (
-              <div className="p-4 text-center text-neutral-500">
+              <div className="p-4 text-center text-foreground-muted">
                 Loading...
               </div>
             ) : notifications.length === 0 ? (
               <div className="p-8 text-center">
-                <Bell className="h-8 w-8 text-neutral-300 mx-auto mb-2" />
-                <p className="text-sm text-neutral-500">No notifications yet</p>
+                <Bell className="h-8 w-8 text-foreground-muted mx-auto mb-2" />
+                <p className="text-sm text-foreground-muted">No notifications yet</p>
               </div>
             ) : (
               notifications.map((notification, index) => (
@@ -221,26 +221,26 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
                   onClick={() => handleNotificationClick(notification)}
                   role="menuitem"
                   tabIndex={focusedIndex === index ? 0 : -1}
-                  className={`w-full text-left px-4 py-3 hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors border-b border-neutral-50 last:border-0 ${
-                    !notification.isRead ? "bg-primary-50/50" : ""
+                  className={`w-full text-left px-4 py-3 hover:bg-background-hover focus:bg-background-muted focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500 transition-colors border-b border-border last:border-0 ${
+                    !notification.isRead ? "bg-primary-subtle/50" : ""
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${
-                        notification.isRead ? "bg-transparent" : "bg-primary-500"
+                        notification.isRead ? "bg-transparent" : "bg-primary-subtle0"
                       }`}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-neutral-900 truncate">
+                      <p className="text-sm font-medium text-foreground truncate">
                         {notification.title}
                       </p>
                       {notification.message && (
-                        <p className="text-xs text-neutral-500 mt-0.5 line-clamp-2">
+                        <p className="text-xs text-foreground-muted mt-0.5 line-clamp-2">
                           {notification.message}
                         </p>
                       )}
-                      <p className="text-xs text-neutral-400 mt-1">
+                      <p className="text-xs text-foreground-muted mt-1">
                         {formatDistanceToNow(
                           typeof notification.createdAt === "string"
                             ? new Date(notification.createdAt)

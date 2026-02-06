@@ -21,7 +21,7 @@ export function DocumentItemSkeleton() {
 
 export function DocumentListSkeleton({ count = 5 }: { count?: number }) {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 divide-y divide-neutral-200">
+    <div className="bg-card rounded-lg border border-border divide-y divide-border">
       {Array.from({ length: count }).map((_, i) => (
         <DocumentItemSkeleton key={i} />
       ))}
@@ -35,7 +35,7 @@ export function FolderGridSkeleton({ count = 4 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="bg-white rounded-lg border border-neutral-200 p-4"
+          className="bg-card rounded-lg border border-border p-4"
         >
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 rounded" />

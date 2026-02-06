@@ -121,9 +121,9 @@ export function EventFilters({
   const activeSecondaryCount = [virtualOnly, community].filter(Boolean).length;
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-4">
+    <div className="bg-card rounded-lg border border-border p-4 space-y-4">
       {/* Prominent Upcoming/Past tabs */}
-      <div className="flex gap-1 p-1 bg-neutral-100 rounded-lg w-fit">
+      <div className="flex gap-1 p-1 bg-background-muted rounded-lg w-fit">
         <button
           type="button"
           onClick={() => {
@@ -132,8 +132,8 @@ export function EventFilters({
           }}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             !showPast
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-600 hover:text-neutral-900"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-foreground-muted hover:text-foreground"
           }`}
         >
           Upcoming
@@ -146,8 +146,8 @@ export function EventFilters({
           }}
           className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
             showPast
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-600 hover:text-neutral-900"
+              ? "bg-card text-foreground shadow-sm"
+              : "text-foreground-muted hover:text-foreground"
           }`}
         >
           Past
@@ -164,12 +164,12 @@ export function EventFilters({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search events..."
-              className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg text-foreground placeholder-foreground-muted
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400"
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -190,7 +190,7 @@ export function EventFilters({
             updateFilters({ type: e.target.value });
           }}
           aria-label="Filter by event type"
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+          className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
           <option value="">All Types</option>
@@ -210,9 +210,9 @@ export function EventFilters({
           }}
           aria-label="Filter by state"
           disabled={virtualOnly}
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+          className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-100 disabled:text-neutral-500"
+                     disabled:bg-background-muted disabled:text-foreground-muted"
         >
           <option value="">All States</option>
           {US_STATES.map((state) => (
@@ -231,7 +231,7 @@ export function EventFilters({
         >
           <div className="flex flex-wrap gap-3 items-center">
             {/* Virtual toggle */}
-            <label className="flex items-center gap-2 px-3 py-2 border border-neutral-300 rounded-lg bg-white text-sm cursor-pointer hover:bg-neutral-50">
+            <label className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-card text-sm cursor-pointer hover:bg-background-hover">
               <input
                 type="checkbox"
                 checked={virtualOnly}
@@ -241,7 +241,7 @@ export function EventFilters({
                 }}
                 className="h-4 w-4 text-primary-500 focus:ring-primary-500 rounded"
               />
-              <span className="text-neutral-700">Virtual Only</span>
+              <span className="text-foreground">Virtual Only</span>
             </label>
 
             {/* Community Filter */}
@@ -252,7 +252,7 @@ export function EventFilters({
                 updateFilters({ community: e.target.value });
               }}
               aria-label="Filter by community"
-              className="px-4 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+              className="px-4 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">All Communities</option>
@@ -270,7 +270,7 @@ export function EventFilters({
           <button
             type="button"
             onClick={handleClearFilters}
-            className="px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="px-3 py-2 text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg transition-colors"
           >
             Clear filters
           </button>

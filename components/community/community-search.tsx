@@ -149,7 +149,7 @@ export function CommunitySearch({
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {isPending ? (
               <svg
-                className="animate-spin h-5 w-5 text-neutral-400"
+                className="animate-spin h-5 w-5 text-foreground-muted"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -170,7 +170,7 @@ export function CommunitySearch({
               </svg>
             ) : (
               <svg
-                className="h-5 w-5 text-neutral-400"
+                className="h-5 w-5 text-foreground-muted"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -191,14 +191,14 @@ export function CommunitySearch({
             onChange={handleQueryChange}
             placeholder="Search communities...)"
             aria-label="Search communities. Press slash or Command+K to focus."
-            className="block w-full pl-10 pr-10 py-2.5 border border-neutral-300 rounded-lg text-neutral-900 placeholder-neutral-400
+            className="block w-full pl-10 pr-10 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
           {query && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-foreground-muted hover:text-foreground-muted"
               aria-label="Clear search"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -219,9 +219,9 @@ export function CommunitySearch({
           onChange={handleStateChange}
           aria-label="Filter by state"
           disabled={virtualOnly}
-          className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+          className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
-                     disabled:bg-neutral-100 disabled:text-neutral-500"
+                     disabled:bg-background-muted disabled:text-foreground-muted"
         >
           <option value="">All States</option>
           {US_STATES.map((state) => (
@@ -232,14 +232,14 @@ export function CommunitySearch({
         </select>
 
         {/* Virtual toggle */}
-        <label className="flex items-center gap-2 px-3 py-2 border border-neutral-300 rounded-lg bg-white text-sm cursor-pointer hover:bg-neutral-50">
+        <label className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-card text-sm cursor-pointer hover:bg-background-hover">
           <input
             type="checkbox"
             checked={virtualOnly}
             onChange={handleVirtualChange}
             className="h-4 w-4 text-primary-500 focus:ring-primary-500 rounded"
           />
-          <span className="text-neutral-700">Virtual</span>
+          <span className="text-foreground">Virtual</span>
         </label>
       </div>
 
@@ -255,7 +255,7 @@ export function CommunitySearch({
               value={sizeFilter}
               onChange={handleSizeChange}
               aria-label="Filter by community size"
-              className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+              className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="all">All Sizes</option>
@@ -269,7 +269,7 @@ export function CommunitySearch({
               value={sortBy}
               onChange={handleSortChange}
               aria-label="Sort communities by"
-              className="px-3 py-2 border border-neutral-300 rounded-lg text-neutral-900 bg-white text-sm
+              className="px-3 py-2 border border-border rounded-lg text-foreground bg-card text-sm
                          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="recent">Recently Created</option>
@@ -283,7 +283,7 @@ export function CommunitySearch({
           <button
             type="button"
             onClick={handleClear}
-            className="px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="px-3 py-2 text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg transition-colors"
           >
             Clear all
           </button>

@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -10,7 +10,7 @@ export default function EventDetailLoading() {
       {/* Breadcrumb Skeleton */}
       <div className="flex items-center gap-2 mb-6">
         <Skeleton className="h-4 w-32" />
-        <span className="text-neutral-300">/</span>
+        <span className="text-foreground-muted">/</span>
         <Skeleton className="h-4 w-16" />
       </div>
 
@@ -23,7 +23,7 @@ export default function EventDetailLoading() {
           </div>
 
           {/* Date & Time Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-4">
+          <div className="bg-card rounded-lg border border-border p-4">
             <div className="flex items-start gap-3">
               <Skeleton className="h-9 w-9 rounded-lg" />
               <div className="space-y-2">
@@ -34,7 +34,7 @@ export default function EventDetailLoading() {
           </div>
 
           {/* Location Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-4">
+          <div className="bg-card rounded-lg border border-border p-4">
             <div className="flex items-start gap-3">
               <Skeleton className="h-9 w-9 rounded-lg" />
               <div className="space-y-2">
@@ -45,7 +45,7 @@ export default function EventDetailLoading() {
           </div>
 
           {/* Description Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
+          <div className="bg-card rounded-lg border border-border p-6">
             <Skeleton className="h-5 w-16 mb-3" />
             <div className="space-y-2">
               <Skeleton className="h-4 w-full" />
@@ -55,7 +55,7 @@ export default function EventDetailLoading() {
           </div>
 
           {/* Organizers Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
+          <div className="bg-card rounded-lg border border-border p-6">
             <Skeleton className="h-5 w-24 mb-4" />
             <div className="space-y-3">
               {[1, 2].map((i) => (
@@ -71,7 +71,7 @@ export default function EventDetailLoading() {
           </div>
 
           {/* Attendees Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
+          <div className="bg-card rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-4">
               <Skeleton className="h-5 w-24" />
               <Skeleton className="h-4 w-16" />
@@ -87,14 +87,14 @@ export default function EventDetailLoading() {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* RSVP Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-24">
+          <div className="bg-card rounded-lg border border-border p-6 sticky top-24">
             <Skeleton className="h-4 w-24 mb-2" />
             <Skeleton className="h-10 w-full mb-4" />
             <Skeleton className="h-4 w-32 mx-auto" />
           </div>
 
           {/* Community Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-4">
+          <div className="bg-card rounded-lg border border-border p-4">
             <Skeleton className="h-3 w-16 mb-2" />
             <Skeleton className="h-5 w-32" />
           </div>

@@ -97,7 +97,7 @@ export function GlobalPostList({
 
   if (posts.length === 0 && !isLoading) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200">
+      <div className="bg-card rounded-lg border border-border">
         <EmptyState
           icon={FileText}
           title="No posts yet"
@@ -134,13 +134,13 @@ export function GlobalPostList({
       {/* Loading indicator / scroll trigger */}
       <div ref={ref} className="py-4">
         {isLoading && (
-          <div className="flex items-center justify-center gap-2 text-neutral-500">
+          <div className="flex items-center justify-center gap-2 text-foreground-muted">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Loading more posts...</span>
           </div>
         )}
         {!hasMore && posts.length > 0 && (
-          <p className="text-center text-sm text-neutral-400">
+          <p className="text-center text-sm text-foreground-muted">
             No more posts to load
           </p>
         )}

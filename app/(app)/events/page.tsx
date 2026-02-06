@@ -85,14 +85,14 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Events</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Events</h1>
+        <p className="text-foreground-muted mt-1">
           Discover upcoming events in your communities
         </p>
       </div>
 
       {/* Filters */}
-      <Suspense fallback={<div className="h-12 bg-neutral-100 rounded animate-pulse" />}>
+      <Suspense fallback={<div className="h-12 bg-background-muted rounded animate-pulse" />}>
         <EventFilters communities={communities} />
       </Suspense>
 
@@ -103,7 +103,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="h-48 bg-neutral-100 rounded-lg animate-pulse"
+                className="h-48 bg-background-muted rounded-lg animate-pulse"
               />
             ))}
           </div>

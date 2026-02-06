@@ -90,7 +90,7 @@ export function TipTapEditor({
 
       <div
         className={cn(
-          "overflow-hidden rounded-lg border border-neutral-200 bg-white",
+          "overflow-hidden rounded-lg border border-border bg-card",
           disabled && "opacity-60",
           className
         )}

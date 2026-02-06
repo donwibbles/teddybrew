@@ -48,19 +48,19 @@ export default function CommunityError({
               />
             </svg>
           </div>
-          <CardTitle className="text-xl text-neutral-900">Community Not Available</CardTitle>
+          <CardTitle className="text-xl text-foreground">Community Not Available</CardTitle>
           <CardDescription>
             We couldn&apos;t load this community. It may have been removed or there was an error.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {process.env.NODE_ENV === "development" && (
-            <div className="p-3 bg-neutral-100 rounded-lg">
-              <p className="text-sm font-mono text-neutral-700 break-all">
+            <div className="p-3 bg-background-muted rounded-lg">
+              <p className="text-sm font-mono text-foreground break-all">
                 {error.message}
               </p>
               {error.digest && (
-                <p className="text-xs text-neutral-500 mt-1">Error ID: {error.digest}</p>
+                <p className="text-xs text-foreground-muted mt-1">Error ID: {error.digest}</p>
               )}
             </div>
           )}

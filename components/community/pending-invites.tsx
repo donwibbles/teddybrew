@@ -73,15 +73,15 @@ export function PendingInvites({ invites, onUpdate }: PendingInvitesProps) {
 
   if (invites.length === 0) {
     return (
-      <div className="text-center py-6 text-neutral-500">
-        <Mail className="h-8 w-8 mx-auto mb-2 text-neutral-300" />
+      <div className="text-center py-6 text-foreground-muted">
+        <Mail className="h-8 w-8 mx-auto mb-2 text-foreground-muted" />
         <p className="text-sm">No pending invitations</p>
       </div>
     );
   }
 
   return (
-    <div className="divide-y divide-neutral-200">
+    <div className="divide-y divide-border">
       {invites.map((invite) => {
         const expired = isExpired(invite.expiresAt);
         const isResending = loadingIds.has(`resend-${invite.id}`);
@@ -96,12 +96,12 @@ export function PendingInvites({ invites, onUpdate }: PendingInvitesProps) {
           >
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-neutral-400 shrink-0" />
-                <p className="font-medium text-neutral-900 truncate">
+                <Mail className="h-4 w-4 text-foreground-muted shrink-0" />
+                <p className="font-medium text-foreground truncate">
                   {invite.email}
                 </p>
               </div>
-              <div className="flex items-center gap-3 mt-1 text-xs text-neutral-500">
+              <div className="flex items-center gap-3 mt-1 text-xs text-foreground-muted">
                 <span>Sent {formatDate(invite.createdAt)}</span>
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
@@ -118,7 +118,7 @@ export function PendingInvites({ invites, onUpdate }: PendingInvitesProps) {
               <button
                 onClick={() => handleResend(invite.id)}
                 disabled={isResending || isCancelling}
-                className="p-2 text-neutral-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg
+                className="p-2 text-foreground-muted hover:text-primary-600 hover:bg-primary-subtle rounded-lg
                            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 title="Resend invitation"
               >
@@ -131,7 +131,7 @@ export function PendingInvites({ invites, onUpdate }: PendingInvitesProps) {
               <button
                 onClick={() => handleCancel(invite.id)}
                 disabled={isResending || isCancelling}
-                className="p-2 text-neutral-600 hover:text-error-600 hover:bg-error-50 rounded-lg
+                className="p-2 text-foreground-muted hover:text-error-600 hover:bg-error-50 rounded-lg
                            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 title="Cancel invitation"
               >

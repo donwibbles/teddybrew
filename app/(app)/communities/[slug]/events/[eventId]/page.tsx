@@ -42,7 +42,7 @@ export default async function EventPage({ params }: EventPageProps) {
     return (
       <div className="max-w-4xl mx-auto">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+        <div className="flex items-center gap-2 text-sm text-foreground-muted mb-6">
           <Link
             href={`/communities/${event.community.slug}`}
             className="hover:text-primary-600"
@@ -79,7 +79,7 @@ export default async function EventPage({ params }: EventPageProps) {
   return (
     <div className="max-w-4xl mx-auto">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+      <div className="flex items-center gap-2 text-sm text-foreground-muted mb-6">
         <Link
           href={`/communities/${event.community.slug}`}
           className="hover:text-primary-600"
@@ -110,18 +110,18 @@ export default async function EventPage({ params }: EventPageProps) {
           {/* Event Header */}
           <div>
             {isPast && (
-              <span className="inline-block px-2 py-1 bg-neutral-100 text-neutral-600 text-xs font-medium rounded mb-3">
+              <span className="inline-block px-2 py-1 bg-background-muted text-foreground-muted text-xs font-medium rounded mb-3">
                 Past Event
               </span>
             )}
-            <h1 className="text-2xl font-semibold text-neutral-900">
+            <h1 className="text-2xl font-semibold text-foreground">
               {event.title}
             </h1>
           </div>
 
           {/* Sessions */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
-            <h2 className="font-medium text-neutral-900 mb-4">
+          <div className="bg-card rounded-lg border border-border p-6">
+            <h2 className="font-medium text-foreground mb-4">
               {event.sessions.length > 1
                 ? `Sessions (${event.sessions.length})`
                 : "When"}
@@ -139,9 +139,9 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Location */}
           {event.location && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-4">
+            <div className="bg-card rounded-lg border border-border p-4">
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-primary-50 rounded-lg">
+                <div className="p-2 bg-primary-subtle rounded-lg">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     className="h-5 w-5 text-primary-600"
@@ -156,8 +156,8 @@ export default async function EventPage({ params }: EventPageProps) {
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-neutral-900">Location</p>
-                  <p className="text-sm text-neutral-600">{event.location}</p>
+                  <p className="font-medium text-foreground">Location</p>
+                  <p className="text-sm text-foreground-muted">{event.location}</p>
                 </div>
               </div>
             </div>
@@ -165,20 +165,20 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Virtual Event Info */}
           {event.isVirtual && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-4">
+            <div className="bg-card rounded-lg border border-border p-4 space-y-4">
               <div className="flex items-center gap-2">
                 <Video className="h-5 w-5 text-primary-600" />
-                <span className="font-medium text-neutral-900">Virtual Event</span>
+                <span className="font-medium text-foreground">Virtual Event</span>
               </div>
 
               {/* Meeting URL */}
               {event.meetingUrl && (
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-primary-50 rounded-lg">
+                  <div className="p-2 bg-primary-subtle rounded-lg">
                     <ExternalLink className="h-4 w-4 text-primary-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-900">Meeting Link</p>
+                    <p className="text-sm font-medium text-foreground">Meeting Link</p>
                     <a
                       href={event.meetingUrl}
                       target="_blank"
@@ -195,7 +195,7 @@ export default async function EventPage({ params }: EventPageProps) {
               {event.chatChannelId && isGoing && (
                 <Link
                   href={`/communities/${slug}/chat?channel=${event.chatChannelId}`}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Join Event Chat
@@ -204,7 +204,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
               {/* Message for non-attendees */}
               {event.chatChannelId && !isGoing && membership.isMember && (
-                <p className="text-sm text-neutral-500 text-center">
+                <p className="text-sm text-foreground-muted text-center">
                   RSVP to access the event chat
                 </p>
               )}
@@ -213,17 +213,17 @@ export default async function EventPage({ params }: EventPageProps) {
 
           {/* Description */}
           {event.description && (
-            <div className="bg-white rounded-lg border border-neutral-200 p-6">
-              <h2 className="font-medium text-neutral-900 mb-3">About</h2>
-              <div className="prose prose-sm max-w-none text-neutral-700 whitespace-pre-wrap">
+            <div className="bg-card rounded-lg border border-border p-6">
+              <h2 className="font-medium text-foreground mb-3">About</h2>
+              <div className="prose prose-sm max-w-none text-foreground whitespace-pre-wrap">
                 {event.description}
               </div>
             </div>
           )}
 
           {/* Organizers */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
-            <h2 className="font-medium text-neutral-900 mb-4">Organizers</h2>
+          <div className="bg-card rounded-lg border border-border p-6">
+            <h2 className="font-medium text-foreground mb-4">Organizers</h2>
             <div className="space-y-3">
               {/* Main organizer */}
               <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-primary-subtle-hover flex items-center justify-center">
                     <span className="text-primary-700 font-medium">
                       {(event.organizer.name || "Event Organizer")
                         .charAt(0)
@@ -247,11 +247,11 @@ export default async function EventPage({ params }: EventPageProps) {
                 <div>
                   <ProfileLink
                     user={event.organizer}
-                    className="font-medium text-neutral-900 hover:text-primary-600"
+                    className="font-medium text-foreground hover:text-primary-600"
                   >
                     {event.organizer.name || "Event Organizer"}
                   </ProfileLink>
-                  <p className="text-xs text-neutral-500">Organizer</p>
+                  <p className="text-xs text-foreground-muted">Organizer</p>
                 </div>
               </div>
 
@@ -267,7 +267,7 @@ export default async function EventPage({ params }: EventPageProps) {
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full bg-primary-subtle-hover flex items-center justify-center">
                       <span className="text-primary-700 font-medium">
                         {(co.name || "?").charAt(0).toUpperCase()}
                       </span>
@@ -276,9 +276,9 @@ export default async function EventPage({ params }: EventPageProps) {
                   <div>
                     <ProfileLink
                       user={co}
-                      className="font-medium text-neutral-900 hover:text-primary-600"
+                      className="font-medium text-foreground hover:text-primary-600"
                     />
-                    <p className="text-xs text-neutral-500">Co-organizer</p>
+                    <p className="text-xs text-foreground-muted">Co-organizer</p>
                   </div>
                 </div>
               ))}
@@ -286,8 +286,8 @@ export default async function EventPage({ params }: EventPageProps) {
           </div>
 
           {/* Attendees */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6">
-            <h2 className="font-medium text-neutral-900 mb-4">Attendees</h2>
+          <div className="bg-card rounded-lg border border-border p-6">
+            <h2 className="font-medium text-foreground mb-4">Attendees</h2>
             {(() => {
               // Collect unique attendees across all sessions
               const attendeeMap = new Map<
@@ -312,7 +312,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
               if (attendees.length === 0) {
                 return (
-                  <p className="text-sm text-neutral-500">
+                  <p className="text-sm text-foreground-muted">
                     No attendees yet. Be the first to RSVP!
                   </p>
                 );
@@ -331,7 +331,7 @@ export default async function EventPage({ params }: EventPageProps) {
                           className="rounded-full"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-primary-subtle-hover flex items-center justify-center">
                           <span className="text-primary-700 text-sm font-medium">
                             {(user.name || "?").charAt(0).toUpperCase()}
                           </span>
@@ -340,10 +340,10 @@ export default async function EventPage({ params }: EventPageProps) {
                       <div className="flex-1 min-w-0">
                         <ProfileLink
                           user={user}
-                          className="text-sm font-medium text-neutral-900 truncate block hover:text-primary-600"
+                          className="text-sm font-medium text-foreground truncate block hover:text-primary-600"
                         />
                         {totalSessions > 1 && (
-                          <p className="text-xs text-neutral-500">
+                          <p className="text-xs text-foreground-muted">
                             {sessionCount} of {totalSessions} sessions
                           </p>
                         )}
@@ -351,7 +351,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     </div>
                   ))}
                   {attendees.length > 10 && (
-                    <p className="text-sm text-neutral-500">
+                    <p className="text-sm text-foreground-muted">
                       +{attendees.length - 10} more attendees
                     </p>
                   )}
@@ -364,7 +364,7 @@ export default async function EventPage({ params }: EventPageProps) {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Attendance Summary Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-6 sticky top-24">
+          <div className="bg-card rounded-lg border border-border p-6 sticky top-24">
             {(() => {
               // Calculate total unique attendees
               const uniqueAttendees = new Set<string>();
@@ -386,11 +386,11 @@ export default async function EventPage({ params }: EventPageProps) {
                     >
                       <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                     </svg>
-                    <span className="text-2xl font-semibold text-neutral-900">
+                    <span className="text-2xl font-semibold text-foreground">
                       {totalAttendees}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-600">
+                  <p className="text-sm text-foreground-muted">
                     {totalAttendees === 1 ? "person attending" : "people attending"}
                   </p>
                   {isGoing && (
@@ -411,7 +411,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     </div>
                   )}
                   {isPast && (
-                    <p className="mt-2 text-xs text-neutral-500">
+                    <p className="mt-2 text-xs text-foreground-muted">
                       This event has ended
                     </p>
                   )}
@@ -421,10 +421,10 @@ export default async function EventPage({ params }: EventPageProps) {
 
             {/* Edit button for organizers */}
             {canEdit && (
-              <div className="mt-4 pt-4 border-t border-neutral-200">
+              <div className="mt-4 pt-4 border-t border-border">
                 <Link
                   href={`/communities/${slug}/events/${eventId}/edit`}
-                  className="block w-full text-center px-4 py-2 text-sm text-neutral-700 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+                  className="block w-full text-center px-4 py-2 text-sm text-foreground border border-border rounded-lg hover:bg-background-hover transition-colors"
                 >
                   Edit Event
                 </Link>
@@ -433,11 +433,11 @@ export default async function EventPage({ params }: EventPageProps) {
           </div>
 
           {/* Community Card */}
-          <div className="bg-white rounded-lg border border-neutral-200 p-4">
-            <p className="text-xs text-neutral-500 mb-2">Hosted by</p>
+          <div className="bg-card rounded-lg border border-border p-4">
+            <p className="text-xs text-foreground-muted mb-2">Hosted by</p>
             <Link
               href={`/communities/${event.community.slug}`}
-              className="font-medium text-neutral-900 hover:text-primary-600"
+              className="font-medium text-foreground hover:text-primary-600"
             >
               {event.community.name}
             </Link>

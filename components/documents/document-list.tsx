@@ -220,7 +220,7 @@ export function DocumentList({
         <main className="flex-1 min-w-0">
           {/* Header */}
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-neutral-900">
+            <h2 className="text-xl font-semibold text-foreground">
               {getFilterTitle()}
             </h2>
             {canEdit && (

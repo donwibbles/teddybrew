@@ -47,7 +47,7 @@ export function UserDropdown({ userName, userEmail, userImage }: UserDropdownPro
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center gap-1.5 p-1 rounded-md hover:bg-neutral-100 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+          className="flex items-center gap-1.5 p-1 rounded-md hover:bg-background-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           aria-label="User menu"
         >
           <Avatar className="h-7 w-7">
@@ -56,15 +56,15 @@ export function UserDropdown({ userName, userEmail, userImage }: UserDropdownPro
               {getInitials(userName, userEmail)}
             </AvatarFallback>
           </Avatar>
-          <ChevronDown className="h-4 w-4 text-neutral-500" />
+          <ChevronDown className="h-4 w-4 text-foreground-muted" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium text-neutral-900">{userName || "User"}</p>
+            <p className="text-sm font-medium text-foreground">{userName || "User"}</p>
             {userEmail && (
-              <p className="text-xs text-neutral-500 truncate max-w-[180px]">{userEmail}</p>
+              <p className="text-xs text-foreground-muted truncate max-w-[180px]">{userEmail}</p>
             )}
           </div>
         </DropdownMenuLabel>

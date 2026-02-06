@@ -93,7 +93,7 @@ export function DeleteAccountDialog() {
           <div className="space-y-2">
             <label
               htmlFor="confirmation"
-              className="text-sm font-medium text-neutral-700"
+              className="text-sm font-medium text-foreground"
             >
               Type <span className="font-mono text-error-600">delete my account</span> to confirm:
             </label>
@@ -103,7 +103,7 @@ export function DeleteAccountDialog() {
               value={confirmationPhrase}
               onChange={(e) => setConfirmationPhrase(e.target.value)}
               placeholder="delete my account"
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg text-sm
+              className="w-full px-3 py-2 border border-border rounded-lg text-sm
                          focus:outline-none focus:ring-2 focus:ring-error-500 focus:border-transparent"
               disabled={isDeleting}
               autoComplete="off"

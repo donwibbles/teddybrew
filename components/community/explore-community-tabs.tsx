@@ -34,7 +34,7 @@ export function ExploreCommunityTabs({ communitySlug }: ExploreCommunityTabsProp
   };
 
   return (
-    <div className="bg-white border-b border-neutral-200">
+    <div className="bg-card border-b border-border">
       <nav className="flex gap-1 px-1 overflow-x-auto overflow-y-hidden scrollbar-hide" style={{ touchAction: "pan-x" }} aria-label="Community navigation">
         {tabs.map((tab) => {
           const active = isActive(tab.href, tab.exact);
@@ -48,7 +48,7 @@ export function ExploreCommunityTabs({ communitySlug }: ExploreCommunityTabsProp
                 "flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap flex-shrink-0",
                 active
                   ? "border-primary-500 text-primary-600"
-                  : "border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300"
+                  : "border-transparent text-foreground-muted hover:text-foreground hover:border-border"
               )}
             >
               <Icon className="h-4 w-4 flex-shrink-0" />

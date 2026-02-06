@@ -28,7 +28,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     : 0;
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <Header
         userEmail={session.user.email}

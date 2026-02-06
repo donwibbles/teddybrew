@@ -23,13 +23,13 @@ export function CollapsibleFilters({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 px-3 py-2 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+        className="flex items-center gap-1.5 px-3 py-2 text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg transition-colors"
         aria-expanded={isOpen}
         aria-controls="collapsible-filters-content"
       >
         <span>{isOpen ? "Less" : label}</span>
         {activeFilterCount > 0 && !isOpen && (
-          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-primary-100 text-primary-700 rounded-full">
+          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium bg-primary-subtle-hover text-primary-700 rounded-full">
             {activeFilterCount}
           </span>
         )}

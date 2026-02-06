@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -14,8 +14,8 @@ export default function SettingsLoading() {
       </div>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
-        <div className="p-6 border-b border-neutral-200">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-6 border-b border-border">
           <Skeleton className="h-6 w-20 mb-1" />
           <Skeleton className="h-4 w-48" />
         </div>
@@ -33,8 +33,8 @@ export default function SettingsLoading() {
       </div>
 
       {/* Account Card */}
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
-        <div className="p-6 border-b border-neutral-200">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-6 border-b border-border">
           <Skeleton className="h-6 w-20 mb-1" />
           <Skeleton className="h-4 w-44" />
         </div>
@@ -52,8 +52,8 @@ export default function SettingsLoading() {
       </div>
 
       {/* Session Card */}
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
-        <div className="p-6 border-b border-neutral-200">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-6 border-b border-border">
           <Skeleton className="h-6 w-20 mb-1" />
           <Skeleton className="h-4 w-48" />
         </div>
@@ -64,8 +64,8 @@ export default function SettingsLoading() {
       </div>
 
       {/* Danger Zone Card */}
-      <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
-        <div className="p-6 border-b border-neutral-200">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
+        <div className="p-6 border-b border-border">
           <Skeleton className="h-6 w-28 mb-1" />
           <Skeleton className="h-4 w-56" />
         </div>

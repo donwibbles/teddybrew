@@ -52,8 +52,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Feed</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Feed</h1>
+        <p className="text-foreground-muted mt-1">
           Discover discussions from communities across Hive
         </p>
       </div>

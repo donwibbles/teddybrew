@@ -82,10 +82,10 @@ export function FeedFilters({
   );
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-3">
+    <div className="bg-card rounded-lg border border-border p-4 space-y-3">
       {/* Tag chips row */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-neutral-500">Tags:</span>
+        <span className="text-sm text-foreground-muted">Tags:</span>
 
         {/* Selected tag chips */}
         {selectedTagObjects.map((tag) => (
@@ -93,7 +93,7 @@ export function FeedFilters({
             key={tag.slug}
             type="button"
             onClick={() => handleRemoveTag(tag.slug)}
-            className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-primary-100 text-primary-700 border border-primary-300 hover:bg-primary-200 transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-primary-subtle-hover text-primary-700 border border-primary-300 hover:bg-primary-200 transition-colors"
           >
             {tag.name}
             <X className="h-3 w-3" />
@@ -106,7 +106,7 @@ export function FeedFilters({
             <button
               type="button"
               onClick={() => setShowTagPicker(!showTagPicker)}
-              className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-white text-neutral-600 border border-neutral-300 hover:bg-neutral-50 transition-colors"
+              className="inline-flex items-center gap-1 px-3 py-1 text-sm rounded-full bg-card text-foreground-muted border border-border hover:bg-background-hover transition-colors"
             >
               <Plus className="h-3 w-3" />
               Add
@@ -119,7 +119,7 @@ export function FeedFilters({
                   className="fixed inset-0 z-10"
                   onClick={() => setShowTagPicker(false)}
                 />
-                <div className="absolute top-full left-0 mt-1 z-20 bg-white rounded-lg border border-neutral-200 shadow-lg py-2 max-h-64 overflow-y-auto min-w-[200px]">
+                <div className="absolute top-full left-0 mt-1 z-20 bg-card rounded-lg border border-border shadow-lg py-2 max-h-64 overflow-y-auto min-w-[200px]">
                   {unselectedTags.map((tag) => (
                     <button
                       key={tag.slug}
@@ -128,7 +128,7 @@ export function FeedFilters({
                         handleTagToggle(tag.slug);
                         setShowTagPicker(false);
                       }}
-                      className="w-full px-4 py-2 text-sm text-left text-neutral-700 hover:bg-neutral-50 transition-colors"
+                      className="w-full px-4 py-2 text-sm text-left text-foreground hover:bg-background-hover transition-colors"
                     >
                       {tag.name}
                     </button>
@@ -144,7 +144,7 @@ export function FeedFilters({
           <button
             type="button"
             onClick={handleClearFilters}
-            className="px-3 py-1 text-sm text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors"
+            className="px-3 py-1 text-sm text-foreground-muted hover:text-foreground hover:bg-background-hover rounded-lg transition-colors"
           >
             Clear
           </button>

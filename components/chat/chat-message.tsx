@@ -121,17 +121,17 @@ export function ChatMessage({
     <div
       id={`message-${id}`}
       className={cn(
-        "group relative flex gap-3 px-4 py-2 hover:bg-neutral-50 transition-colors",
+        "group relative flex gap-3 px-4 py-2 hover:bg-background-hover transition-colors",
         isDeleting && "opacity-50",
         isPending && "opacity-70",
-        isPinned && "bg-amber-50/50"
+        isPinned && "bg-amber-50/50 dark:bg-amber-950/30"
       )}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       <Avatar className="h-9 w-9 shrink-0">
         <AvatarImage src={author.image || undefined} alt={author.name || ""} />
-        <AvatarFallback className="bg-primary-100 text-primary-700 text-sm">
+        <AvatarFallback className="bg-primary-subtle-hover text-primary-700 text-sm">
           {initials}
         </AvatarFallback>
       </Avatar>
@@ -151,30 +151,30 @@ export function ChatMessage({
             user={author}
             className={cn(
               "font-medium text-sm hover:text-primary-600",
-              isOwnMessage ? "text-primary-700" : "text-neutral-900"
+              isOwnMessage ? "text-primary-700" : "text-foreground"
             )}
           />
           {author.role && <RoleBadge role={author.role} size="sm" />}
-          <span className="text-xs text-neutral-400">{timeAgo}</span>
+          <span className="text-xs text-foreground-muted">{timeAgo}</span>
           {/* Pending status indicator */}
           {isPending && pendingStatus === "sending" && (
-            <span className="flex items-center gap-1 text-xs text-neutral-400">
+            <span className="flex items-center gap-1 text-xs text-foreground-muted">
               <Loader2 className="h-3 w-3 animate-spin" />
               Sending...
             </span>
           )}
           {isPending && pendingStatus === "queued" && (
-            <span className="text-xs text-neutral-400">Queued</span>
+            <span className="text-xs text-foreground-muted">Queued</span>
           )}
           {/* Pin indicator */}
           {isPinned && (
-            <span className="flex items-center gap-1 text-xs text-amber-600">
+            <span className="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400">
               <Pin className="h-3 w-3" />
               Pinned
             </span>
           )}
         </div>
-        <p className="text-sm text-neutral-700 break-words whitespace-pre-wrap">
+        <p className="text-sm text-foreground break-words whitespace-pre-wrap">
           {content}
         </p>
 
@@ -198,7 +198,7 @@ export function ChatMessage({
 
       {/* Action buttons — floating toolbar */}
       {showActions && !isPending && (
-        <div className="absolute -top-3 right-2 bg-white border border-neutral-200 rounded-lg shadow-sm px-1 flex items-center gap-0.5 z-10">
+        <div className="absolute -top-3 right-2 bg-card border border-border rounded-lg shadow-sm px-1 flex items-center gap-0.5 z-10">
           {/* Emoji picker */}
           <EmojiPicker onSelect={handleReaction} disabled={isDeleting} />
 
@@ -207,7 +207,7 @@ export function ChatMessage({
             <button
               onClick={() => onReply(id)}
               disabled={isDeleting}
-              className="p-1.5 text-neutral-400 hover:text-primary-600 hover:bg-primary-50 rounded transition-colors"
+              className="p-1.5 text-foreground-muted hover:text-primary-600 hover:bg-primary-subtle rounded transition-colors"
               title="Reply"
             >
               <Reply className="h-4 w-4" />
@@ -222,8 +222,8 @@ export function ChatMessage({
               className={cn(
                 "p-1.5 rounded transition-colors",
                 isPinned
-                  ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50"
-                  : "text-neutral-400 hover:text-amber-600 hover:bg-amber-50"
+                  ? "text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/50"
+                  : "text-foreground-muted hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/50"
               )}
               title={isPinned ? "Unpin message" : "Pin message"}
             >
@@ -236,7 +236,7 @@ export function ChatMessage({
             <button
               onClick={() => onDelete?.(id)}
               disabled={isDeleting}
-              className="p-1.5 text-neutral-400 hover:text-error-500 hover:bg-error-50 rounded transition-colors"
+              className="p-1.5 text-foreground-muted hover:text-error-500 hover:bg-error-50 rounded transition-colors"
               title="Delete message"
             >
               <Trash2 className="h-4 w-4" />
@@ -257,13 +257,13 @@ export function ChatMessageSkeleton({ count = 5 }: ChatMessageSkeletonProps) {
     <>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="flex gap-3 px-4 py-2 animate-pulse">
-          <div className="h-9 w-9 rounded-full bg-neutral-200" />
+          <div className="h-9 w-9 rounded-full bg-background-muted" />
           <div className="flex-1">
             <div className="flex items-baseline gap-2 mb-1">
-              <div className="h-4 w-24 bg-neutral-200 rounded" />
-              <div className="h-3 w-16 bg-neutral-100 rounded" />
+              <div className="h-4 w-24 bg-background-muted rounded" />
+              <div className="h-3 w-16 bg-background-muted rounded" />
             </div>
-            <div className="h-4 w-3/4 bg-neutral-100 rounded" />
+            <div className="h-4 w-3/4 bg-background-muted rounded" />
           </div>
         </div>
       ))}

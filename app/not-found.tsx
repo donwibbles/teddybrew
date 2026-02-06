@@ -4,13 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-background-muted flex items-center justify-center p-4">
       <Card className="max-w-md w-full">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-neutral-100 flex items-center justify-center">
-            <span className="text-2xl font-bold text-neutral-400">404</span>
+          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-background-muted flex items-center justify-center">
+            <span className="text-2xl font-bold text-foreground-muted">404</span>
           </div>
-          <CardTitle className="text-xl text-neutral-900">Page Not Found</CardTitle>
+          <CardTitle className="text-xl text-foreground">Page Not Found</CardTitle>
           <CardDescription>
             The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </CardDescription>

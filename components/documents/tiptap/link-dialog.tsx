@@ -135,7 +135,7 @@ export function LinkDialog({ editor, open, onOpenChange }: LinkDialogProps) {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={handleKeyDown}
             />
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-foreground-muted">
               Leave empty to use the selected text
             </p>
           </div>

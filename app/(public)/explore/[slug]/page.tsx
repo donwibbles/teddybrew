@@ -42,8 +42,8 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
   if (community.type === "PRIVATE") {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg border border-neutral-200 p-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-neutral-100 text-neutral-500 mb-4">
+        <div className="bg-card rounded-lg border border-border p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-background-muted text-foreground-muted mb-4">
             <svg
               className="w-8 h-8"
               fill="none"
@@ -58,15 +58,15 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
               />
             </svg>
           </div>
-          <h1 className="text-2xl font-semibold text-neutral-900 mb-2">
+          <h1 className="text-2xl font-semibold text-foreground mb-2">
             Private Community
           </h1>
-          <p className="text-neutral-600 mb-6">
+          <p className="text-foreground-muted mb-6">
             This community is private. Sign in to request access or view if you&apos;re already a member.
           </p>
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center px-6 py-3 bg-primary-500 text-white font-medium rounded-lg
+            className="inline-flex items-center justify-center px-6 py-3 bg-primary-subtle0 text-white font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        transition-colors"
           >
@@ -83,7 +83,7 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
   return (
     <div className="space-y-6">
       {/* Sign in to join banner */}
-      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
+      <div className="bg-primary-subtle border border-primary-200 rounded-lg p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="font-medium text-primary-900">
@@ -95,7 +95,7 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
           </div>
           <Link
             href="/sign-in"
-            className="inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg
+            className="inline-flex items-center justify-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg
                        hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                        transition-colors whitespace-nowrap"
           >
@@ -105,18 +105,18 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
       </div>
 
       {/* Community Header */}
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-semibold text-neutral-900 mb-2">
+            <h1 className="text-2xl font-semibold text-foreground mb-2">
               {community.name}
             </h1>
 
             {community.description && (
-              <p className="text-neutral-600 mb-4">{community.description}</p>
+              <p className="text-foreground-muted mb-4">{community.description}</p>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-neutral-500">
+            <div className="flex items-center gap-4 text-sm text-foreground-muted">
               <span className="flex items-center gap-1">
                 <svg
                   className="w-4 h-4"
@@ -167,14 +167,14 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Events Section */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Upcoming Events
           </h2>
 
           {community.events.length === 0 ? (
-            <div className="bg-white rounded-lg border border-neutral-200 p-8 text-center">
+            <div className="bg-card rounded-lg border border-border p-8 text-center">
               <svg
-                className="w-12 h-12 mx-auto text-neutral-400 mb-4"
+                className="w-12 h-12 mx-auto text-foreground-muted mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -186,10 +186,10 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              <h3 className="text-neutral-900 font-medium mb-1">
+              <h3 className="text-foreground font-medium mb-1">
                 No upcoming events
               </h3>
-              <p className="text-neutral-500 text-sm">
+              <p className="text-foreground-muted text-sm">
                 Sign in and join this community to see and create events.
               </p>
             </div>
@@ -199,10 +199,10 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
                 <Link
                   key={event.id}
                   href={`/explore/${slug}/events/${event.id}`}
-                  className="block bg-white rounded-lg border border-neutral-200 p-4 hover:border-primary-300 hover:shadow-sm transition-all"
+                  className="block bg-card rounded-lg border border-border p-4 hover:border-primary-300 hover:shadow-sm transition-all"
                 >
-                  <h3 className="font-medium text-neutral-900">{event.title}</h3>
-                  <p className="text-sm text-neutral-500 mt-1">
+                  <h3 className="font-medium text-foreground">{event.title}</h3>
+                  <p className="text-sm text-foreground-muted mt-1">
                     {event.sessions[0]?.startTime
                       ? new Date(event.sessions[0].startTime).toLocaleDateString("en-US", {
                           weekday: "short",
@@ -226,13 +226,13 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
 
         {/* Members Sidebar */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-neutral-900">Members</h2>
-          <div className="bg-white rounded-lg border border-neutral-200 p-6 text-center">
+          <h2 className="text-lg font-semibold text-foreground">Members</h2>
+          <div className="bg-card rounded-lg border border-border p-6 text-center">
             <div className="flex justify-center -space-x-2 mb-4">
               {members.map((member, index) => (
                 <div
                   key={member.user.id}
-                  className="w-10 h-10 rounded-full bg-neutral-200 border-2 border-white flex items-center justify-center text-neutral-500 text-sm font-medium"
+                  className="w-10 h-10 rounded-full bg-background-muted border-2 border-white flex items-center justify-center text-foreground-muted text-sm font-medium"
                   style={{ zIndex: 5 - index }}
                 >
                   {member.user.image ? (
@@ -249,13 +249,13 @@ export default async function PublicCommunityPage({ params }: PublicCommunityPag
               ))}
               {community._count.members > 5 && (
                 <div
-                  className="w-10 h-10 rounded-full bg-neutral-100 border-2 border-white flex items-center justify-center text-neutral-500 text-xs font-medium"
+                  className="w-10 h-10 rounded-full bg-background-muted border-2 border-white flex items-center justify-center text-foreground-muted text-xs font-medium"
                 >
                   +{community._count.members - 5}
                 </div>
               )}
             </div>
-            <p className="text-sm text-neutral-600 mb-4">
+            <p className="text-sm text-foreground-muted mb-4">
               {community._count.members} {community._count.members === 1 ? "member" : "members"} in this community
             </p>
             <Link

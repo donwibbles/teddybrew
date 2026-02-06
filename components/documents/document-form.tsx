@@ -302,17 +302,17 @@ export function DocumentForm({
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-neutral-200 bg-white px-4 py-3">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border bg-card px-4 py-3">
         <div className="flex items-center gap-3">
           <Link
             href={backUrl}
-            className="flex items-center gap-1 text-sm text-neutral-600 hover:text-neutral-900"
+            className="flex items-center gap-1 text-sm text-foreground-muted hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Back to Docs</span>
           </Link>
 
-          <div className="hidden h-6 w-px bg-neutral-200 sm:block" />
+          <div className="hidden h-6 w-px bg-background-muted sm:block" />
 
           <DocumentStatusBadge status={status} />
         </div>
@@ -320,14 +320,14 @@ export function DocumentForm({
         <div className="flex items-center gap-2">
           {/* Viewers */}
           {viewers.length > 0 && (
-            <div className="flex items-center gap-1 text-sm text-neutral-500">
+            <div className="flex items-center gap-1 text-sm text-foreground-muted">
               <Users className="h-4 w-4" />
               <span>{viewers.length} viewing</span>
             </div>
           )}
 
           {/* Save Status */}
-          <div className="text-sm text-neutral-500">
+          <div className="text-sm text-foreground-muted">
             {isSaving && (
               <span className="flex items-center gap-1">
                 <LoadingSpinner size="sm" />
@@ -341,7 +341,7 @@ export function DocumentForm({
               </span>
             )}
             {hasUnsavedChanges && !isSaving && (
-              <span className="text-amber-600">Unsaved changes</span>
+              <span className="text-amber-600 dark:text-amber-400">Unsaved changes</span>
             )}
           </div>
 
@@ -388,7 +388,7 @@ export function DocumentForm({
 
       {/* Locked Banner */}
       {lockedByOther && (
-        <div className="flex items-center gap-2 bg-amber-50 px-4 py-2 text-sm text-amber-700">
+        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/50 px-4 py-2 text-sm text-amber-700 dark:text-amber-300">
           <AlertCircle className="h-4 w-4" />
           This document is being edited by another user. You can view but not edit.
         </div>

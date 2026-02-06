@@ -19,7 +19,7 @@ export function LoadingSpinner({ size = "md", className }: LoadingSpinnerProps) 
   return (
     <div
       className={cn(
-        "animate-spin rounded-full border-neutral-200 border-t-primary-600",
+        "animate-spin rounded-full border-border border-t-primary-600",
         sizeClasses[size],
         className
       )}
@@ -43,7 +43,7 @@ export function LoadingPage({ message = "Loading..." }: LoadingPageProps) {
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <LoadingSpinner size="lg" />
-      <p className="mt-4 text-neutral-600">{message}</p>
+      <p className="mt-4 text-foreground-muted">{message}</p>
     </div>
   );
 }
@@ -55,7 +55,7 @@ export function LoadingInline({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <LoadingSpinner size="sm" />
-      <span className="text-sm text-neutral-600">Loading...</span>
+      <span className="text-sm text-foreground-muted">Loading...</span>
     </div>
   );
 }

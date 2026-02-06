@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -8,7 +8,7 @@ export default function CommunityLoading() {
   return (
     <div className="space-y-6">
       {/* Header Skeleton */}
-      <div className="bg-white rounded-lg border border-neutral-200 p-6">
+      <div className="bg-card rounded-lg border border-border p-6">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
@@ -27,7 +27,7 @@ export default function CommunityLoading() {
       </div>
 
       {/* Tabs Skeleton */}
-      <div className="flex gap-1 bg-neutral-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-background-muted p-1 rounded-lg w-fit">
         <Skeleton className="h-9 w-24" />
         <Skeleton className="h-9 w-20" />
         <Skeleton className="h-9 w-24" />
@@ -45,7 +45,7 @@ export default function CommunityLoading() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-white rounded-lg border border-neutral-200 p-4"
+                className="bg-card rounded-lg border border-border p-4"
               >
                 <Skeleton className="h-5 w-48 mb-2" />
                 <Skeleton className="h-4 w-64" />
@@ -60,7 +60,7 @@ export default function CommunityLoading() {
             <Skeleton className="h-6 w-20" />
             <Skeleton className="h-4 w-16" />
           </div>
-          <div className="bg-white rounded-lg border border-neutral-200 p-4 space-y-3">
+          <div className="bg-card rounded-lg border border-border p-4 space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center gap-3">
                 <Skeleton className="h-10 w-10 rounded-full" />

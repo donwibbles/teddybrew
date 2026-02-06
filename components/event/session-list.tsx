@@ -38,7 +38,7 @@ export function SessionList({
 
   if (sessions.length === 0) {
     return (
-      <div className="text-center py-8 text-neutral-500">
+      <div className="text-center py-8 text-foreground-muted">
         No sessions scheduled
       </div>
     );

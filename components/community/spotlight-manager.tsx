@@ -30,17 +30,17 @@ export function SpotlightManager({ events }: SpotlightManagerProps) {
     <div className="space-y-4">
       {/* Header with count */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-foreground-muted">
           Select up to {MAX_SPOTLIGHTED} events to feature at the top of your community page.
         </p>
-        <span className="text-sm font-medium text-neutral-700">
+        <span className="text-sm font-medium text-foreground">
           {spotlightedCount}/{MAX_SPOTLIGHTED} spotlighted
         </span>
       </div>
 
       {/* Events List */}
       {events.length === 0 ? (
-        <div className="text-center py-8 text-neutral-500">
+        <div className="text-center py-8 text-foreground-muted">
           <Calendar className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p>No upcoming events to spotlight.</p>
         </div>
@@ -119,8 +119,8 @@ function SpotlightEventItem({
     <div
       className={`border rounded-lg p-4 transition-colors ${
         event.isSpotlighted
-          ? "border-amber-300 bg-amber-50"
-          : "border-neutral-200 bg-white"
+          ? "border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/50"
+          : "border-border bg-card"
       }`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -130,10 +130,10 @@ function SpotlightEventItem({
             {event.isSpotlighted && (
               <Star className="w-4 h-4 text-amber-500 fill-amber-500 flex-shrink-0" />
             )}
-            <h4 className="font-medium text-neutral-900 truncate">{event.title}</h4>
+            <h4 className="font-medium text-foreground truncate">{event.title}</h4>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground-muted">
             {firstSession && (
               <span className="flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
@@ -166,8 +166,8 @@ function SpotlightEventItem({
             disabled={isPending || (!canSpotlight && !event.isSpotlighted)}
             className={`flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               event.isSpotlighted
-                ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
+                ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800"
+                : "bg-background-muted text-foreground hover:bg-background-hover"
             }`}
           >
             {isPending ? (
@@ -183,13 +183,13 @@ function SpotlightEventItem({
 
       {/* Notify Option Panel */}
       {showNotifyOption && (
-        <div className="mt-3 pt-3 border-t border-neutral-200">
-          <label className="flex items-center gap-2 text-sm text-neutral-700 mb-3">
+        <div className="mt-3 pt-3 border-t border-border">
+          <label className="flex items-center gap-2 text-sm text-foreground mb-3">
             <input
               type="checkbox"
               checked={notifyMembers}
               onChange={(e) => setNotifyMembers(e.target.checked)}
-              className="w-4 h-4 rounded border-neutral-300 text-primary-600 focus:ring-primary-500"
+              className="w-4 h-4 rounded border-border text-primary-600 focus:ring-primary-500"
             />
             Notify members about this featured event
           </label>
@@ -208,7 +208,7 @@ function SpotlightEventItem({
             <button
               onClick={handleCancelSpotlight}
               disabled={isPending}
-              className="px-3 py-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-800"
+              className="px-3 py-1.5 text-sm font-medium text-foreground-muted hover:text-foreground"
             >
               Cancel
             </button>

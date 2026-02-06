@@ -130,7 +130,7 @@ export function CreatePostForm({
       {/* Tags (required) - moved above content */}
       <div className="space-y-2">
         <Label>Tags <span className="text-error-500">*</span></Label>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-foreground-muted">
           Select at least one tag for your post
         </p>
         <IssueTagSelect

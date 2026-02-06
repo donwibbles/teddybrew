@@ -96,7 +96,7 @@ function CommentItem({
   };
 
   return (
-    <div className={cn("group", comment.depth > 0 && "pl-4 border-l-2 border-neutral-100")}>
+    <div className={cn("group", comment.depth > 0 && "pl-4 border-l-2 border-border")}>
       <div className="flex gap-3 py-3">
         {/* Vote */}
         <div className="shrink-0">
@@ -119,18 +119,18 @@ function CommentItem({
                 src={comment.author.image || undefined}
                 alt={comment.author.name || ""}
               />
-              <AvatarFallback className="text-xs bg-neutral-100">
+              <AvatarFallback className="text-xs bg-background-muted">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <ProfileLink user={comment.author} className="text-sm font-medium text-neutral-700 hover:text-primary-600" />
+            <ProfileLink user={comment.author} className="text-sm font-medium text-foreground hover:text-primary-600" />
             {comment.author.role && <RoleBadge role={comment.author.role} size="sm" />}
-            <span className="text-xs text-neutral-400">·</span>
-            <span className="text-xs text-neutral-400">{timeAgo}</span>
+            <span className="text-xs text-foreground-muted">·</span>
+            <span className="text-xs text-foreground-muted">{timeAgo}</span>
             {comment.replies.length > 0 && (
               <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className="ml-auto text-xs text-neutral-400 hover:text-neutral-600 flex items-center gap-0.5"
+                className="ml-auto text-xs text-foreground-muted hover:text-foreground-muted flex items-center gap-0.5"
               >
                 {isCollapsed ? (
                   <>
@@ -157,7 +157,7 @@ function CommentItem({
             {canReply && (
               <button
                 onClick={() => setIsReplying(!isReplying)}
-                className="text-xs text-neutral-500 hover:text-neutral-700 flex items-center gap-1"
+                className="text-xs text-foreground-muted hover:text-foreground flex items-center gap-1"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
                 Reply
@@ -167,7 +167,7 @@ function CommentItem({
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="text-xs text-neutral-500 hover:text-error-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="text-xs text-foreground-muted hover:text-error-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Delete
@@ -237,7 +237,7 @@ export function CommentThread({
   }
 
   return (
-    <div className="divide-y divide-neutral-100">
+    <div className="divide-y divide-border">
       {comments.map((comment) => (
         <CommentItem
           key={comment.id}

@@ -118,7 +118,7 @@ export function FolderDialog({
 
             <div className="space-y-2">
               <Label htmlFor="folder-description">
-                Description <span className="text-neutral-400">(optional)</span>
+                Description <span className="text-foreground-muted">(optional)</span>
               </Label>
               <Input
                 id="folder-description"

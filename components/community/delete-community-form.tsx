@@ -85,9 +85,9 @@ export function DeleteCommunityForm({
           onChange={(e) => setConfirmName(e.target.value)}
           disabled={isDeleting}
           placeholder="Enter community name"
-          className="w-full px-4 py-2.5 border border-error-300 rounded-lg text-neutral-900 placeholder-neutral-400
+          className="w-full px-4 py-2.5 border border-error-300 rounded-lg text-foreground placeholder-foreground-muted
                      focus:outline-none focus:ring-2 focus:ring-error-500 focus:border-transparent
-                     disabled:bg-neutral-50 disabled:text-neutral-500"
+                     disabled:bg-background-muted disabled:text-foreground-muted"
         />
       </div>
 
@@ -100,8 +100,8 @@ export function DeleteCommunityForm({
             setError(null);
           }}
           disabled={isDeleting}
-          className="px-4 py-2 border border-neutral-300 text-neutral-700 font-medium rounded-lg
-                     hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-500
+          className="px-4 py-2 border border-border text-foreground font-medium rounded-lg
+                     hover:bg-background-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-border
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           Cancel

@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -13,10 +13,10 @@ export default function ChatLoading() {
       </div>
 
       {/* Chat Layout Skeleton */}
-      <div className="flex h-[calc(100vh-220px)] min-h-[500px] rounded-lg border border-neutral-200 bg-white overflow-hidden">
+      <div className="flex h-[calc(100vh-220px)] min-h-[500px] rounded-lg border border-border bg-card overflow-hidden">
         {/* Channel Sidebar */}
-        <div className="w-60 border-r border-neutral-200 flex-shrink-0 hidden md:block">
-          <div className="p-4 border-b border-neutral-200">
+        <div className="w-60 border-r border-border flex-shrink-0 hidden md:block">
+          <div className="p-4 border-b border-border">
             <Skeleton className="h-6 w-24" />
           </div>
           <div className="p-2 space-y-1">
@@ -32,7 +32,7 @@ export default function ChatLoading() {
         {/* Main Chat Area */}
         <div className="flex-1 flex flex-col">
           {/* Channel Header */}
-          <div className="p-4 border-b border-neutral-200 flex items-center gap-2">
+          <div className="p-4 border-b border-border flex items-center gap-2">
             <Skeleton className="h-5 w-5" />
             <Skeleton className="h-5 w-32" />
           </div>
@@ -55,7 +55,7 @@ export default function ChatLoading() {
           </div>
 
           {/* Input Area */}
-          <div className="p-4 border-t border-neutral-200">
+          <div className="p-4 border-t border-border">
             <div className="flex gap-2 items-end">
               <Skeleton className="h-10 flex-1 rounded-lg" />
               <Skeleton className="h-10 w-10 rounded-md" />
@@ -64,8 +64,8 @@ export default function ChatLoading() {
         </div>
 
         {/* Members Sidebar */}
-        <div className="w-60 border-l border-neutral-200 flex-shrink-0 hidden lg:block">
-          <div className="p-4 border-b border-neutral-200">
+        <div className="w-60 border-l border-border flex-shrink-0 hidden lg:block">
+          <div className="p-4 border-b border-border">
             <Skeleton className="h-5 w-20" />
           </div>
           <div className="p-2 space-y-2">

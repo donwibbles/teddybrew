@@ -103,15 +103,15 @@ export function SessionCard({
     (totalSessions > 1 ? `Session ${sessionIndex + 1}` : "Event Session");
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-4">
+    <div className="bg-card rounded-lg border border-border p-4">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium text-neutral-900">{displayTitle}</h3>
+          <h3 className="font-medium text-foreground">{displayTitle}</h3>
 
-          <div className="mt-2 space-y-1.5 text-sm text-neutral-600">
+          <div className="mt-2 space-y-1.5 text-sm text-foreground-muted">
             {/* Date & Time */}
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-neutral-400" />
+              <Calendar className="h-4 w-4 text-foreground-muted" />
               <span>
                 {formatDate(session.startTime)} at {formatTime(session.startTime)}
                 {session.endTime && ` - ${formatTime(session.endTime)}`}
@@ -121,14 +121,14 @@ export function SessionCard({
             {/* Location */}
             {effectiveLocation && (
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-neutral-400" />
+                <MapPin className="h-4 w-4 text-foreground-muted" />
                 <span className="truncate">{effectiveLocation}</span>
               </div>
             )}
 
             {/* Attendees */}
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-neutral-400" />
+              <Users className="h-4 w-4 text-foreground-muted" />
               <span>
                 {optimisticCount} attending
                 {effectiveCapacity && ` / ${effectiveCapacity} spots`}
@@ -140,11 +140,11 @@ export function SessionCard({
         {/* RSVP Button */}
         <div className="shrink-0">
           {isPast ? (
-            <span className="text-sm text-neutral-500">Past session</span>
+            <span className="text-sm text-foreground-muted">Past session</span>
           ) : !isLoggedIn ? (
-            <span className="text-sm text-neutral-500">Sign in to RSVP</span>
+            <span className="text-sm text-foreground-muted">Sign in to RSVP</span>
           ) : !isMember && !isPublicCommunity ? (
-            <span className="text-sm text-neutral-500">Join to RSVP</span>
+            <span className="text-sm text-foreground-muted">Join to RSVP</span>
           ) : optimisticIsGoing ? (
             <div className="space-y-2">
               <span className="inline-flex items-center gap-1 text-sm text-success-600">
@@ -164,7 +164,7 @@ export function SessionCard({
               <button
                 onClick={handleCancel}
                 disabled={isPending}
-                className="block text-xs text-neutral-500 hover:text-neutral-700 disabled:opacity-50"
+                className="block text-xs text-foreground-muted hover:text-foreground disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -176,13 +176,13 @@ export function SessionCard({
               <button
                 onClick={handleRSVP}
                 disabled={isPending}
-                className="px-4 py-2 text-sm bg-primary-500 text-white rounded-lg
+                className="px-4 py-2 text-sm bg-primary-subtle0 text-white rounded-lg
                            hover:bg-primary-600 disabled:opacity-50 transition-colors"
               >
                 {isPending ? "..." : "RSVP"}
               </button>
               {!isMember && isPublicCommunity && (
-                <p className="text-xs text-neutral-500 mt-1">Joins community</p>
+                <p className="text-xs text-foreground-muted mt-1">Joins community</p>
               )}
             </div>
           )}

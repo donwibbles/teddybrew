@@ -32,12 +32,12 @@ export function MessageReactions({
           disabled={disabled}
           className={cn(
             "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
-            "bg-neutral-100 hover:bg-neutral-200 transition-colors",
+            "bg-background-muted hover:bg-background-hover transition-colors",
             "disabled:opacity-50 disabled:cursor-not-allowed"
           )}
         >
           <span>{getEmojiDisplay(emoji)}</span>
-          <span className="text-neutral-600 font-medium">{count}</span>
+          <span className="text-foreground-muted font-medium">{count}</span>
         </button>
       ))}
     </div>

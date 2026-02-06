@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function EventCardSkeleton() {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
       <div className="p-4 space-y-3">
         <Skeleton className="h-6 w-3/4" />
         <div className="flex items-center gap-2">
@@ -17,7 +17,7 @@ export function EventCardSkeleton() {
           <Skeleton className="h-4 w-4" />
           <Skeleton className="h-4 w-28" />
         </div>
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+        <div className="flex items-center justify-between pt-3 border-t border-border">
           <div className="flex -space-x-2">
             {[1, 2, 3].map((j) => (
               <Skeleton

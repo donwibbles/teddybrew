@@ -126,7 +126,7 @@ export function AvatarUpload({ userId, currentImage, userName }: AvatarUploadPro
         className="relative group"
       >
         {/* Avatar */}
-        <div className="w-24 h-24 rounded-full overflow-hidden bg-neutral-100 border-4 border-white shadow-lg">
+        <div className="w-24 h-24 rounded-full overflow-hidden bg-background-muted border-4 border-white shadow-lg">
           {displayImage ? (
             <Image
               src={displayImage}
@@ -137,7 +137,7 @@ export function AvatarUpload({ userId, currentImage, userName }: AvatarUploadPro
               unoptimized={displayImage.startsWith("blob:")}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-primary-100">
+            <div className="w-full h-full flex items-center justify-center bg-primary-subtle-hover">
               <User className="w-10 h-10 text-primary-600" />
             </div>
           )}
@@ -159,7 +159,7 @@ export function AvatarUpload({ userId, currentImage, userName }: AvatarUploadPro
         </div>
       </button>
 
-      <p className="text-xs text-neutral-500">
+      <p className="text-xs text-foreground-muted">
         Click to upload a profile picture
       </p>
     </div>

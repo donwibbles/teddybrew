@@ -72,35 +72,35 @@ export function AdminCommunityList({ communities }: AdminCommunityListProps) {
 
   if (communities.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200 p-8 text-center">
-        <p className="text-neutral-500">No communities found</p>
+      <div className="bg-card rounded-lg border border-border p-8 text-center">
+        <p className="text-foreground-muted">No communities found</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 overflow-hidden">
+    <div className="bg-card rounded-lg border border-border overflow-hidden">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-neutral-200 bg-neutral-50">
-            <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
+          <tr className="border-b border-border bg-background-muted">
+            <th className="px-4 py-3 text-left text-xs font-medium text-foreground-muted uppercase">
               Community
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
+            <th className="px-4 py-3 text-left text-xs font-medium text-foreground-muted uppercase">
               Owner
             </th>
-            <th className="px-4 py-3 text-center text-xs font-medium text-neutral-500 uppercase">
+            <th className="px-4 py-3 text-center text-xs font-medium text-foreground-muted uppercase">
               Stats
             </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase">
+            <th className="px-4 py-3 text-left text-xs font-medium text-foreground-muted uppercase">
               Created
             </th>
-            <th className="px-4 py-3 text-right text-xs font-medium text-neutral-500 uppercase">
+            <th className="px-4 py-3 text-right text-xs font-medium text-foreground-muted uppercase">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-neutral-100">
+        <tbody className="divide-y divide-border">
           {communities.map((community) => {
             const timestamp =
               community.createdAt instanceof Date
@@ -116,15 +116,15 @@ export function AdminCommunityList({ communities }: AdminCommunityListProps) {
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     {community.type === "PRIVATE" ? (
-                      <Lock className="h-4 w-4 text-neutral-400" />
+                      <Lock className="h-4 w-4 text-foreground-muted" />
                     ) : (
-                      <Globe className="h-4 w-4 text-neutral-400" />
+                      <Globe className="h-4 w-4 text-foreground-muted" />
                     )}
                     <div>
-                      <p className="font-medium text-neutral-900">
+                      <p className="font-medium text-foreground">
                         {community.name}
                       </p>
-                      <p className="text-xs text-neutral-500">
+                      <p className="text-xs text-foreground-muted">
                         /{community.slug}
                       </p>
                     </div>
@@ -132,16 +132,16 @@ export function AdminCommunityList({ communities }: AdminCommunityListProps) {
                 </td>
                 <td className="px-4 py-3">
                   <div>
-                    <p className="text-sm text-neutral-900">
+                    <p className="text-sm text-foreground">
                       {community.owner.name || "No name"}
                     </p>
-                    <p className="text-xs text-neutral-500">
+                    <p className="text-xs text-foreground-muted">
                       {community.owner.email}
                     </p>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center justify-center gap-4 text-xs text-neutral-500">
+                  <div className="flex items-center justify-center gap-4 text-xs text-foreground-muted">
                     <span className="flex items-center gap-1">
                       <Users className="h-3.5 w-3.5" />
                       {community._count.members}
@@ -156,12 +156,12 @@ export function AdminCommunityList({ communities }: AdminCommunityListProps) {
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-sm text-neutral-500">{timeAgo}</td>
+                <td className="px-4 py-3 text-sm text-foreground-muted">{timeAgo}</td>
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleDelete(community)}
                     disabled={deletingId === community.id}
-                    className="p-1.5 text-neutral-400 hover:text-error-500 hover:bg-error-50 rounded transition-colors disabled:opacity-50"
+                    className="p-1.5 text-foreground-muted hover:text-error-500 hover:bg-error-50 rounded transition-colors disabled:opacity-50"
                     title="Delete community"
                   >
                     <Trash2 className="h-4 w-4" />

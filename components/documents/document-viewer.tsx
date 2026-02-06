@@ -64,7 +64,7 @@ export function DocumentViewer({
   return (
     <article className="mx-auto max-w-4xl">
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+      <div className="flex items-center gap-2 text-sm text-foreground-muted mb-6">
         <Link
           href={`/communities/${document.community.slug}`}
           className="hover:text-primary-600"
@@ -119,12 +119,12 @@ export function DocumentViewer({
         </div>
 
         {/* Title */}
-        <h1 className="text-3xl font-bold text-neutral-900 md:text-4xl">
+        <h1 className="text-3xl font-bold text-foreground md:text-4xl">
           {document.title}
         </h1>
 
         {/* Meta Info */}
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-neutral-600">
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-foreground-muted">
           {/* Author */}
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
@@ -142,7 +142,7 @@ export function DocumentViewer({
           {document.publishedBy &&
             document.publishedBy.id !== document.author.id && (
               <div className="flex items-center gap-2">
-                <span className="text-neutral-300">|</span>
+                <span className="text-foreground-muted">|</span>
                 <span>
                   Published by{" "}
                   <strong>{document.publishedBy.name || "Unknown"}</strong>
@@ -153,7 +153,7 @@ export function DocumentViewer({
           {/* Folder */}
           {document.folder && (
             <>
-              <span className="text-neutral-300">|</span>
+              <span className="text-foreground-muted">|</span>
               <Link
                 href={`/communities/${document.community.slug}/docs?folder=${document.folder.slug}`}
                 className="flex items-center gap-1 hover:text-primary-600"
@@ -166,7 +166,7 @@ export function DocumentViewer({
         </div>
 
         {/* Dates */}
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-neutral-500">
+        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-foreground-muted">
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
             Created {format(new Date(document.createdAt), "MMM d, yyyy")}
@@ -193,7 +193,7 @@ export function DocumentViewer({
       </header>
 
       {/* Content */}
-      <div className="rounded-lg border border-neutral-200 bg-white p-6 md:p-8">
+      <div className="rounded-lg border border-border bg-card p-6 md:p-8">
         <TipTapViewer content={document.content as JSONContent} />
       </div>
     </article>
@@ -208,21 +208,21 @@ export function DocumentViewerSkeleton() {
     <article className="mx-auto max-w-4xl animate-pulse">
       <header className="mb-8">
         <div className="mb-4 flex items-center gap-2">
-          <div className="h-6 w-20 rounded-full bg-neutral-200" />
+          <div className="h-6 w-20 rounded-full bg-background-muted" />
         </div>
-        <div className="h-10 w-3/4 rounded bg-neutral-200" />
+        <div className="h-10 w-3/4 rounded bg-background-muted" />
         <div className="mt-4 flex items-center gap-4">
-          <div className="h-6 w-6 rounded-full bg-neutral-200" />
-          <div className="h-4 w-32 rounded bg-neutral-200" />
+          <div className="h-6 w-6 rounded-full bg-background-muted" />
+          <div className="h-4 w-32 rounded bg-background-muted" />
         </div>
       </header>
-      <div className="rounded-lg border border-neutral-200 bg-white p-6">
+      <div className="rounded-lg border border-border bg-card p-6">
         <div className="space-y-4">
-          <div className="h-4 w-full rounded bg-neutral-200" />
-          <div className="h-4 w-5/6 rounded bg-neutral-200" />
-          <div className="h-4 w-4/6 rounded bg-neutral-200" />
-          <div className="h-4 w-full rounded bg-neutral-200" />
-          <div className="h-4 w-3/4 rounded bg-neutral-200" />
+          <div className="h-4 w-full rounded bg-background-muted" />
+          <div className="h-4 w-5/6 rounded bg-background-muted" />
+          <div className="h-4 w-4/6 rounded bg-background-muted" />
+          <div className="h-4 w-full rounded bg-background-muted" />
+          <div className="h-4 w-3/4 rounded bg-background-muted" />
         </div>
       </div>
     </article>

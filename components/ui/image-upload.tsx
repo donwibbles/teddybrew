@@ -171,7 +171,7 @@ export function ImageUpload({
         <div className="relative">
           <div
             className={cn(
-              "relative overflow-hidden rounded-lg border border-neutral-200 bg-neutral-50",
+              "relative overflow-hidden rounded-lg border border-border bg-background-muted",
               previewClassName
             )}
             style={{
@@ -234,9 +234,9 @@ export function ImageUpload({
           onDragOver={handleDrag}
           onDrop={handleDrop}
           className={cn(
-            "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 bg-neutral-50 px-6 py-8 transition-colors",
-            dragActive && "border-primary-500 bg-primary-50",
-            !disabled && !isUploading && "hover:border-primary-400 hover:bg-neutral-100",
+            "flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border bg-background-muted px-6 py-8 transition-colors",
+            dragActive && "border-primary-500 bg-primary-subtle",
+            !disabled && !isUploading && "hover:border-primary-400 hover:bg-background-hover",
             disabled && "cursor-not-allowed opacity-50",
             previewClassName
           )}
@@ -247,15 +247,15 @@ export function ImageUpload({
           {isUploading ? (
             <>
               <LoadingSpinner size="lg" />
-              <p className="mt-3 text-sm text-neutral-600">Uploading...</p>
+              <p className="mt-3 text-sm text-foreground-muted">Uploading...</p>
             </>
           ) : (
             <>
-              <ImageIcon className="h-10 w-10 text-neutral-400" />
-              <p className="mt-3 text-sm font-medium text-neutral-700">
+              <ImageIcon className="h-10 w-10 text-foreground-muted" />
+              <p className="mt-3 text-sm font-medium text-foreground">
                 Click to upload or drag and drop
               </p>
-              <p className="mt-1 text-xs text-neutral-500">
+              <p className="mt-1 text-xs text-foreground-muted">
                 PNG, JPG, GIF, or WebP up to {maxSize}MB
               </p>
             </>

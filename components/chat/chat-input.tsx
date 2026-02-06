@@ -95,23 +95,23 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
       : "Type a message...";
 
     return (
-      <div className="p-4 border-t border-neutral-200 bg-white">
+      <div className="p-4 border-t border-border bg-card">
         {/* Replying indicator */}
         {replyingTo && (
-          <div className="flex items-center justify-between mb-2 px-3 py-2 bg-neutral-100 rounded-lg text-sm">
+          <div className="flex items-center justify-between mb-2 px-3 py-2 bg-background-muted rounded-lg text-sm">
             <div className="min-w-0 flex-1">
-              <span className="text-neutral-500">Replying to </span>
-              <span className="font-medium text-neutral-700">
+              <span className="text-foreground-muted">Replying to </span>
+              <span className="font-medium text-foreground">
                 {replyingTo.authorName}
               </span>
-              <p className="text-neutral-500 text-xs truncate">
+              <p className="text-foreground-muted text-xs truncate">
                 {replyingTo.content.slice(0, 50)}
                 {replyingTo.content.length > 50 && "..."}
               </p>
             </div>
             <button
               onClick={onCancelReply}
-              className="p-1 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-200 rounded transition-colors ml-2"
+              className="p-1 text-foreground-muted hover:text-foreground hover:bg-background-hover rounded transition-colors ml-2"
               title="Cancel reply"
             >
               <X className="h-4 w-4" />
@@ -133,8 +133,8 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             disabled={disabled}
             rows={1}
             maxLength={2000}
-            className="flex-1 resize-none rounded-lg border border-neutral-300 px-3 py-2 text-sm
-                       placeholder:text-neutral-400
+            className="flex-1 resize-none rounded-lg border border-input-border px-3 py-2 text-sm
+                       bg-input text-foreground placeholder:text-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
                        disabled:opacity-50 disabled:cursor-not-allowed"
           />
@@ -152,7 +152,7 @@ export const ChatInput = forwardRef<HTMLTextAreaElement, ChatInputProps>(
             )}
           </Button>
         </div>
-        <p className="mt-1 text-xs text-neutral-400">
+        <p className="mt-1 text-xs text-foreground-muted">
           Press Enter to send, Shift+Enter for new line
           {replyingTo && ", Escape to cancel"}
         </p>

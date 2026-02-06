@@ -31,9 +31,9 @@ export function TagBadge({
       "px-3 py-1 text-sm": size === "md",
     },
     {
-      "bg-neutral-100 text-neutral-700 hover:bg-neutral-200": variant === "default",
-      "bg-primary-100 text-primary-700 hover:bg-primary-200": variant === "primary",
-      "border border-neutral-300 text-neutral-600 hover:border-neutral-400 hover:text-neutral-700": variant === "outline",
+      "bg-background-muted text-foreground hover:bg-background-hover": variant === "default",
+      "bg-primary-subtle-hover text-primary-700 hover:bg-primary-200": variant === "primary",
+      "border border-border text-foreground-muted hover:border-border hover:text-foreground": variant === "outline",
     },
     className
   );
@@ -126,7 +126,7 @@ export function TagBadgeList({
       {hiddenCount > 0 && (
         <span
           className={cn(
-            "inline-flex items-center rounded-full font-medium text-neutral-500",
+            "inline-flex items-center rounded-full font-medium text-foreground-muted",
             {
               "px-2 py-0.5 text-xs": size === "sm",
               "px-3 py-1 text-sm": size === "md",

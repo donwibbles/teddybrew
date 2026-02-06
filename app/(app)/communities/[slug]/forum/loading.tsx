@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -14,7 +14,7 @@ export default function ForumLoading() {
       </div>
 
       {/* Sort Tabs Skeleton */}
-      <div className="flex gap-1 bg-neutral-100 p-1 rounded-lg w-fit">
+      <div className="flex gap-1 bg-background-muted p-1 rounded-lg w-fit">
         <Skeleton className="h-8 w-16" />
         <Skeleton className="h-8 w-16" />
         <Skeleton className="h-8 w-16" />
@@ -25,7 +25,7 @@ export default function ForumLoading() {
         {[1, 2, 3, 4, 5].map((i) => (
           <div
             key={i}
-            className="bg-white rounded-lg border border-neutral-200 p-4"
+            className="bg-card rounded-lg border border-border p-4"
           >
             <div className="flex gap-4">
               {/* Vote Column */}

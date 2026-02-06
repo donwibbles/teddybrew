@@ -78,20 +78,20 @@ export function CommentsSection({
   return (
     <div
       id="comments"
-      className="bg-white rounded-lg border border-neutral-200 mt-4"
+      className="bg-card rounded-lg border border-border mt-4"
     >
       {/* Header */}
-      <div className="px-6 py-4 border-b border-neutral-200">
+      <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-neutral-400" />
-            <h2 className="font-semibold text-neutral-900">
+            <MessageSquare className="h-5 w-5 text-foreground-muted" />
+            <h2 className="font-semibold text-foreground">
               {commentCount} {commentCount === 1 ? "Comment" : "Comments"}
             </h2>
           </div>
 
           {/* Sort Options */}
-          <div className="flex items-center gap-1 bg-neutral-100 rounded-lg p-0.5">
+          <div className="flex items-center gap-1 bg-background-muted rounded-lg p-0.5">
             {sortOptions.map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
@@ -99,8 +99,8 @@ export function CommentsSection({
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 rounded text-sm transition-colors",
                   currentSort === value
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:text-neutral-700"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-foreground-muted hover:text-foreground"
                 )}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -113,15 +113,15 @@ export function CommentsSection({
 
       {/* Comment Form */}
       {isMember ? (
-        <div className="px-6 py-4 border-b border-neutral-200">
+        <div className="px-6 py-4 border-b border-border">
           <CommentForm postId={postId} onSuccess={handleCommentSuccess} />
         </div>
       ) : currentUserId ? (
-        <div className="px-6 py-4 border-b border-neutral-200 text-center text-sm text-neutral-500">
+        <div className="px-6 py-4 border-b border-border text-center text-sm text-foreground-muted">
           Join this community to comment on posts
         </div>
       ) : (
-        <div className="px-6 py-4 border-b border-neutral-200 text-center text-sm text-neutral-500">
+        <div className="px-6 py-4 border-b border-border text-center text-sm text-foreground-muted">
           Sign in to comment on posts
         </div>
       )}
@@ -139,8 +139,8 @@ export function CommentsSection({
 
       {/* More comments indicator */}
       {hasMoreComments && (
-        <div className="px-6 py-3 border-t border-neutral-200 text-center">
-          <p className="text-sm text-neutral-500">
+        <div className="px-6 py-3 border-t border-border text-center">
+          <p className="text-sm text-foreground-muted">
             Showing top {comments.length} comments of {commentCount} total
           </p>
         </div>

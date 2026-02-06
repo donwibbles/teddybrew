@@ -14,7 +14,7 @@ export default async function AdminDashboardPage() {
       value: stats?.userCount ?? 0,
       icon: Users,
       color: "text-primary-600",
-      bg: "bg-primary-50",
+      bg: "bg-primary-subtle",
     },
     {
       label: "Communities",
@@ -42,8 +42,8 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Dashboard</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <p className="text-foreground-muted mt-1">
           System overview and statistics
         </p>
       </div>
@@ -53,17 +53,17 @@ export default async function AdminDashboardPage() {
         {statCards.map(({ label, value, icon: Icon, color, bg }) => (
           <div
             key={label}
-            className="bg-white rounded-lg border border-neutral-200 p-4"
+            className="bg-card rounded-lg border border-border p-4"
           >
             <div className="flex items-center gap-3">
               <div className={`${bg} ${color} p-2 rounded-lg`}>
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-neutral-900">
+                <p className="text-2xl font-semibold text-foreground">
                   {value.toLocaleString()}
                 </p>
-                <p className="text-sm text-neutral-500">{label}</p>
+                <p className="text-sm text-foreground-muted">{label}</p>
               </div>
             </div>
           </div>

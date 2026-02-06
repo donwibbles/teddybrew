@@ -11,8 +11,8 @@ export default async function AdminCommunitiesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Communities</h1>
-        <p className="text-neutral-600 mt-1">
+        <h1 className="text-2xl font-semibold text-foreground">Communities</h1>
+        <p className="text-foreground-muted mt-1">
           Manage all communities ({communities.length} total)
         </p>
       </div>

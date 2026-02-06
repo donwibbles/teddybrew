@@ -16,7 +16,7 @@ const statusConfig: Record<DocumentStatus, {
   DRAFT: {
     label: "Draft",
     icon: FileText,
-    className: "bg-amber-100 text-amber-700 border-amber-200",
+    className: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800",
   },
   PUBLISHED: {
     label: "Published",
@@ -26,7 +26,7 @@ const statusConfig: Record<DocumentStatus, {
   ARCHIVED: {
     label: "Archived",
     icon: Archive,
-    className: "bg-neutral-100 text-neutral-600 border-neutral-200",
+    className: "bg-background-muted text-foreground-muted border-border",
   },
 };
 

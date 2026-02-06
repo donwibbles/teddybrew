@@ -29,8 +29,8 @@ export function MemberList({
   showManageLink,
 }: MemberListProps) {
   return (
-    <div className="bg-white rounded-lg border border-neutral-200">
-      <ul className="divide-y divide-neutral-100">
+    <div className="bg-card rounded-lg border border-border">
+      <ul className="divide-y divide-border">
         {members.map((member) => (
           <li
             key={member.id}
@@ -47,7 +47,7 @@ export function MemberList({
                   className="rounded-full"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full bg-primary-subtle-hover flex items-center justify-center">
                   <span className="text-primary-700 font-medium text-sm">
                     {(member.user.name || "Anonymous").charAt(0).toUpperCase()}
                   </span>
@@ -59,7 +59,7 @@ export function MemberList({
             <div className="flex-1 min-w-0">
               <ProfileLink
                 user={member.user}
-                className="text-sm font-medium text-neutral-900 truncate block hover:text-primary-600"
+                className="text-sm font-medium text-foreground truncate block hover:text-primary-600"
               />
               {member.role === MemberRole.OWNER && (
                 <span className="text-xs text-primary-600">Owner</span>
@@ -71,7 +71,7 @@ export function MemberList({
 
       {/* See all link */}
       {totalCount > members.length && (
-        <div className="border-t border-neutral-100 p-3">
+        <div className="border-t border-border p-3">
           <Link
             href={`/communities/${communitySlug}/members`}
             className="block text-center text-sm text-primary-600 hover:text-primary-700 font-medium"
@@ -83,7 +83,7 @@ export function MemberList({
 
       {/* Manage link for owners */}
       {showManageLink && totalCount <= members.length && (
-        <div className="border-t border-neutral-100 p-3">
+        <div className="border-t border-border p-3">
           <Link
             href={`/communities/${communitySlug}/members`}
             className="block text-center text-sm text-primary-600 hover:text-primary-700 font-medium"

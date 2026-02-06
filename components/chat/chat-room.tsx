@@ -420,9 +420,9 @@ export function ChatRoom({
     const element = document.getElementById(`message-${messageId}`);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.classList.add("bg-primary-50");
+      element.classList.add("bg-primary-subtle");
       setTimeout(() => {
-        element.classList.remove("bg-primary-50");
+        element.classList.remove("bg-primary-subtle");
       }, 2000);
     }
   };
@@ -491,12 +491,12 @@ export function ChatRoom({
   }, [messages, pendingMessages, channelId, currentUserId, currentUser]);
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-card">
       {/* Channel Header */}
-      <div className="px-4 py-3 border-b border-neutral-200">
+      <div className="px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <Hash className="h-5 w-5 text-neutral-400" />
-          <h2 className="font-semibold text-neutral-900">{channelName}</h2>
+          <Hash className="h-5 w-5 text-foreground-muted" />
+          <h2 className="font-semibold text-foreground">{channelName}</h2>
           {!isConnected && (
             <span className="ml-2 text-xs text-warning-600 bg-warning-50 px-2 py-0.5 rounded">
               Connecting...
@@ -504,7 +504,7 @@ export function ChatRoom({
           )}
         </div>
         {channelDescription && (
-          <p className="text-sm text-neutral-500 mt-1">{channelDescription}</p>
+          <p className="text-sm text-foreground-muted mt-1">{channelDescription}</p>
         )}
       </div>
 

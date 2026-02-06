@@ -124,7 +124,7 @@ export function EventCard({
   return (
     <Link
       href={`${basePath}/${event.community.slug}/events/${event.id}`}
-      className="block bg-white rounded-lg border border-neutral-200 hover:border-primary-300 hover:shadow-md transition-all overflow-hidden"
+      className="block bg-card rounded-lg border border-border hover:border-primary-300 hover:shadow-md transition-all overflow-hidden"
     >
       {/* Cover Image Section */}
       <div className="relative aspect-[16/9] w-full">
@@ -148,11 +148,11 @@ export function EventCard({
               <EventTypeBadge
                 type={event.eventType as EventTypeValue}
                 size="sm"
-                className="bg-white/90 backdrop-blur-sm shadow-sm"
+                className="bg-card/90 backdrop-blur-sm shadow-sm"
               />
             )}
             {event.isVirtual && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-white/90 backdrop-blur-sm text-blue-700 shadow-sm">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-card/90 backdrop-blur-sm text-blue-700 shadow-sm">
                 <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
@@ -187,20 +187,20 @@ export function EventCard({
         {/* Community name and title */}
         <div className="mb-3">
           {showCommunity && (
-            <p className="text-xs text-neutral-500 mb-1">
+            <p className="text-xs text-foreground-muted mb-1">
               {event.community.name}
             </p>
           )}
-          <h3 className="font-semibold text-neutral-900 line-clamp-2">
+          <h3 className="font-semibold text-foreground line-clamp-2">
             {event.title}
           </h3>
         </div>
 
         {/* Date & Time */}
-        <div className="flex items-center gap-2 text-sm text-neutral-600 mb-2">
+        <div className="flex items-center gap-2 text-sm text-foreground-muted mb-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-neutral-400 flex-shrink-0"
+            className="h-4 w-4 text-foreground-muted flex-shrink-0"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -215,10 +215,10 @@ export function EventCard({
 
         {/* Location */}
         {(event.location || event.state) && (
-          <div className="flex items-center gap-2 text-sm text-neutral-600 mb-3">
+          <div className="flex items-center gap-2 text-sm text-foreground-muted mb-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 text-neutral-400 flex-shrink-0"
+              className="h-4 w-4 text-foreground-muted flex-shrink-0"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -233,7 +233,7 @@ export function EventCard({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+        <div className="flex items-center justify-between pt-3 border-t border-border">
           {/* Organizer */}
           <div className="flex items-center gap-2 min-w-0">
             {event.organizer.image ? (
@@ -245,20 +245,20 @@ export function EventCard({
                 className="rounded-full flex-shrink-0"
               />
             ) : (
-              <div className="w-6 h-6 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
+              <div className="w-6 h-6 rounded-full bg-primary-subtle-hover flex items-center justify-center flex-shrink-0">
                 <span className="text-primary-700 text-xs font-medium">
                   {(event.organizer.name || "?").charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
-            <span className="text-xs text-neutral-500 truncate">
+            <span className="text-xs text-foreground-muted truncate">
               by {event.organizer.name || "Anonymous"}
             </span>
           </div>
 
           {/* Attendees count - only show if showAttendeeCount is true (default) */}
           {(event.showAttendeeCount !== false) && (
-            <div className="flex items-center gap-1 text-xs text-neutral-500 flex-shrink-0">
+            <div className="flex items-center gap-1 text-xs text-foreground-muted flex-shrink-0">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-4 w-4"

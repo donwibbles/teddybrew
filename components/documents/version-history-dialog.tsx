@@ -128,7 +128,7 @@ export function VersionHistoryDialog({
             ) : error ? (
               <div className="py-8 text-center text-error-600">{error}</div>
             ) : versions.length === 0 ? (
-              <div className="py-8 text-center text-neutral-500">
+              <div className="py-8 text-center text-foreground-muted">
                 No version history yet. Versions are created when you publish.
               </div>
             ) : (
@@ -186,7 +186,7 @@ interface VersionItemProps {
 
 function VersionItem({ version, isLatest, onRestore }: VersionItemProps) {
   return (
-    <div className="flex items-start justify-between gap-4 rounded-lg border border-neutral-200 p-3">
+    <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-3">
       <div className="flex items-start gap-3">
         <Avatar className="h-8 w-8">
           <AvatarImage src={version.author.image || undefined} />
@@ -196,7 +196,7 @@ function VersionItem({ version, isLatest, onRestore }: VersionItemProps) {
         </Avatar>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-neutral-900">
+            <span className="font-medium text-foreground">
               Version {version.version}
             </span>
             {isLatest && (
@@ -205,12 +205,12 @@ function VersionItem({ version, isLatest, onRestore }: VersionItemProps) {
               </span>
             )}
           </div>
-          <p className="text-sm text-neutral-600">{version.author.name}</p>
-          <p className="text-xs text-neutral-500">
+          <p className="text-sm text-foreground-muted">{version.author.name}</p>
+          <p className="text-xs text-foreground-muted">
             {formatDistanceToNow(new Date(version.createdAt), { addSuffix: true })}
           </p>
           {version.changeNote && (
-            <p className="text-sm text-neutral-600 italic">
+            <p className="text-sm text-foreground-muted italic">
               &quot;{version.changeNote}&quot;
             </p>
           )}

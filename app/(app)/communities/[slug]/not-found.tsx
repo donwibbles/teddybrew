@@ -3,9 +3,9 @@ import Link from "next/link";
 export default function CommunityNotFound() {
   return (
     <div className="text-center py-16">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-neutral-100 rounded-full mb-6">
+      <div className="inline-flex items-center justify-center w-16 h-16 bg-background-muted rounded-full mb-6">
         <svg
-          className="w-8 h-8 text-neutral-400"
+          className="w-8 h-8 text-foreground-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -18,16 +18,16 @@ export default function CommunityNotFound() {
           />
         </svg>
       </div>
-      <h1 className="text-2xl font-semibold text-neutral-900 mb-2">
+      <h1 className="text-2xl font-semibold text-foreground mb-2">
         Community Not Found
       </h1>
-      <p className="text-neutral-600 mb-6">
+      <p className="text-foreground-muted mb-6">
         The community you&apos;re looking for doesn&apos;t exist or has been
         deleted.
       </p>
       <Link
         href="/communities"
-        className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+        className="inline-flex items-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
       >
         Browse Communities
       </Link>

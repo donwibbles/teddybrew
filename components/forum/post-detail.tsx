@@ -108,12 +108,12 @@ export function PostDetail({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200">
+    <div className="bg-card rounded-lg border border-border">
       {/* Back link */}
-      <div className="px-4 py-3 border-b border-neutral-200">
+      <div className="px-4 py-3 border-b border-border">
         <Link
           href={`${basePath}/${communitySlug}/forum`}
-          className="inline-flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-700 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-foreground-muted hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to Forum
@@ -140,22 +140,22 @@ export function PostDetail({
               {isPinned && (
                 <Pin className="h-5 w-5 text-primary-500 shrink-0 mt-0.5" />
               )}
-              <h1 className="text-xl font-semibold text-neutral-900">{title}</h1>
+              <h1 className="text-xl font-semibold text-foreground">{title}</h1>
             </div>
 
             {/* Meta */}
-            <div className="flex items-center gap-3 mb-4 text-sm text-neutral-500">
+            <div className="flex items-center gap-3 mb-4 text-sm text-foreground-muted">
               <div className="flex items-center gap-2">
                 <Avatar className="h-6 w-6">
                   <AvatarImage
                     src={author.image || undefined}
                     alt={author.name || ""}
                   />
-                  <AvatarFallback className="text-xs bg-neutral-100">
+                  <AvatarFallback className="text-xs bg-background-muted">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <ProfileLink user={author} className="font-medium text-neutral-700 hover:text-primary-600" />
+                <ProfileLink user={author} className="font-medium text-foreground hover:text-primary-600" />
                 {author.role && <RoleBadge role={author.role} size="sm" />}
               </div>
               <span>·</span>
@@ -179,7 +179,7 @@ export function PostDetail({
 
             {/* Actions */}
             {!isPublicView && (isAuthor || canModerate) && (
-              <div className="flex items-center gap-2 pt-4 border-t border-neutral-100">
+              <div className="flex items-center gap-2 pt-4 border-t border-border">
                 {isAuthor && (
                   <Link href={`/communities/${communitySlug}/forum/${slug}/edit`}>
                     <Button variant="ghost" size="sm">

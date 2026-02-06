@@ -1,6 +1,6 @@
 function Skeleton({ className }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-neutral-200 rounded ${className}`} />
+    <div className={`animate-pulse bg-background-muted rounded ${className}`} />
   );
 }
 
@@ -25,7 +25,7 @@ export default function EventsLoading() {
         {[1, 2, 3, 4, 5, 6].map((i) => (
           <div
             key={i}
-            className="bg-white rounded-lg border border-neutral-200 overflow-hidden"
+            className="bg-card rounded-lg border border-border overflow-hidden"
           >
             <div className="p-4 space-y-3">
               <Skeleton className="h-6 w-3/4" />
@@ -41,7 +41,7 @@ export default function EventsLoading() {
                 <Skeleton className="h-4 w-4" />
                 <Skeleton className="h-4 w-28" />
               </div>
-              <div className="flex items-center justify-between pt-3 border-t border-neutral-100">
+              <div className="flex items-center justify-between pt-3 border-t border-border">
                 <div className="flex -space-x-2">
                   {[1, 2, 3].map((j) => (
                     <Skeleton key={j} className="h-6 w-6 rounded-full border-2 border-white" />

@@ -58,16 +58,16 @@ export function ErrorBoundary({
             />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-neutral-900 mb-2">{title}</h2>
-        <p className="text-neutral-600 mb-6">{description}</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{title}</h2>
+        <p className="text-foreground-muted mb-6">{description}</p>
 
         {process.env.NODE_ENV === "development" && (
-          <div className="mb-6 p-3 bg-neutral-100 rounded-lg text-left">
-            <p className="text-sm font-mono text-neutral-700 break-all">
+          <div className="mb-6 p-3 bg-background-muted rounded-lg text-left">
+            <p className="text-sm font-mono text-foreground break-all">
               {error.message}
             </p>
             {error.digest && (
-              <p className="text-xs text-neutral-500 mt-1">Error ID: {error.digest}</p>
+              <p className="text-xs text-foreground-muted mt-1">Error ID: {error.digest}</p>
             )}
           </div>
         )}

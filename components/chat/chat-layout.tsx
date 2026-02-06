@@ -107,11 +107,11 @@ export function ChatLayout({
   };
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-lg border border-neutral-200 overflow-hidden">
+    <div className="flex h-[calc(100vh-8rem)] bg-card rounded-lg border border-border overflow-hidden">
       {/* Channel Menu Button - Hidden on mobile (<768px), shown on tablet (768px-1023px), hidden on desktop (1024px+) */}
       <button
         onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-        className="hidden md:block lg:hidden absolute top-4 left-4 z-50 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
+        className="hidden md:block lg:hidden absolute top-4 left-4 z-50 p-2 bg-card border border-border rounded-md shadow-sm"
       >
         {showMobileSidebar ? (
           <X className="h-5 w-5" />
@@ -123,7 +123,7 @@ export function ChatLayout({
       {/* Channel Sidebar */}
       <div
         className={cn(
-          "w-56 border-r border-neutral-200 bg-neutral-50 shrink-0",
+          "w-56 border-r border-border bg-background-muted shrink-0",
           "fixed lg:relative inset-y-0 left-0 z-40 lg:z-auto",
           "transform lg:transform-none transition-transform duration-200",
           // On mobile, always hidden (channels via main nav)
@@ -165,7 +165,7 @@ export function ChatLayout({
             onOpenThread={handleOpenThread}
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-neutral-500">
+          <div className="flex-1 flex items-center justify-center text-foreground-muted">
             Select a channel to start chatting
           </div>
         )}
@@ -186,7 +186,7 @@ export function ChatLayout({
 
       {/* Online Members Sidebar - Hidden on mobile, hidden when thread panel is open */}
       {!openThreadId && (
-        <div className="hidden xl:block w-52 border-l border-neutral-200 bg-neutral-50 shrink-0">
+        <div className="hidden xl:block w-52 border-l border-border bg-background-muted shrink-0">
           <OnlineMembers currentUserId={currentUser.id} />
         </div>
       )}
@@ -195,7 +195,7 @@ export function ChatLayout({
       {!openThreadId && (
         <button
           onClick={() => setShowMobileMembers(!showMobileMembers)}
-          className="xl:hidden hidden md:block absolute top-4 right-4 z-50 p-2 bg-white border border-neutral-200 rounded-md shadow-sm"
+          className="xl:hidden hidden md:block absolute top-4 right-4 z-50 p-2 bg-card border border-border rounded-md shadow-sm"
           title="Show members"
         >
           <Users className="h-5 w-5" />
@@ -209,7 +209,7 @@ export function ChatLayout({
             className="xl:hidden fixed inset-0 bg-black/20 z-30"
             onClick={() => setShowMobileMembers(false)}
           />
-          <div className="xl:hidden fixed right-0 top-0 bottom-0 w-52 bg-neutral-50 border-l border-neutral-200 z-40">
+          <div className="xl:hidden fixed right-0 top-0 bottom-0 w-52 bg-background-muted border-l border-border z-40">
             <OnlineMembers currentUserId={currentUser.id} />
           </div>
         </>

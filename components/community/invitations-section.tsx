@@ -37,7 +37,7 @@ export function InvitationsSection({ communityId }: InvitationsSectionProps) {
     <div className="space-y-6">
       {/* Send Invite */}
       <div>
-        <h3 className="text-sm font-medium text-neutral-900 mb-3">
+        <h3 className="text-sm font-medium text-foreground mb-3">
           Invite New Member
         </h3>
         <InviteForm communityId={communityId} onInviteSent={loadInvites} />
@@ -45,12 +45,12 @@ export function InvitationsSection({ communityId }: InvitationsSectionProps) {
 
       {/* Pending Invites */}
       <div>
-        <h3 className="text-sm font-medium text-neutral-900 mb-3">
+        <h3 className="text-sm font-medium text-foreground mb-3">
           Pending Invitations
         </h3>
         {isLoading ? (
-          <div className="py-6 text-center text-neutral-500">
-            <div className="animate-spin h-6 w-6 border-2 border-neutral-300 border-t-primary-500 rounded-full mx-auto mb-2" />
+          <div className="py-6 text-center text-foreground-muted">
+            <div className="animate-spin h-6 w-6 border-2 border-border border-t-primary-500 rounded-full mx-auto mb-2" />
             <p className="text-sm">Loading invitations...</p>
           </div>
         ) : (

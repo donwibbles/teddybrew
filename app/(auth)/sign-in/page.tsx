@@ -26,12 +26,12 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     : undefined;
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8">
+    <div className="bg-card rounded-lg shadow-sm border border-border p-8">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-semibold text-neutral-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Welcome to Hive Community
         </h1>
-        <p className="text-neutral-600 mt-2">
+        <p className="text-foreground-muted mt-2">
           Sign in with your email to continue
         </p>
       </div>
@@ -51,11 +51,11 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       {process.env.NODE_ENV === "development" && (
         <>
           <div className="my-6 flex items-center gap-4">
-            <div className="flex-1 h-px bg-neutral-200" />
-            <span className="text-xs text-neutral-400 uppercase tracking-wide">
+            <div className="flex-1 h-px bg-background-muted" />
+            <span className="text-xs text-foreground-muted uppercase tracking-wide">
               Dev Only
             </span>
-            <div className="flex-1 h-px bg-neutral-200" />
+            <div className="flex-1 h-px bg-background-muted" />
           </div>
           <DevLoginForm />
         </>

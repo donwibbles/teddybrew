@@ -36,7 +36,7 @@ export function ThreadPreview({
             return (
               <Avatar key={user.id} className="h-5 w-5 border border-white">
                 <AvatarImage src={user.image || undefined} alt={user.name || ""} />
-                <AvatarFallback className="bg-primary-100 text-primary-700 text-[10px]">
+                <AvatarFallback className="bg-primary-subtle-hover text-primary-700 text-[10px]">
                   {initials}
                 </AvatarFallback>
               </Avatar>

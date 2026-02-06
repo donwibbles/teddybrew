@@ -104,7 +104,7 @@ export function AnnouncementBanner({
   }
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg overflow-hidden">
+    <div className="bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg overflow-hidden">
       {isExpanded ? (
         <ExpandedBanner
           announcements={visibleAnnouncements}
@@ -139,8 +139,8 @@ function ExpandedBanner({
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-amber-200 bg-amber-100/50">
-        <div className="flex items-center gap-2 text-amber-800 font-medium">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-amber-200 dark:border-amber-800 bg-amber-100/50 dark:bg-amber-900/30">
+        <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200 font-medium">
           <Megaphone className="w-5 h-5" />
           <span>
             Announcements ({announcements.length})
@@ -150,7 +150,7 @@ function ExpandedBanner({
           {canManage && (
             <Link
               href={`/communities/${communitySlug}/settings#announcements`}
-              className="text-sm text-amber-700 hover:text-amber-900 font-medium flex items-center gap-1"
+              className="text-sm text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 font-medium flex items-center gap-1"
             >
               <Settings className="w-4 h-4" />
               Manage
@@ -158,7 +158,7 @@ function ExpandedBanner({
           )}
           <button
             onClick={onCollapse}
-            className="p-1 text-amber-700 hover:text-amber-900 hover:bg-amber-200 rounded"
+            className="p-1 text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 hover:bg-amber-200 dark:hover:bg-amber-800 rounded"
             aria-label="Collapse announcements"
           >
             <ChevronUp className="w-5 h-5" />
@@ -167,7 +167,7 @@ function ExpandedBanner({
       </div>
 
       {/* Announcements List */}
-      <div className="divide-y divide-amber-200">
+      <div className="divide-y divide-amber-200 dark:divide-amber-800">
         {announcements.map((announcement) => (
           <AnnouncementItem
             key={announcement.id}
@@ -192,19 +192,19 @@ function AnnouncementItem({
       {/* Dismiss Button */}
       <button
         onClick={() => onDismiss(announcement.id)}
-        className="absolute top-3 right-3 p-1 text-amber-600 hover:text-amber-800 hover:bg-amber-200 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-3 right-3 p-1 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 hover:bg-amber-200 dark:hover:bg-amber-800 rounded opacity-0 group-hover:opacity-100 transition-opacity"
         aria-label="Dismiss announcement"
       >
         <X className="w-4 h-4" />
       </button>
 
       {/* Title */}
-      <h3 className="font-semibold text-amber-900 mb-1 pr-8">
+      <h3 className="font-semibold text-amber-900 dark:text-amber-100 mb-1 pr-8">
         {announcement.title}
       </h3>
 
       {/* Content (Markdown) */}
-      <div className="prose prose-sm prose-amber max-w-none text-amber-800 mb-2">
+      <div className="prose prose-sm prose-amber max-w-none text-amber-800 dark:text-amber-200 mb-2">
         <ReactMarkdown
           components={{
             // Customize links to open in new tab
@@ -213,7 +213,7 @@ function AnnouncementItem({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-amber-700 hover:text-amber-900 underline"
+                className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-100 underline"
               >
                 {children}
               </a>
@@ -227,7 +227,7 @@ function AnnouncementItem({
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-2 text-xs text-amber-600">
+      <div className="flex items-center gap-2 text-xs text-amber-600 dark:text-amber-400">
         {announcement.createdBy.image && (
           <Image
             src={announcement.createdBy.image}
@@ -260,7 +260,7 @@ function CollapsedBanner({
   return (
     <button
       onClick={onExpand}
-      className="w-full flex items-center justify-between px-4 py-2 text-amber-800 hover:bg-amber-100 transition-colors"
+      className="w-full flex items-center justify-between px-4 py-2 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors"
     >
       <div className="flex items-center gap-2">
         <Megaphone className="w-4 h-4" />

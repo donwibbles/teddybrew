@@ -44,16 +44,16 @@ export default async function CommunitiesPage({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Communities
           </h1>
-          <p className="text-neutral-600 mt-1">
+          <p className="text-foreground-muted mt-1">
             Discover communities and connect with others
           </p>
         </div>
         <Link
           href="/communities/new"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg
                      hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                      transition-colors"
         >
@@ -120,7 +120,7 @@ async function CommunityList({
 
   if (communities.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-neutral-200">
+      <div className="bg-card rounded-lg border border-border">
         <EmptyState
           icon={Users}
           title="No communities found"
@@ -133,7 +133,7 @@ async function CommunityList({
             !query ? (
               <Link
                 href="/communities/new"
-                className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
               >
                 Create Community
               </Link>
@@ -167,11 +167,11 @@ function CommunityListSkeleton() {
       {[...Array(6)].map((_, i) => (
         <div
           key={i}
-          className="bg-white rounded-lg border border-neutral-200 p-6 animate-pulse"
+          className="bg-card rounded-lg border border-border p-6 animate-pulse"
         >
-          <div className="h-6 bg-neutral-200 rounded w-3/4 mb-2" />
-          <div className="h-4 bg-neutral-200 rounded w-full mb-4" />
-          <div className="h-4 bg-neutral-200 rounded w-1/2" />
+          <div className="h-6 bg-background-muted rounded w-3/4 mb-2" />
+          <div className="h-4 bg-background-muted rounded w-full mb-4" />
+          <div className="h-4 bg-background-muted rounded w-1/2" />
         </div>
       ))}
     </div>

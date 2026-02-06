@@ -66,7 +66,7 @@ function ToolbarButton({
       size="icon"
       className={cn(
         "h-8 w-8",
-        isActive && "bg-neutral-200 text-neutral-900"
+        isActive && "bg-background-muted text-foreground"
       )}
       onClick={onClick}
       disabled={disabled}
@@ -78,7 +78,7 @@ function ToolbarButton({
 }
 
 function ToolbarDivider() {
-  return <div className="mx-1 h-6 w-px bg-neutral-200" />;
+  return <div className="mx-1 h-6 w-px bg-background-muted" />;
 }
 
 export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: ToolbarProps) {
@@ -92,7 +92,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-200 bg-neutral-50 p-1.5">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-background-muted p-1.5">
       {/* Undo/Redo */}
       <ToolbarButton
         onClick={() => editor.chain().focus().undo().run()}
@@ -173,7 +173,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             className={cn(
-              editor.isActive("heading", { level: 1 }) && "bg-neutral-100"
+              editor.isActive("heading", { level: 1 }) && "bg-background-muted"
             )}
           >
             <Heading1 className="mr-2 h-4 w-4" />
@@ -182,7 +182,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             className={cn(
-              editor.isActive("heading", { level: 2 }) && "bg-neutral-100"
+              editor.isActive("heading", { level: 2 }) && "bg-background-muted"
             )}
           >
             <Heading2 className="mr-2 h-4 w-4" />
@@ -191,7 +191,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
             className={cn(
-              editor.isActive("heading", { level: 3 }) && "bg-neutral-100"
+              editor.isActive("heading", { level: 3 }) && "bg-background-muted"
             )}
           >
             <Heading3 className="mr-2 h-4 w-4" />
@@ -200,7 +200,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
           <DropdownMenuItem
             onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
             className={cn(
-              editor.isActive("heading", { level: 4 }) && "bg-neutral-100"
+              editor.isActive("heading", { level: 4 }) && "bg-background-muted"
             )}
           >
             <Heading4 className="mr-2 h-4 w-4" />
@@ -209,7 +209,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
           <DropdownMenuItem
             onClick={() => editor.chain().focus().setParagraph().run()}
             className={cn(
-              !editor.isActive("heading") && "bg-neutral-100"
+              !editor.isActive("heading") && "bg-background-muted"
             )}
           >
             Paragraph
@@ -308,7 +308,7 @@ export function Toolbar({ editor, onLinkClick, onImageClick, disabled }: Toolbar
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor.isActive("table") && "bg-neutral-200 text-neutral-900"
+              editor.isActive("table") && "bg-background-muted text-foreground"
             )}
             disabled={disabled}
             title="Table"
