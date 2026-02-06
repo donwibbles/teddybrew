@@ -117,7 +117,7 @@ export function EditPostForm({
       postId,
       title: data.title,
       content: html,
-      contentJson: contentJsonRef.current,
+      contentJson: contentJsonRef.current ? JSON.parse(JSON.stringify(contentJsonRef.current)) : undefined,
       issueTagIds,
     });
 
