@@ -189,7 +189,7 @@ export function CommunitySearch({
             type="search"
             value={query}
             onChange={handleQueryChange}
-            placeholder="Search communities...)"
+            placeholder="Search communities..."
             aria-label="Search communities. Press slash or Command+K to focus."
             className="block w-full pl-10 pr-10 py-2.5 border border-border rounded-lg text-foreground placeholder-foreground-muted
                        focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
