@@ -2,7 +2,7 @@
 
 import { usePresenceContext } from "@/contexts/presence-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users } from "lucide-react";
+import { Users, WifiOff } from "lucide-react";
 
 interface MemberData {
   id: string;
@@ -15,7 +15,7 @@ interface OnlineMembersProps {
 }
 
 export function OnlineMembers({ currentUserId }: OnlineMembersProps) {
-  const { members, isConnected, memberCount } = usePresenceContext();
+  const { members, connectionStatus, memberCount, retryConnection } = usePresenceContext();
 
   // Get unique members (by clientId) with their data
   const uniqueMembers = members.reduce<MemberData[]>((acc, member) => {
@@ -26,6 +26,15 @@ export function OnlineMembers({ currentUserId }: OnlineMembersProps) {
     return acc;
   }, []);
 
+  const statusLabel =
+    connectionStatus === "connected"
+      ? memberCount
+      : connectionStatus === "reconnecting"
+        ? "Reconnecting..."
+        : connectionStatus === "error"
+          ? "Offline"
+          : "Connecting...";
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-border">
@@ -35,15 +44,30 @@ export function OnlineMembers({ currentUserId }: OnlineMembersProps) {
             Online
           </h3>
           <span className="text-xs text-foreground-muted">
-            {isConnected ? memberCount : "..."}
+            {statusLabel}
           </span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto py-2">
-        {!isConnected ? (
+        {connectionStatus === "connecting" ? (
           <div className="px-3 py-2 text-sm text-foreground-muted">
             Connecting...
+          </div>
+        ) : connectionStatus === "reconnecting" ? (
+          <div className="px-3 py-2 text-sm text-foreground-muted">
+            Reconnecting...
+          </div>
+        ) : connectionStatus === "error" ? (
+          <div className="px-3 py-4 flex flex-col items-center gap-2 text-center">
+            <WifiOff className="h-5 w-5 text-foreground-muted" />
+            <p className="text-sm text-foreground-muted">Connection lost</p>
+            <button
+              onClick={retryConnection}
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium cursor-pointer"
+            >
+              Retry connection
+            </button>
           </div>
         ) : uniqueMembers.length === 0 ? (
           <div className="px-3 py-4 text-center text-sm text-foreground-muted">

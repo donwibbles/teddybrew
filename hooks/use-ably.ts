@@ -9,7 +9,7 @@ let ablyClient: Ably.Realtime | null = null;
 let connectionPromise: Promise<Ably.Realtime> | null = null;
 let connectionState: "disconnected" | "connecting" | "connected" | "failed" = "disconnected";
 
-async function getAblyClient(): Promise<Ably.Realtime> {
+export async function getAblyClient(): Promise<Ably.Realtime> {
   // Return existing connected client
   if (ablyClient && connectionState === "connected") {
     return ablyClient;
@@ -91,11 +91,6 @@ export interface AblyMessage {
   data: unknown;
   timestamp: number;
   clientId?: string;
-}
-
-export interface PresenceMember {
-  clientId: string;
-  data?: unknown;
 }
 
 // Message queue for throttling
@@ -238,166 +233,6 @@ export function useAblyChannel(
     isConnected,
     error,
     clearMessages,
-  };
-}
-
-// Global tracker for presence channels to prevent duplicate enters
-const presenceChannels = new Map<string, { refCount: number; channel: Ably.RealtimeChannel }>();
-
-/**
- * Hook for Ably presence with rate limit protection
- */
-export function useAblyPresence(channelName: string | null, data?: unknown) {
-  const [members, setMembers] = useState<PresenceMember[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const channelRef = useRef<Ably.RealtimeChannel | null>(null);
-  const hasEnteredRef = useRef(false);
-  const dataRef = useRef(data);
-
-  // Update data ref without triggering reconnection
-  useEffect(() => {
-    dataRef.current = data;
-  }, [data]);
-
-  useEffect(() => {
-    if (!channelName) return;
-
-    let mounted = true;
-
-    async function connect() {
-      try {
-        const client = await getAblyClient();
-        if (!mounted || !channelName) return;
-
-        // Check if we already have this presence channel
-        const existing = presenceChannels.get(channelName);
-        if (existing) {
-          existing.refCount++;
-          channelRef.current = existing.channel;
-
-          // Just get current members without re-entering
-          const currentMembers = await existing.channel.presence.get();
-          if (mounted) {
-            setMembers(
-              currentMembers.map((m) => ({
-                clientId: m.clientId,
-                data: m.data,
-              }))
-            );
-            setIsConnected(true);
-            setError(null);
-          }
-          return;
-        }
-
-        const channel = client.channels.get(channelName);
-        channelRef.current = channel;
-        presenceChannels.set(channelName, { refCount: 1, channel });
-
-        // Subscribe to presence events
-        channel.presence.subscribe("enter", (member) => {
-          if (!mounted) return;
-          setMembers((prev) => {
-            if (prev.some((m) => m.clientId === member.clientId)) return prev;
-            return [...prev, { clientId: member.clientId, data: member.data }];
-          });
-        });
-
-        channel.presence.subscribe("leave", (member) => {
-          if (!mounted) return;
-          setMembers((prev) =>
-            prev.filter((m) => m.clientId !== member.clientId)
-          );
-        });
-
-        channel.presence.subscribe("update", (member) => {
-          if (!mounted) return;
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.clientId === member.clientId
-                ? { clientId: member.clientId, data: member.data }
-                : m
-            )
-          );
-        });
-
-        // Enter presence with delay to avoid rate limits
-        if (!hasEnteredRef.current) {
-          // Small delay to batch rapid mount/unmount cycles
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          if (!mounted) return;
-
-          await channel.presence.enter(dataRef.current);
-          hasEnteredRef.current = true;
-        }
-
-        const currentMembers = await channel.presence.get();
-        if (mounted) {
-          setMembers(
-            currentMembers.map((m) => ({
-              clientId: m.clientId,
-              data: m.data,
-            }))
-          );
-          setIsConnected(true);
-          setError(null);
-        }
-      } catch (err) {
-        if (!mounted) return;
-
-        // Don't log rate limit errors to Sentry - they're expected under load
-        const isRateLimit = err instanceof Error && err.message.includes("Rate limit");
-        if (!isRateLimit) {
-          console.error("Ably presence error:", err);
-          Sentry.captureException(err, {
-            tags: { service: "ably", type: "presence" },
-            extra: { channelName },
-          });
-        }
-        setError(err as Error);
-        setIsConnected(false);
-      }
-    }
-
-    connect();
-
-    return () => {
-      mounted = false;
-
-      // Decrement ref count and only cleanup if no more references
-      const existing = presenceChannels.get(channelName);
-      if (existing) {
-        existing.refCount--;
-        if (existing.refCount <= 0) {
-          presenceChannels.delete(channelName);
-          if (hasEnteredRef.current) {
-            existing.channel.presence.leave().catch(() => {});
-            existing.channel.presence.unsubscribe();
-          }
-        }
-      }
-
-      hasEnteredRef.current = false;
-      channelRef.current = null;
-    };
-  }, [channelName]); // Remove data from dependencies
-
-  const updatePresence = useCallback(async (newData: unknown) => {
-    if (!channelRef.current) return;
-    try {
-      await channelRef.current.presence.update(newData);
-    } catch (err) {
-      console.error("Failed to update presence:", err);
-    }
-  }, []);
-
-  return {
-    members,
-    isConnected,
-    error,
-    updatePresence,
-    memberCount: members.length,
   };
 }
 

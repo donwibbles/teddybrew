@@ -6,9 +6,11 @@ import {
   useEffect,
   useState,
   useRef,
+  useCallback,
   type ReactNode,
 } from "react";
-import Ably from "ably";
+import { getAblyClient } from "@/hooks/use-ably";
+import type Ably from "ably";
 import * as Sentry from "@sentry/nextjs";
 
 interface MemberData {
@@ -22,10 +24,13 @@ interface PresenceMember {
   data?: MemberData;
 }
 
+type ConnectionStatus = "connecting" | "connected" | "reconnecting" | "error";
+
 interface PresenceContextValue {
   members: PresenceMember[];
-  isConnected: boolean;
+  connectionStatus: ConnectionStatus;
   memberCount: number;
+  retryConnection: () => void;
 }
 
 const PresenceContext = createContext<PresenceContextValue | null>(null);
@@ -36,10 +41,12 @@ interface CommunityPresenceProviderProps {
   currentUser: MemberData;
 }
 
+const RETRY_DELAYS = [5_000, 10_000, 30_000, 60_000, 120_000];
+const SYNC_INTERVAL = 30_000;
+
 /**
  * Community-level presence provider that manages a single Ably presence connection.
- * This provider enters presence once when mounted and leaves when unmounted,
- * preventing rate limit issues from component mount/unmount cycles.
+ * Uses the global Ably client singleton, adds periodic sync and retry logic.
  */
 export function CommunityPresenceProvider({
   children,
@@ -47,125 +54,150 @@ export function CommunityPresenceProvider({
   currentUser,
 }: CommunityPresenceProviderProps) {
   const [members, setMembers] = useState<PresenceMember[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const clientRef = useRef<Ably.Realtime | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
   const channelRef = useRef<Ably.RealtimeChannel | null>(null);
   const hasEnteredRef = useRef(false);
+  const retryCountRef = useRef(0);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const syncIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const mountedRef = useRef(true);
 
-  useEffect(() => {
-    let mounted = true;
-    const presenceChannelName = `community:${communityId}:presence`;
+  const presenceChannelName = `community:${communityId}:presence`;
 
-    async function connect() {
-      try {
-        // Fetch token and create a dedicated client for this presence connection
-        const response = await fetch("/api/ably/token");
-        if (!response.ok) {
-          throw new Error("Failed to get Ably token");
-        }
-        const tokenRequest = await response.json();
+  const syncMembers = useCallback(async () => {
+    if (!channelRef.current || !mountedRef.current) return;
+    try {
+      const currentMembers = await channelRef.current.presence.get();
+      if (mountedRef.current) {
+        setMembers(
+          currentMembers.map((m) => ({
+            clientId: m.clientId,
+            data: m.data as MemberData,
+          }))
+        );
+      }
+    } catch {
+      // Sync failures are non-fatal — next interval will retry
+    }
+  }, []);
 
-        if (!mounted) return;
+  const connect = useCallback(async () => {
+    if (!mountedRef.current) return;
 
-        const client = new Ably.Realtime({
-          authCallback: async (_, callback) => {
-            try {
-              const res = await fetch("/api/ably/token");
-              if (!res.ok) throw new Error("Token refresh failed");
-              const token = await res.json();
-              callback(null, token);
-            } catch (err) {
-              callback(err instanceof Error ? err.message : String(err), null);
-            }
-          },
-          disconnectedRetryTimeout: 5000,
-          suspendedRetryTimeout: 10000,
-          ...tokenRequest,
+    setConnectionStatus(retryCountRef.current > 0 ? "reconnecting" : "connecting");
+
+    try {
+      const client = await getAblyClient();
+      if (!mountedRef.current) return;
+
+      const channel = client.channels.get(presenceChannelName);
+      channelRef.current = channel;
+
+      // Subscribe to presence events
+      channel.presence.subscribe("enter", (member) => {
+        if (!mountedRef.current) return;
+        setMembers((prev) => {
+          if (prev.some((m) => m.clientId === member.clientId)) return prev;
+          return [...prev, { clientId: member.clientId, data: member.data as MemberData }];
         });
+      });
 
-        clientRef.current = client;
+      channel.presence.subscribe("leave", (member) => {
+        if (!mountedRef.current) return;
+        setMembers((prev) =>
+          prev.filter((m) => m.clientId !== member.clientId)
+        );
+      });
 
-        // Wait for connection
-        await new Promise<void>((resolve, reject) => {
-          client.connection.on("connected", () => resolve());
-          client.connection.on("failed", (err) => reject(err));
+      channel.presence.subscribe("update", (member) => {
+        if (!mountedRef.current) return;
+        setMembers((prev) =>
+          prev.map((m) =>
+            m.clientId === member.clientId
+              ? { clientId: member.clientId, data: member.data as MemberData }
+              : m
+          )
+        );
+      });
+
+      // Enter presence once
+      if (!hasEnteredRef.current) {
+        await channel.presence.enter({
+          id: currentUser.id,
+          name: currentUser.name,
+          image: currentUser.image,
         });
+        hasEnteredRef.current = true;
+      }
 
-        if (!mounted) {
-          client.close();
-          return;
-        }
+      // Get current members
+      const currentMembers = await channel.presence.get();
+      if (!mountedRef.current) return;
 
-        const channel = client.channels.get(presenceChannelName);
-        channelRef.current = channel;
+      setMembers(
+        currentMembers.map((m) => ({
+          clientId: m.clientId,
+          data: m.data as MemberData,
+        }))
+      );
+      setConnectionStatus("connected");
+      retryCountRef.current = 0;
 
-        // Subscribe to presence events
-        channel.presence.subscribe("enter", (member) => {
-          if (!mounted) return;
-          setMembers((prev) => {
-            if (prev.some((m) => m.clientId === member.clientId)) return prev;
-            return [...prev, { clientId: member.clientId, data: member.data as MemberData }];
-          });
+      // Start periodic sync
+      if (syncIntervalRef.current) clearInterval(syncIntervalRef.current);
+      syncIntervalRef.current = setInterval(syncMembers, SYNC_INTERVAL);
+    } catch (err) {
+      if (!mountedRef.current) return;
+
+      const isRateLimit = err instanceof Error && err.message.includes("Rate limit");
+      if (!isRateLimit) {
+        console.error("Community presence error:", err);
+        Sentry.captureException(err, {
+          tags: { service: "ably", type: "community_presence" },
+          extra: { communityId, retryCount: retryCountRef.current },
         });
+      }
 
-        channel.presence.subscribe("leave", (member) => {
-          if (!mounted) return;
-          setMembers((prev) =>
-            prev.filter((m) => m.clientId !== member.clientId)
-          );
-        });
-
-        channel.presence.subscribe("update", (member) => {
-          if (!mounted) return;
-          setMembers((prev) =>
-            prev.map((m) =>
-              m.clientId === member.clientId
-                ? { clientId: member.clientId, data: member.data as MemberData }
-                : m
-            )
-          );
-        });
-
-        // Enter presence once
-        if (!hasEnteredRef.current) {
-          await channel.presence.enter({
-            id: currentUser.id,
-            name: currentUser.name,
-            image: currentUser.image,
-          });
-          hasEnteredRef.current = true;
-        }
-
-        // Get current members
-        const currentMembers = await channel.presence.get();
-        if (mounted) {
-          setMembers(
-            currentMembers.map((m) => ({
-              clientId: m.clientId,
-              data: m.data as MemberData,
-            }))
-          );
-          setIsConnected(true);
-        }
-      } catch (err) {
-        if (!mounted) return;
-
-        const isRateLimit = err instanceof Error && err.message.includes("Rate limit");
-        if (!isRateLimit) {
-          console.error("Community presence error:", err);
-          Sentry.captureException(err, {
-            tags: { service: "ably", type: "community_presence" },
-            extra: { communityId },
-          });
-        }
-        setIsConnected(false);
+      // Auto-retry with exponential backoff
+      if (retryCountRef.current < RETRY_DELAYS.length) {
+        setConnectionStatus("reconnecting");
+        const delay = RETRY_DELAYS[retryCountRef.current];
+        retryCountRef.current++;
+        retryTimeoutRef.current = setTimeout(() => {
+          if (mountedRef.current) connect();
+        }, delay);
+      } else {
+        setConnectionStatus("error");
       }
     }
+  }, [presenceChannelName, currentUser.id, currentUser.name, currentUser.image, communityId, syncMembers]);
+
+  const retryConnection = useCallback(() => {
+    retryCountRef.current = 0;
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+    connect();
+  }, [connect]);
+
+  useEffect(() => {
+    mountedRef.current = true;
 
     connect();
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
+
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+
+      if (syncIntervalRef.current) {
+        clearInterval(syncIntervalRef.current);
+        syncIntervalRef.current = null;
+      }
 
       // Leave presence and cleanup
       if (channelRef.current && hasEnteredRef.current) {
@@ -173,23 +205,18 @@ export function CommunityPresenceProvider({
         channelRef.current.presence.unsubscribe();
       }
 
-      // Close dedicated client
-      if (clientRef.current) {
-        clientRef.current.close();
-        clientRef.current = null;
-      }
-
       channelRef.current = null;
       hasEnteredRef.current = false;
     };
-  }, [communityId, currentUser.id, currentUser.name, currentUser.image]);
+  }, [connect]);
 
   return (
     <PresenceContext.Provider
       value={{
         members,
-        isConnected,
+        connectionStatus,
         memberCount: members.length,
+        retryConnection,
       }}
     >
       {children}
