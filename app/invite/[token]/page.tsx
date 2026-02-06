@@ -43,7 +43,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           </p>
           <Link
             href="/"
-            className="inline-block px-6 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+            className="inline-block px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
           >
             Go Home
           </Link>
@@ -69,7 +69,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
           </p>
           <Link
             href="/"
-            className="inline-block px-6 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+            className="inline-block px-6 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
           >
             Go Home
           </Link>
@@ -112,7 +112,7 @@ export default async function InvitePage({ params }: InvitePageProps) {
 
             <Link
               href={`/sign-in?callbackUrl=${callbackUrl}`}
-              className="block w-full px-6 py-3 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+              className="block w-full px-6 py-3 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
             >
               Sign In to Accept
             </Link>

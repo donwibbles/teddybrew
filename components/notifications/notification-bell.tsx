@@ -166,7 +166,7 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
         <Bell className="h-5 w-5" aria-hidden="true" />
         {unreadCount > 0 && (
           <span
-            className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-subtle0 text-[10px] font-medium text-white"
+            className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-500 text-[10px] font-medium text-white"
             aria-hidden="true"
           >
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -228,7 +228,7 @@ export function NotificationBell({ userId, initialUnreadCount }: NotificationBel
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${
-                        notification.isRead ? "bg-transparent" : "bg-primary-subtle0"
+                        notification.isRead ? "bg-transparent" : "bg-primary-500"
                       }`}
                     />
                     <div className="flex-1 min-w-0">

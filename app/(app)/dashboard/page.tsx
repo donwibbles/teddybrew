@@ -58,7 +58,7 @@ async function MyEventsList() {
         action={
           <Link
             href="/events"
-            className="inline-flex items-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
           >
             Browse Events
           </Link>
@@ -138,7 +138,7 @@ async function CommunityActivityFeed() {
         action={
           <Link
             href="/communities"
-            className="inline-flex items-center px-4 py-2 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
           >
             Browse Communities
           </Link>

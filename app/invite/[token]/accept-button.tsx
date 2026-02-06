@@ -49,7 +49,7 @@ export function AcceptInviteButton({ token }: AcceptInviteButtonProps) {
     <button
       onClick={handleAccept}
       disabled={isLoading}
-      className="w-full px-6 py-3 bg-primary-subtle0 text-white font-medium rounded-lg
+      className="w-full px-6 py-3 bg-primary-500 text-white font-medium rounded-lg
                  hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500
                  disabled:opacity-50 disabled:cursor-not-allowed transition-colors
                  flex items-center justify-center gap-2"

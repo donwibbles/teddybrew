@@ -30,7 +30,7 @@ export async function CommunitiesSidebar({ communities, userId }: CommunitiesSid
         </p>
         <Link
           href="/communities"
-          className="inline-flex items-center px-3 py-1.5 bg-primary-subtle0 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
+          className="inline-flex items-center px-3 py-1.5 bg-primary-500 text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors"
         >
           Browse Communities
         </Link>
@@ -74,7 +74,7 @@ export async function CommunitiesSidebar({ communities, userId }: CommunitiesSid
                 </p>
               </div>
               {unread > 0 && (
-                <span className="shrink-0 bg-primary-subtle0 text-white text-xs font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                <span className="shrink-0 bg-primary-500 text-white text-xs font-medium rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
                   {unread > 9 ? "9+" : unread}
                 </span>
               )}

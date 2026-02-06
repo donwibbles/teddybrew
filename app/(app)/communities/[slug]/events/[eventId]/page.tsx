@@ -195,7 +195,7 @@ export default async function EventPage({ params }: EventPageProps) {
               {event.chatChannelId && isGoing && (
                 <Link
                   href={`/communities/${slug}/chat?channel=${event.chatChannelId}`}
-                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary-subtle0 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors"
                 >
                   <MessageSquare className="h-4 w-4" />
                   Join Event Chat

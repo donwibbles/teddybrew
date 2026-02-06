@@ -85,7 +85,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
         </p>
         <Link
           href="/"
-          className="mt-6 px-4 py-2 bg-primary-subtle0 text-white rounded-lg hover:bg-primary-600 transition-colors"
+          className="mt-6 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           Go Home
         </Link>

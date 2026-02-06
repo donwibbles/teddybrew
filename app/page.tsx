@@ -22,7 +22,7 @@ export default async function HomePage() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Link
             href="/explore"
-            className="bg-primary-subtle0 hover:bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
+            className="bg-primary-500 hover:bg-primary-600 text-white px-8 py-3 rounded-lg font-semibold shadow-md transition-colors"
           >
             Explore
           </Link>
