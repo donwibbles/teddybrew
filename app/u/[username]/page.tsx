@@ -107,7 +107,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
   }
 
   // Determine what sections to show
-  const showCommunities = isOwnProfile || profile.showCommunities;
+  const showCommunities = profile.showCommunities;
 
   return (
     <div className="space-y-6">
