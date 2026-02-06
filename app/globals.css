@@ -43,6 +43,19 @@
   --color-warning-600: #d97706;
   --color-warning-100: #fef3c7;
 
+  /* Semantic UI Tokens */
+  --color-background: var(--color-neutral-50);
+  --color-background-elevated: #ffffff;
+  --color-background-muted: var(--color-neutral-100);
+  --color-foreground: var(--color-neutral-900);
+  --color-foreground-muted: var(--color-neutral-500);
+  --color-border: var(--color-neutral-200);
+  --color-card: #ffffff;
+  --color-card-foreground: var(--color-neutral-900);
+  --color-input: #ffffff;
+  --color-input-border: var(--color-neutral-300);
+  --color-ring: var(--color-primary-500);
+
   /* Font Sizes with Line Heights */
   --font-size-xs: 0.75rem;       /* 12px - captions, badges */
   --line-height-xs: 1rem;
@@ -92,6 +105,20 @@
   --breakpoint-xl: 1280px;
 }
 
+/* Dark mode overrides */
+.dark {
+  --color-background: #0a0a0a;
+  --color-background-elevated: var(--color-neutral-900);
+  --color-background-muted: var(--color-neutral-800);
+  --color-foreground: var(--color-neutral-50);
+  --color-foreground-muted: var(--color-neutral-400);
+  --color-border: var(--color-neutral-800);
+  --color-card: var(--color-neutral-900);
+  --color-card-foreground: var(--color-neutral-50);
+  --color-input: var(--color-neutral-900);
+  --color-input-border: var(--color-neutral-700);
+}
+
 /* Base styles */
 @layer base {
   *,
@@ -101,7 +128,7 @@
   }
 
   body {
-    @apply bg-white text-neutral-900 antialiased;
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
   }
 }
 

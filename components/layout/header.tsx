@@ -26,7 +26,7 @@ export function Header({ userEmail, userName, userId, userImage, unreadNotificat
   const pathname = usePathname();
 
   return (
-    <header className="bg-white border-b border-neutral-200">
+    <header className="bg-card border-b border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

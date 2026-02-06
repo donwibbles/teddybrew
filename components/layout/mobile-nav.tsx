@@ -191,13 +191,13 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
         aria-modal="true"
         aria-label="Navigation menu"
         className={cn(
-          "fixed top-0 right-0 h-full w-72 bg-white shadow-xl z-50 transform transition-transform duration-300 ease-in-out",
+          "fixed top-0 right-0 h-full w-72 bg-card shadow-xl z-50 transform transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-neutral-200">
+          <div className="flex items-center justify-between p-4 border-b border-border">
             <span className="font-semibold text-lg text-primary-600">Menu</span>
             <button
               ref={closeButtonRef}
@@ -268,7 +268,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
                     )}
                   </ul>
                 )}
-                <div className="my-3 border-t border-neutral-200" />
+                <div className="my-3 border-t border-border" />
               </div>
             )}
 
@@ -298,7 +298,7 @@ export function MobileNav({ userEmail, userName }: MobileNavProps) {
           </nav>
 
           {/* User info & sign out */}
-          <div className="p-4 border-t border-neutral-200">
+          <div className="p-4 border-t border-border">
             <div className="mb-3">
               <p className="text-sm font-medium text-neutral-900 truncate">
                 {userName || "User"}

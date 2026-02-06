@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ThemeScript } from "@/components/providers/theme-script";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,9 +23,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="font-sans antialiased">
-        {children}
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
+      <body className="font-sans">
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
         <Toaster position="bottom-right" richColors closeButton duration={4000} />
       </body>
     </html>

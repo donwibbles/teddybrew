@@ -6,6 +6,7 @@ import { SignOutButton } from "@/components/auth/sign-out-button";
 import { ProfileEditForm } from "@/components/profile/profile-edit-form";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { DeleteAccountDialog } from "@/components/settings/delete-account-dialog";
+import { ThemeSelector } from "@/components/settings/theme-selector";
 
 export const metadata = {
   title: "Settings - Hive Community",
@@ -50,6 +51,17 @@ export default async function SettingsPage({
             currentImage={user.image}
             userName={user.name}
           />
+        </CardContent>
+      </Card>
+
+      {/* Appearance Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+          <CardDescription>Choose your preferred theme</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ThemeSelector />
         </CardContent>
       </Card>
 

@@ -13,11 +13,11 @@ const buttonVariants = cva(
         destructive:
           "bg-error-500 text-white hover:bg-error-600 shadow-sm",
         outline:
-          "border border-neutral-300 bg-white hover:bg-neutral-50 hover:text-neutral-900",
+          "border border-input-border bg-card hover:bg-background-muted hover:text-foreground",
         secondary:
-          "bg-neutral-100 text-neutral-900 hover:bg-neutral-200",
+          "bg-background-muted text-foreground hover:bg-neutral-200 dark:hover:bg-neutral-700",
         ghost:
-          "hover:bg-neutral-100 hover:text-neutral-900",
+          "hover:bg-background-muted hover:text-foreground",
         link:
           "text-primary-600 underline-offset-4 hover:underline",
       },
